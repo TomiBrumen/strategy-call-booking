@@ -22,7 +22,10 @@ export function calendarLinks({ title, start, end, details }) {
     `UID:${icsStamp(start)}@databox-sim`, `DTSTAMP:${icsStamp(new Date().toISOString())}`,
     `DTSTART:${icsStamp(start)}`, `DTEND:${icsStamp(end)}`, `SUMMARY:${title}`, `DESCRIPTION:${details}`,
     'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const outlookWeb = 'https://outlook.live.com/calendar/0/deeplink/compose?' + new URLSearchParams({
+    path: '/calendar/action/compose', rru: 'addevent', subject: title, startdt: new Date(start).toISOString(), enddt: new Date(end).toISOString(), body: details,
+  });
   const file = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
-  return { google, apple: file, outlook: file };
+  return { google, apple: file, outlook: file, outlookWeb };
 }
 

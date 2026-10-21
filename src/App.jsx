@@ -5,7 +5,7 @@ import Calendar from './Calendar.jsx';
 import Confirm from './Confirm.jsx';
 import Panel from './Panel.jsx';
 import { STEPS } from './events.js';
-import { browserTz, rand } from './util.js';
+import { browserTz, calendarLinks, fmtDate, fmtTime, rand, tzName } from './util.js';
 import { DEMO, EVENT, createBooking, getHostAvatar } from './cal.js';
 
 const load = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -119,9 +119,15 @@ export default function App() {
         setBooking(b);
         bookingIdRef.current = d.uid;
         getHostAvatar(hostUser(d)).then((hostAvatar) => hostAvatar && setBooking((cur) => cur && { ...cur, hostAvatar }));
+        // Everything the emails need travels in the event, already formatted for the visitor's time zone
+        const links = calendarLinks({ title: event.title, start: d.start, end: d.end, details: d.meetingUrl || 'Strategy call with Databox' });
         fire('booking_confirmed', {
           booking_id: d.uid, host_id: d.hosts?.[0]?.id ?? null, call_at: d.start, lead_time_h: Math.round((new Date(d.start) - Date.now()) / 36e5),
           rebook_reason: null, variant_booking: vb,
+          call_weekday: new Intl.DateTimeFormat(undefined, { weekday: 'long', timeZone: tz }).format(new Date(d.start)),
+          call_date_text: fmtDate(d.start, tz), call_time_text: `${fmtTime(d.start, tz)} (${tzName(d.start, tz)})`, time_zone: tz,
+          join_url: d.meetingUrl || null, host_name: hostOf(d) || null, host_username: hostUser(d) || null,
+          calendar_google_url: links.google, calendar_outlook_url: links.outlookWeb,
         });
       }
       go('confirm');
