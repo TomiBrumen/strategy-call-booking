@@ -1,0 +1,59 @@
+<div class="r" style="width: 1440px; height: 1100px;">
+
+<header style="height: 72px; flex-shrink: 0; border-bottom: 1px solid #D4D4D4; display: flex; align-items: center; gap: 40px; padding: 0 80px;">
+<div class="ph" style="width: 128px; height: 32px;">[Logo]</div>
+<nav style="display: flex; gap: 32px; flex-grow: 1;">
+<a class="navl" href="#">[Nav item]</a><a class="navl" href="#">[Nav item]</a><a class="navl" href="#">[Nav item]</a><a class="navl" href="#">[Nav item]</a><a class="navl" href="#">[Nav item]</a>
+</nav>
+<a class="navl" href="#">[Log in]</a>
+</header>
+
+<main style="width: 1120px; margin: 0 auto; padding: 48px 0 64px; display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<a href="#" style="font-size: 15px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>[Back – edit details]</a>
+<span class="step">[Step 2 of 2]</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<h1 style="font-size: 40px; line-height: 48px; font-weight: 700; letter-spacing: -0.3px;">[Pick a time]</h1>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 15px; font-weight: 500;">
+<span>[Call name]</span><span class="mut" aria-hidden="true">·</span><span>[Length]</span><span class="mut" aria-hidden="true">·</span><span>[Free]</span>
+</div>
+</div>
+
+<div class="card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); display: flex; flex-direction: column;">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 360px;">
+<div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 16px; border-right: 1px solid #E2E2E2;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<button class="icb" type="button" aria-label="Previous month"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<span style="font-weight: 600; font-size: 18px;">[Month YYYY]</span>
+<button class="icb" type="button" aria-label="Next month"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px;">
+<span class="wd">MON</span><span class="wd">TUE</span><span class="wd">WED</span><span class="wd">THU</span><span class="wd">FRI</span><span class="wd">SAT</span><span class="wd">SUN</span>
+<span class="d blank"></span><span class="d blank"></span><span class="d off">1</span><span class="d off">2</span><span class="d off">3</span><span class="d off">4</span><span class="d off">5</span><span class="d off">6</span><span class="d off">7</span><span class="d off">8</span><span class="d off">9</span><span class="d off">10</span><span class="d off">11</span><span class="d off">12</span><span class="d off">13</span><span class="d av">14</span><span class="d av">15</span><span class="d sel">16</span><span class="d av">17</span><span class="d off">18</span><span class="d off">19</span><span class="d av">20</span><span class="d av">21</span><span class="d av">22</span><span class="d av">23</span><span class="d av">24</span><span class="d off">25</span><span class="d off">26</span><span class="d av">27</span><span class="d av">28</span><span class="d av">29</span><span class="d av">30</span><span class="d blank"></span><span class="d blank"></span><span class="d blank"></span>
+</div>
+</div>
+<div style="padding: 32px 32px; display: flex; flex-direction: column; gap: 10px;">
+<span style="font-weight: 600; font-size: 18px; height: 44px; display: flex; align-items: center; margin-bottom: 6px;">[Weekday, Date]</span>
+<button type="button" class="slot">[Time]</button><button type="button" class="slot">[Time]</button><button type="button" class="slot sel">[Time]</button><button type="button" class="slot">[Time]</button><button type="button" class="slot">[Time]</button><button type="button" class="slot">[Time]</button><button type="button" class="slot">[Time]</button><button type="button" class="slot">[Time]</button>
+</div>
+</div>
+
+<div style="border-top: 1px solid #E2E2E2; padding: 16px 40px; display: flex; align-items: center; gap: 10px; font-size: 15px; background: #FAFAFA;">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E5E5E" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
+<span>[All times in your time zone: auto-detected]</span>
+<a href="#" style="font-size: 15px;">[Change]</a>
+<span class="note" style="margin-left: auto;">Round-robin: no host name or photo</span>
+</div>
+
+<div style="border-top: 1px solid #E2E2E2; padding: 20px 40px; display: flex; align-items: center; gap: 16px; border-radius: 0 0 16px 16px;">
+<div style="display: flex; flex-direction: column;">
+<span style="font-weight: 600;">[Weekday, Date] · [Time] ([Local time zone])</span>
+<span class="mut" style="font-size: 14px;">[First name Last name] · [Email address]</span>
+</div>
+<button class="btn" type="button" style="margin-left: auto;">[Confirm booking]</button>
+</div>
+</div>
+</main>
+
+</div>

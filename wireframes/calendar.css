@@ -1,0 +1,20 @@
+.r{font-family:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:#1C1C1C;background:#FFFFFF;box-sizing:border-box;display:flex;flex-direction:column;font-size:16px;line-height:24px}
+.r *{box-sizing:border-box}
+.r h1,.r h2,.r h3,.r p{margin:0}
+.mut{color:#5E5E5E}
+.ph{background:#EDEDED;border:1px dashed #8F8F8F;display:flex;align-items:center;justify-content:center;color:#4F4F4F;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.card{background:#FFFFFF;border:1px solid #C8C8C8;border-radius:16px}
+.btn{display:flex;align-items:center;justify-content:center;height:52px;padding:0 32px;border:0;border-radius:8px;background:#1C1C1C;color:#FFFFFF;font:600 16px/20px 'Public Sans',system-ui,sans-serif}
+.note{display:inline-flex;align-items:center;height:22px;padding:0 8px;border:1px dashed #6B6B6B;border-radius:4px;background:#F7F7F7;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;font-weight:500;color:#3D3D3D;white-space:nowrap}
+.step{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#5E5E5E}
+.navl{font-size:15px;color:#3D3D3D;text-decoration:none}
+.icb{width:44px;height:44px;border:1px solid #C8C8C8;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center}
+.wd{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:12px;font-weight:500;color:#5E5E5E;text-align:center}
+.d{height:64px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-variant-numeric:tabular-nums}
+.d.blank{visibility:hidden}
+.d.off{color:#8A8A8A}
+.d.av{border:1px solid #A8A8A8;font-weight:600}
+.d.sel{background:#D9D9D9;border:2px solid #1C1C1C;font-weight:700}
+.slot{height:48px;border:1px solid #A8A8A8;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 15px 'Public Sans',system-ui,sans-serif;color:#1C1C1C;width:100%}
+.slot.sel{background:#D9D9D9;border:2px solid #1C1C1C}
+a{color:#1C1C1C}a:hover{color:#000000}

@@ -1,0 +1,22 @@
+.r{font-family:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:#1C1C1C;background:#FFFFFF;box-sizing:border-box;display:flex;flex-direction:column;font-size:16px;line-height:24px}
+.r *{box-sizing:border-box}
+.r h1,.r h2,.r h3,.r p{margin:0}
+.mut{color:#5E5E5E}
+.ph{background:#EDEDED;border:1px dashed #8F8F8F;display:flex;align-items:center;justify-content:center;color:#4F4F4F;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.card{background:#FFFFFF;border:1px solid #C8C8C8;border-radius:12px}
+.step{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#5E5E5E}
+.navl{font-size:15px;color:#3D3D3D;text-decoration:none}
+.seg{display:flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 24px;border:0;background:#1C1C1C;color:#FFFFFF;font:600 15px 'Public Sans',system-ui,sans-serif}
+.seg + .seg{border-left:1px solid #5E5E5E}
+.pi{width:20px;height:20px;border-radius:4px;border:1px dashed #BDBDBD}
+.num{flex-shrink:0;width:32px;height:32px;border-radius:16px;border:1px solid #1C1C1C;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px}
+.ps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.ps li{display:flex;flex-direction:column;gap:12px;min-width:0}
+.mk{display:flex;align-items:center;gap:8px;padding-right:8px}
+.c{flex-shrink:0;width:32px;height:32px;border-radius:16px;border:1px solid #1C1C1C;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px}
+.c.done{background:#1C1C1C}
+.ln{flex-grow:1;border-top:2px dashed #BDBDBD}
+.ln.done{border-top:2px solid #1C1C1C}
+.pt{display:flex;flex-direction:column;gap:2px;padding-right:24px}
+.note{display:inline-flex;align-items:center;height:22px;padding:0 8px;border:1px dashed #6B6B6B;border-radius:4px;background:#F7F7F7;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;font-weight:500;color:#3D3D3D;white-space:nowrap}
+a{color:#1C1C1C}a:hover{color:#000000}
