@@ -54,12 +54,14 @@ export default function App() {
 
   const [knownEmail, setKnownEmail] = useState('');
   const emailRef = useRef('');
+  const bookingIdRef = useRef('');
   const identify = (email) => { emailRef.current = email; setKnownEmail(email); };
 
   const fire = useCallback((name, props = {}) => {
     const time = new Date().toLocaleTimeString([], { hour12: false });
     // Before the email is known the visitor is anonymous. From then on every event carries it.
-    const withWho = emailRef.current && !('email' in props) ? { ...props, email: emailRef.current } : props;
+    let withWho = emailRef.current && !('email' in props) ? { ...props, email: emailRef.current } : props;
+    if (bookingIdRef.current && !('booking_id' in withWho)) withWho = { ...withWho, booking_id: bookingIdRef.current };
     setLog((l) => [...l, { id: ++seq.current, name, props: withWho, time, step: stepRef.current }]);
   }, []);
 
@@ -72,7 +74,7 @@ export default function App() {
   };
 
   const restart = (e = entry) => {
-    identify(''); setCtx(freshCtx(e)); setForm(emptyForm); setBooking(null); setError(''); setBusy(false);
+    identify(''); bookingIdRef.current = ''; setCtx(freshCtx(e)); setForm(emptyForm); setBooking(null); setError(''); setBusy(false);
     setLog([]);
     const first = e === 'ad' ? 'calendar' : 'cta';
     stepRef.current = first; setStep(first);
@@ -115,6 +117,7 @@ export default function App() {
         const d = await createBooking({ start, name: `${form.first} ${form.last}`.trim(), email: form.email, phone: form.phone ? form.cc + form.phone : '', timeZone: tz, metadata: metadata() });
         const b = { uid: d.uid, start: d.start, end: d.end, host: hostOf(d), meetingUrl: d.meetingUrl, status: 'accepted' };
         setBooking(b);
+        bookingIdRef.current = d.uid;
         getHostAvatar(hostUser(d)).then((hostAvatar) => hostAvatar && setBooking((cur) => cur && { ...cur, hostAvatar }));
         fire('booking_confirmed', {
           booking_id: d.uid, host_id: d.hosts?.[0]?.id ?? null, call_at: d.start, lead_time_h: Math.round((new Date(d.start) - Date.now()) / 36e5),
