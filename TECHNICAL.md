@@ -49,12 +49,13 @@ the ones we use, with no credentials, against the live API:
 | `GET /v2/slots` (free times) | works (200) | tested |
 | `POST /v2/bookings` (create) | works, only validates the body (400 on an empty body, not 401) | docs and tested; real bookings made |
 | `GET /v2/event-types?username=` (public profile and photo) | works (200) | tested |
-| `POST /v2/bookings/{uid}/cancel` and `/reschedule` | refused (400 and 403) | tested |
+| `POST /v2/bookings/{uid}/cancel` and `/reschedule` | works on events that allow it (tested); refused on an event with cancelling and rescheduling disabled | tested on both kinds |
 | `GET /v2/bookings` (list bookings) | refused (403) | tested |
 | `GET /v2/teams/...` (team event types, members, bio) | refused (401) | tested |
 
-In short: **visitor-facing actions (see times, book) are open; anything that reads or changes existing data
-needs a key.** Browsers can call it because the API allows cross-origin requests from any website
+In short: **visitor-facing actions (see times, book, and cancel or reschedule your own booking) are open;
+anything that lists or reads other people's data needs a key.** The booking `uid` returned when booking acts as
+the secret for that one booking. Browsers can call it because the API allows cross-origin requests from any website
 (`access-control-allow-origin: *`).
 
 ## Why it is open, and how Atoms relate
@@ -86,8 +87,15 @@ Booking response: `uid`, `start`, `end`, `meetingUrl`, and `hosts[]` with `id`, 
 (email appears for authenticated callers). The confirmation page uses it to show the assigned host and to build
 the add-to-calendar links. The photo comes from a second call by the host's username.
 
-Reschedule and cancel are not done through the API: Cal.com refuses them without a key, so the confirmation page
-links to Cal.com's own pages (`cal.com/reschedule/{uid}`, `cal.com/booking/{uid}?cancel=true`).
+Reschedule and cancel: the page currently links to Cal.com's own pages (`cal.com/reschedule/{uid}`,
+`cal.com/booking/{uid}?cancel=true`), the same links Cal.com puts in its emails. They only work if the event type
+allows them. The Databox round-robin event currently has **"disable cancelling" and "disable rescheduling" switched
+on** (`disableCancelling.disabled` and `disableRescheduling.disabled` are `true`), so on that event the hosted pages
+show no cancel or reschedule option and the API refuses both calls ("This event type does not allow cancellations",
+"Rescheduling is disabled for this event type"). On an event with those settings off (tested), the hosted cancel page
+shows a reason field and a Cancel button, the reschedule link opens the booking screen, and
+`POST /v2/bookings/{uid}/reschedule` and `/cancel` also work without a key. So we could build both inside our own
+pages if wanted. A reschedule returns a new booking `uid`.
 
 Versions: Cal.com's current docs name `2026-02-25` as the version for create-booking. We pin older dates that
 work today. Before launch, test the newer version and decide whether to move up.
@@ -95,7 +103,6 @@ work today. Before launch, test the newer version and decide whether to move up.
 ## Where an API key IS needed
 Not in the page. Only for server-side use, never in browser code:
 - reading bookings, event types, team members or profile bio
-- cancelling or rescheduling a booking on someone's behalf (works with a key)
 - creating or changing event types and webhooks
 A key was used during development only for testing and cleanup. It is not in the built files or on the server.
 
@@ -113,6 +120,8 @@ reschedule and cancel pages and its default emails.
 - Demo-only (remove for production): the top control bar and events panel (`Panel.jsx`, `events.js`, `sim.css`)
 
 ## Open points
+- Cal.com event setting: turn off "disable cancelling" and "disable rescheduling" on the real event, or the cancel and
+  reschedule links (in the page and in Cal.com's emails) will not work.
 - Spam: with no key required, anyone can call the booking endpoint directly. Add a honeypot or Turnstile and
   keep within the 120 requests per minute unauthenticated limit.
 - Real event type and host list (the demo books a hidden test event).
