@@ -52,9 +52,15 @@ export default function App() {
   const seq = useRef(0);
   stepRef.current = step;
 
+  const [knownEmail, setKnownEmail] = useState('');
+  const emailRef = useRef('');
+  const identify = (email) => { emailRef.current = email; setKnownEmail(email); };
+
   const fire = useCallback((name, props = {}) => {
     const time = new Date().toLocaleTimeString([], { hour12: false });
-    setLog((l) => [...l, { id: ++seq.current, name, props, time, step: stepRef.current }]);
+    // Before the email is known the visitor is anonymous. From then on every event carries it.
+    const withWho = emailRef.current && !('email' in props) ? { ...props, email: emailRef.current } : props;
+    setLog((l) => [...l, { id: ++seq.current, name, props: withWho, time, step: stepRef.current }]);
   }, []);
 
   const go = (to) => {
@@ -66,15 +72,17 @@ export default function App() {
   };
 
   const restart = (e = entry) => {
-    setCtx(freshCtx(e)); setForm(emptyForm); setBooking(null); setError(''); setBusy(false);
+    identify(''); setCtx(freshCtx(e)); setForm(emptyForm); setBooking(null); setError(''); setBusy(false);
     setLog([]);
     const first = e === 'ad' ? 'calendar' : 'cta';
     stepRef.current = first; setStep(first);
+    fire('page', { path: { cta: '/page-xyz', calendar: '/strategy-call/calendar' }[first] });
     window.scrollTo({ top: 0 });
   };
 
   // Step 1 -> 2
   const onForm = () => {
+    identify(form.email);
     fire('form_submitted', { email_domain: form.email.split('@')[1], contact_id: 'contact_' + ctx.booking_session_id.slice(3, 8) });
     go('calendar');
   };
@@ -101,6 +109,7 @@ export default function App() {
 
   const onConfirm = async (start) => {
     setBusy(true); setError('');
+    identify(form.email);
     try {
       {
         const d = await createBooking({ start, name: `${form.first} ${form.last}`.trim(), email: form.email, phone: form.phone ? form.cc + form.phone : '', timeZone: tz, metadata: metadata() });
@@ -148,7 +157,7 @@ export default function App() {
       </div>}
       <div className={'main' + (showPanel ? '' : ' nopanel')}>
         <div className="screen">{screenEl}</div>
-        {showPanel && <Panel onClose={() => togglePanel(false)} step={step} log={log} ctx={{ ...ctx, ...(step === 'booking' || step === 'confirm' ? { variant_booking: vb } : {}), ...(step === 'confirm' ? { variant_confirmation: vc } : {}), ...(booking ? { booking_id: booking.uid } : {}) }} booking={booking} tz={tz} />}
+        {showPanel && <Panel onClose={() => togglePanel(false)} step={step} log={log} ctx={{ ...ctx, ...(knownEmail ? { email: knownEmail } : { email: '(anonymous: not known yet)' }), ...(step === 'booking' || step === 'confirm' ? { variant_booking: vb } : {}), ...(step === 'confirm' ? { variant_confirmation: vc } : {}), ...(booking ? { booking_id: booking.uid } : {}) }} booking={booking} tz={tz} />}
       </div>
       {(!showBar || !showPanel) && (
         <div className="reveal">
