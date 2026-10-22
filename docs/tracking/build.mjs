@@ -46,7 +46,7 @@ fs.writeFileSync(path.join(dir, 'tracking-plan.json'), J(plan) + '\n');
 const md = [];
 md.push(`# Strategy call tracking plan\n\n${DRAFT}. Built from the "${plan.source}". Every event below is in the spec. Property descriptions ending in "Added." are the only things this plan adds to it.\n`);
 md.push('## Rules for every event\n');
-md.push(`1. **${UTM_RULE.headline}** ${UTM_RULE.body} ${UTM_RULE.firstTouch} ${UTM_RULE.lastTouch} The standard properties, for the first touch and the last touch: ${UTM_RULE.firstLast.map((k) => `\`first_touch_${k}\` / \`last_touch_${k}\``).join(', ')}.`);
+md.push(`1. **${UTM_RULE.headline}** ${UTM_RULE.body} ${UTM_RULE.firstTouch} ${UTM_RULE.lastTouch}`);
 md.push(`2. **Names** follow this rule: ${NAMING.rule} ${NAMING.exception}`);
 md.push(`3. **Call type:** ${PAGE_NOTE} Everything else is a \`track\` call.`);
 md.push(`4. ${SEGMENT_NOTE}`);
@@ -163,7 +163,6 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <h2 id="h-rules">Include on every event</h2>
     <ol>
       <li><b>${esc(UTM_RULE.headline)}</b> ${esc(UTM_RULE.body)}
-        <div class="chips">${UTM_RULE.firstLast.map((k) => `<span class="chip">${k}</span>`).join('')}</div>
         <div class="utmbox"><b>first_touch_*</b> ${esc(UTM_RULE.firstTouch.replace("first_touch_* is ", "is "))}<br><b>last_touch_*</b> ${esc(UTM_RULE.lastTouch.replace("last_touch_* is ", "is "))}</div></li>
       <li><b>Segment call type.</b> ${esc(PAGE_NOTE)} Everything else is a <code>track</code> call.</li>
       <li><b>Who and what:</b> <code>email</code> as soon as it is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
