@@ -337,7 +337,5 @@ export const SEGMENT_SOURCE = {
   keysPage: 'https://app.segment.com/databox/sources/2.0/settings/keys',
   lines: [
     'Browser events: Analytics.js with the source write key. Server events: the Segment HTTP Tracking API with the same write key.',
-    'The write key is not in this document or in the repo. Take it from the vault, or from the source\'s Settings, Keys page.',
-    'This is the production source and it feeds downstream tools such as HubSpot and Mixpanel. Do not send test or demo data to it: test against a development source first.',
   ],
 };
