@@ -286,7 +286,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 - **Properties:** all booking and email variables, see section 5.
 - The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.
 - Sent with identify() when no form ran (P3, direct P6).
-- Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.
 - This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.
 - Starts the HubSpot workflow: confirmation email now, reminders from call_at.
 
@@ -325,7 +324,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "first_name": "Ana",
     "last_name": "Novak",
     "phone": "+38640123456",
-    "rebook_reason": null,
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
@@ -553,7 +551,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "first_name": "Ana",
     "last_name": "Novak",
     "phone": "+38640123456",
-    "rebook_reason": null,
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
@@ -648,7 +645,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 - **Segment call:** track · **Fired by:** Server or webhook · **Role:** diagnostic · **Step:** 7
 - **Fires when:** The visitor has not joined 15 minutes after the start.
 - **Entry paths:** P1, P2, P3, P4, P5, P6, P7
-- Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar (rebook_reason = no_show).
+- Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar.
 
 ```json
 {
@@ -767,7 +764,6 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 | `first_name` | string | First name, split from name on the first space. Used by HubSpot and the emails ("Hi Ana"). Added. | `Ana` | Derived from name | 1, 2, 3 |
 | `last_name` | string or empty | Rest of name after the first space. Empty if only one word was typed. Added. | `Novak` | Derived from name | 1 |
 | `phone` | string or null | Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added. | `+38640123456` | Booking form |  |
-| `rebook_reason` | enum or null | recovery or no_show when the booking came from a rebook email. Null on a first booking. | `null` | Rebook link in the email |  |
 
 ## 6. Entry paths
 

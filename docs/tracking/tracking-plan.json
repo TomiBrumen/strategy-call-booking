@@ -513,14 +513,6 @@
       "example": "+38640123456",
       "source": "Booking form",
       "usedInEmail": null
-    },
-    {
-      "name": "rebook_reason",
-      "type": "enum or null",
-      "description": "recovery or no_show when the booking came from a rebook email. Null on a first booking.",
-      "example": null,
-      "source": "Rebook link in the email",
-      "usedInEmail": null
     }
   ],
   "events": [
@@ -940,7 +932,6 @@
       "notes": [
         "The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.",
         "Sent with identify() when no form ran (P3, direct P6).",
-        "Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.",
         "This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.",
         "Starts the HubSpot workflow: confirmation email now, reminders from call_at."
       ],
@@ -979,7 +970,6 @@
           "first_name": "Ana",
           "last_name": "Novak",
           "phone": "+38640123456",
-          "rebook_reason": null,
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
@@ -1281,7 +1271,6 @@
           "first_name": "Ana",
           "last_name": "Novak",
           "phone": "+38640123456",
-          "rebook_reason": null,
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
@@ -1424,7 +1413,7 @@
         "P7"
       ],
       "notes": [
-        "Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar (rebook_reason = no_show)."
+        "Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar."
       ],
       "specificProperties": [],
       "example": {

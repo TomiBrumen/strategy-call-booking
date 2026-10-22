@@ -93,7 +93,6 @@ export const BOOKING_VARS = [
   ['first_name', 'string', 'First name, split from name on the first space. Used by HubSpot and the emails ("Hi Ana"). Added.', 'Ana', 'Derived from name'],
   ['last_name', 'string or empty', 'Rest of name after the first space. Empty if only one word was typed. Added.', 'Novak', 'Derived from name'],
   ['phone', 'string or null', 'Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added.', '+38640123456', 'Booking form'],
-  ['rebook_reason', 'enum or null', 'recovery or no_show when the booking came from a rebook email. Null on a first booking.', null, 'Rebook link in the email'],
 ];
 
 // name -> value, for JSON
@@ -163,7 +162,7 @@ export const EVENTS = [
     name: 'meeting_booking_confirmed', group: 'Site', step: '2, R, N', by: 'server', role: 'counting', level: 'booked',
     when: 'A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
-    notes: ['The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.', 'Sent with identify() when no form ran (P3, direct P6).', 'Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.', 'This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.', 'Starts the HubSpot workflow: confirmation email now, reminders from call_at.'],
+    notes: ['The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.', 'Sent with identify() when no form ran (P3, direct P6).', 'This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.', 'Starts the HubSpot workflow: confirmation email now, reminders from call_at.'],
     props: [], specific: bookingProps(ALL_BOOKING), booking: true,
     identify: true,
   },
@@ -227,7 +226,7 @@ export const EVENTS = [
     later: true, name: 'meeting_call_no_show', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'diagnostic', level: 'booked', new: true,
     when: 'The visitor has not joined 15 minutes after the start.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
-    notes: ['Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar (rebook_reason = no_show).'],
+    notes: ['Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar.'],
     props: [], specific: { call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
   },
 ];
