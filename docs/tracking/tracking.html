@@ -56,8 +56,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <section class="rules" aria-labelledby="h-rules">
     <h2 id="h-rules">Include on every event</h2>
     <ol>
-      <li><b>Every event includes all UTMs, as separate properties.</b> Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.
-        <div class="utmbox"><b>first_touch_*</b> is the first marketing touch ever.<br><b>last_touch_*</b> is read from the page where the visitor started the flow, the page where they clicked the CTA. If that page's URL has no UTMs, the UTM fields stay empty (null); there is no fallback to earlier UTMs.</div></li>
+      <li><b>Every event includes the UTMs, as separate properties.</b> Send each UTM as its own property, never nested, never hardcoded values. The list is source, medium, campaign, content and term until Marketing defines the final one (open point). No ad click ids.
+        <div class="utmbox"><b>first_touch_*</b> is the first marketing touch ever.<br><b>last_touch_*</b> is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.</div></li>
       <li><b>Segment call type.</b> The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a <code>track</code> call.</li>
       <li><b>Who and what:</b> <code>email</code> as soon as it is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
     </ol>
@@ -228,7 +228,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;cta_id&quot;: &quot;xyz_inline&quot;,
     &quot;variant_booking&quot;: &quot;A&quot;,
     &quot;variant_confirmation&quot;: &quot;A&quot;,
-    &quot;email&quot;: &quot;ana.novak@acme.com&quot;
+    &quot;email&quot;: &quot;ana.novak@acme.com&quot;,
+    &quot;hashed_email&quot;: &quot;ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84&quot;
   }
 }</code></pre>
     <p class="mut utmline">Plus all UTMs, each as a separate property (see the UTM rule).</p>
@@ -290,7 +291,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;cta_id&quot;: &quot;xyz_inline&quot;,
     &quot;variant_booking&quot;: &quot;A&quot;,
     &quot;variant_confirmation&quot;: &quot;A&quot;,
-    &quot;email&quot;: &quot;ana.novak@acme.com&quot;
+    &quot;email&quot;: &quot;ana.novak@acme.com&quot;,
+    &quot;hashed_email&quot;: &quot;ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84&quot;
   },
   &quot;context&quot;: {
     &quot;page&quot;: {
@@ -351,7 +353,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;cta_id&quot;: &quot;xyz_inline&quot;,
     &quot;variant_booking&quot;: &quot;A&quot;,
     &quot;variant_confirmation&quot;: &quot;A&quot;,
-    &quot;email&quot;: &quot;ana.novak@acme.com&quot;
+    &quot;email&quot;: &quot;ana.novak@acme.com&quot;,
+    &quot;hashed_email&quot;: &quot;ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84&quot;
   }
 }</code></pre>
     <p class="mut utmline">Plus all UTMs, each as a separate property (see the UTM rule).</p>
@@ -381,6 +384,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;cta_id&quot;: &quot;xyz_inline&quot;,
     &quot;variant_booking&quot;: &quot;A&quot;,
     &quot;email&quot;: &quot;ana.novak@acme.com&quot;,
+    &quot;hashed_email&quot;: &quot;ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84&quot;,
     &quot;booking_id&quot;: &quot;k9Zp3QmV7sLw2TnXb8Rc4D&quot;
   },
   &quot;context&quot;: {
@@ -416,6 +420,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;variant_booking&quot;: &quot;A&quot;,
     &quot;variant_confirmation&quot;: &quot;A&quot;,
     &quot;email&quot;: &quot;ana.novak@acme.com&quot;,
+    &quot;hashed_email&quot;: &quot;ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84&quot;,
     &quot;booking_id&quot;: &quot;k9Zp3QmV7sLw2TnXb8Rc4D&quot;
   },
   &quot;context&quot;: {
@@ -462,7 +467,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section aria-labelledby="h-open">
     <h2 id="h-open">Open points</h2>
-    <ul class="op"><li>Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.</li><li>UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.</li><li>email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.</li><li>Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.</li></ul>
+    <ul class="op"><li>Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.</li><li>hashed_email: confirm the hash (SHA-256 of the trimmed, lowercased email) and whether it also arrives as a URL parameter from marketing emails.</li><li>Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.</li></ul>
   </section>
 </div>
 <script>

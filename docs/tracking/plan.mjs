@@ -8,6 +8,7 @@ export const S = {
   userId: 'contact_8812',
   bookingSessionId: 'bs_7f3a91c2',
   email: 'ana.novak@acme.com',
+  hashedEmail: 'ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84',
   bookingId: 'k9Zp3QmV7sLw2TnXb8Rc4D',
   firstTouchAt: '2026-10-19T09:12:00Z',
   callAt: '2026-10-29T14:30:00Z',
@@ -26,26 +27,21 @@ export const CONTEXT_PROPS = [
   ['first_touch_campaign', 'string or null', 'utm_campaign of the first marketing touch.', 'Touch script'],
   ['first_touch_content', 'string or null', 'utm_content of the first marketing touch.', 'Touch script'],
   ['first_touch_term', 'string or null', 'utm_term of the first marketing touch.', 'Touch script'],
-  ['first_touch_click_id', 'string or null', 'Ad click id of the first touch. Ad platforms match offline conversions on it.', 'Touch script'],
-  ['first_touch_click_id_type', 'enum or null', 'gclid, gbraid, wbraid, li_fat_id, fbclid or msclkid.', 'Touch script'],
   ['first_touch_landing_page', 'string or null', 'Path of the first page they landed on. One field of the touch, not the touch itself.', 'Touch script'],
   ['first_touch_referrer_domain', 'string or null', 'Domain of the external referrer at the first touch.', 'Touch script'],
   ['first_touch_at', 'ISO datetime', 'When the first touch happened (UTC).', 'Touch script'],
-  ['last_touch_source', 'string or null', 'utm_source of the page where the visitor started the flow (the page where they clicked the CTA). Same shape as first_touch_*.', 'Read from that page at the CTA click'],
-  ['last_touch_medium', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_campaign', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_content', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_term', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_click_id', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_click_id_type', 'enum or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_landing_page', 'string or null', 'Path of the page where the CTA was clicked (the same page as source_page).', 'Read from that page at the CTA click'],
-  ['last_touch_referrer_domain', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
-  ['last_touch_at', 'ISO datetime', 'When the CTA was clicked (UTC).', 'Read at the CTA click'],
-  ['first_touch_<other utm_* parameter>', 'string or null', 'Every other utm_* parameter found on the URL (for example utm_id) is captured the same way. Names follow the same pattern; confirm the exact naming with Engineering.', 'Touch script'],
-  ['last_touch_<other utm_* parameter>', 'string or null', 'Same, read from the page where the flow started.', 'Read from the page where the flow started'],
-  ['variant_booking', 'enum A or B', 'Booking page A/B variant. Sticky per visitor, stored on the booking.', 'Assigned on first view, cookie'],
+  ['last_touch_source', 'string or null', 'utm_source of the latest visit that carried tracking parameters. A visit with parameters replaces the last touch; a visit without leaves it as it was. Same shape as first_touch_*.', 'Touch script'],
+  ['last_touch_medium', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_campaign', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_content', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_term', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_landing_page', 'string or null', 'Path of the landing page of that latest visit with tracking parameters.', 'Touch script'],
+  ['last_touch_referrer_domain', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_at', 'ISO datetime', 'When that visit happened (UTC).', 'Touch script'],
+    ['variant_booking', 'enum A or B', 'Booking page A/B variant. Sticky per visitor, stored on the booking.', 'Assigned on first view, cookie'],
   ['variant_confirmation', 'enum A or B', 'Confirmation page A/B variant. Sticky per visitor.', 'Assigned on first view, cookie'],
   ['email', 'string', 'The visitor\'s email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.', 'Form or calendar details'],
+  ['hashed_email', 'string', 'SHA-256 of the trimmed, lowercased email, as hex. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.', 'Computed from the email'],
   ['booking_id', 'string', 'The Cal.com booking id, on every event once the booking exists. Added.', 'Cal.com booking response or webhook'],
 ];
 
@@ -58,7 +54,7 @@ export function context(level) {
     flow_entry: 'cta', flow_start: 'booking_page', source_page: '/page-xyz', cta_id: 'xyz_inline',
     variant_booking: 'A', variant_confirmation: 'A',
   };
-  if (level === 'known' || level === 'booked') c.email = S.email;
+  if (level === 'known' || level === 'booked') { c.email = S.email; c.hashed_email = S.hashedEmail; }
   if (level === 'booked') c.booking_id = S.bookingId;
   return c;
 }
@@ -199,7 +195,7 @@ export const EVENTS = [
     later: true, name: 'meeting_email_clicked', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
     when: 'Tracked link click in a flow email.',
     paths: ['P6', 'P7'],
-    notes: ['Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they are a new last touch (open question Q10).', 'link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple.'],
+    notes: ['Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they carry UTMs, so they replace the last touch like any visit with parameters.', 'link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple.'],
     props: [['email_id', 'enum', 'Which email.', 'reminder_24h'], ['link_id', 'enum', 'Which link.', 'join']],
     specific: { email_id: 'reminder_24h', link_id: 'join' },
   },
@@ -258,20 +254,19 @@ export const IDENTIFY_CALLS = [
 
 // ---------- entry paths from the spec ----------
 export const PATHS = [
-  ['P1', 'Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you', 'flow_entry = cta, source_page = the page with the CTA. last_touch = that page, first_touch = the first marketing touch (the ad)'],
-  ['P2', 'Ad, then ad landing, then booking page, calendar, thank you', 'flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing page'],
-  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the calendar page the ad opened. No form: identify() goes with meeting_booking_confirmed'],
-  ['P4', 'Search, social or direct, any page, header CTA, booking page, calendar, thank you', 'flow_entry = cta, cta_id = header, source_page = the current page. last_touch = that page'],
-  ['P5', 'Search, social or partner, landing page, booking page, calendar, thank you', 'flow_entry = cta, source_page = /landing-page. last_touch = that landing page'],
-  ['P6', 'Marketing email, booking page (or straight to the calendar), thank you', 'flow_entry = email. No CTA click: last_touch = the booking page or calendar the email link opened, with the email\'s UTMs'],
+  ['P1', 'Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you', 'flow_entry = cta, source_page = the page with the CTA. first_touch = last_touch = the ad, unless the page with the CTA carried newer parameters'],
+  ['P2', 'Ad, then ad landing, then booking page, calendar, thank you', 'flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing visit (it carried the ad parameters)'],
+  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: identify() goes with meeting_booking_confirmed'],
+  ['P4', 'Search, social or direct, any page, header CTA, booking page, calendar, thank you', 'flow_entry = cta, cta_id = header, source_page = the current page. last_touch = the latest visit with parameters, if any'],
+  ['P5', 'Search, social or partner, landing page, booking page, calendar, thank you', 'flow_entry = cta, source_page = /landing-page. last_touch = that landing page visit if it carried parameters'],
+  ['P6', 'Marketing email, booking page (or straight to the calendar), thank you', 'flow_entry = email. No CTA click: last_touch = the email visit, with the email\'s UTMs'],
   ['P7', 'Flow email (reschedule, rebook), calendar, thank you', 'No new touch. The booking keeps its original first_touch and last_touch'],
 ];
 
 export const OPEN_POINTS = [
-  'Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.',
-  'UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.',
-  'email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.',
-  'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.',
+  'Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.',
+  'hashed_email: confirm the hash (SHA-256 of the trimmed, lowercased email) and whether it also arrives as a URL parameter from marketing emails.',
+  'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.',
 ];// ---------- JSON builder ----------
 export const callOf = (e) => e.call || 'track';
 export function jsonFor(e) {
@@ -291,13 +286,11 @@ export function jsonFor(e) {
 }
 
 export const UTM_RULE = {
-  headline: 'Every event includes all UTMs, as separate properties.',
-  body: 'Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.',
+  headline: 'Every event includes the UTMs, as separate properties.',
+  body: 'Send each UTM as its own property, never nested, never hardcoded values. The list is source, medium, campaign, content and term until Marketing defines the final one (open point). No ad click ids.',
   firstTouch: 'first_touch_* is the first marketing touch ever.',
-  lastTouch: 'last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA. If that page\'s URL has no UTMs, the UTM fields stay empty (null); there is no fallback to earlier UTMs.',
-  firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'click_id', 'click_id_type', 'landing_page', 'referrer_domain', 'at'],
-  more: 'Any other utm_* parameter is sent the same way (for example utm_id). Confirm the property naming for these with Engineering.',
-  clickIds: ['gclid', 'gbraid', 'wbraid', 'li_fat_id', 'fbclid', 'msclkid'],
+  lastTouch: 'last_touch_* is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.',
+  firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'landing_page', 'referrer_domain', 'at'],
 };
 
 // ---------- check against the spec file ----------
@@ -305,13 +298,13 @@ export const COVERAGE = {
   spec: 'Strategy Call Booking Flow (2), checked 22 Oct 2026',
   checks: [
     ['Event dictionary', '16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.'],
-    ['Last touch (changed on purpose)', 'The spec defines last_touch_* as the last marketing touch. This plan defines it as the page where the visitor started the flow (the CTA page), as requested.'],
+    ['Last touch', 'Defined as the spec does: the latest visit with tracking parameters (confirmed by Engineering). The CTA page is source_page, on every event.'],
     ['Context properties', 'anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.'],
     ['Segment calls', 'page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says.'],
     ['Entry paths', 'P1 to P7 are all covered, with the events each one fires.'],
     ['Q4 (decided in this version)', 'Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it.'],
     ['New page copy', 'The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.'],
-    ['Added beyond the spec', 'email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter.'],
+    ['Added beyond the spec', 'email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; hashed_email.'],
   ],
 };
 
@@ -322,7 +315,7 @@ export const NAMING = {
   renames: [["cta_clicked", "meeting_cta_clicked"], ["booking_page_viewed", "meeting_booking_page_viewed"], ["video_played", "meeting_video_played"], ["form_started", "meeting_form_started"], ["form_submitted", "meeting_form_submitted"], ["calendar_viewed", "meeting_calendar_page_viewed"], ["slot_selected", "meeting_slot_selected"], ["booking_confirmed", "meeting_booking_confirmed"], ["confirmation_viewed", "meeting_confirmation_page_viewed"], ["calendar_added", "meeting_add_to_calendar_clicked"], ["email_sent", "meeting_email_sent"], ["email_clicked", "meeting_email_clicked"], ["booking_rescheduled", "meeting_booking_rescheduled"], ["booking_canceled", "meeting_booking_canceled"], ["call_held", "meeting_call_held"], ["call_no_show", "meeting_call_no_show"]],
 };
 
-export const SEGMENT_NOTE = 'Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_.';
+export const SEGMENT_NOTE = 'Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.';
 
 export const LATER = {
   title: 'Implemented separately',

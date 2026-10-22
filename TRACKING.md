@@ -4,10 +4,10 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 
 ## Rules for every event
 
-1. **Every event includes all UTMs, as separate properties.** Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values. first_touch_* is the first marketing touch ever. last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA. If that page's URL has no UTMs, the UTM fields stay empty (null); there is no fallback to earlier UTMs.
+1. **Every event includes the UTMs, as separate properties.** Send each UTM as its own property, never nested, never hardcoded values. The list is source, medium, campaign, content and term until Marketing defines the final one (open point). No ad click ids. first_touch_* is the first marketing touch ever. last_touch_* is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.
 2. **Names** follow this rule: meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.
 3. **Call type:** The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a `track` call.
-4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.
+4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.
 5. **Also on every event:** `email` as soon as it is known, and `booking_id` once the booking exists. The flow properties are in section 4.
 
 ## Where to send
@@ -205,7 +205,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com"
+    "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
   }
 }
 ```
@@ -273,7 +274,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com"
+    "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
   },
   "context": {
     "page": {
@@ -339,7 +341,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com"
+    "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
   }
 }
 ```
@@ -372,6 +375,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
   },
   "context": {
@@ -409,6 +413,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "variant_booking": "A",
     "variant_confirmation": "A",
     "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
   },
   "context": {
@@ -465,6 +470,7 @@ The booking lifecycle and call events (reschedule, cancel, call held, no-show) a
     "variant_booking": "A",
     "variant_confirmation": "A",
     "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
   },
   "context": {
@@ -480,7 +486,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 - **Fires when:** Tracked link click in a flow email.
 - **Entry paths:** P6, P7
 - **Properties:** `email_id` (enum): Which email.; `link_id` (enum): Which link.
-- Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they are a new last touch (open question Q10).
+- Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they carry UTMs, so they replace the last touch like any visit with parameters.
 - link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple.
 
 ```json
@@ -502,6 +508,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "variant_booking": "A",
     "variant_confirmation": "A",
     "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
   },
   "context": {
@@ -568,7 +575,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com"
+    "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
   }
 }
 ```
@@ -615,7 +623,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com"
+    "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
   }
 }
 ```
@@ -652,6 +661,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "variant_booking": "A",
     "variant_confirmation": "A",
     "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
   }
 }
@@ -695,7 +705,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com"
+    "email": "ana.novak@acme.com",
+    "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
   }
 }
 ```
@@ -754,6 +765,7 @@ At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Sa
 | `variant_booking` | enum A or B | Booking page A/B variant. Sticky per visitor, stored on the booking. | Assigned on first view, cookie |
 | `variant_confirmation` | enum A or B | Confirmation page A/B variant. Sticky per visitor. | Assigned on first view, cookie |
 | `email` | string | The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added. | Form or calendar details |
+| `hashed_email` | string | SHA-256 of the trimmed, lowercased email, as hex. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added. | Computed from the email |
 | `booking_id` | string | The Cal.com booking id, on every event once the booking exists. Added. | Cal.com booking response or webhook |
 
 UTMs: see rule 1. They are also passed to the booking in the URL, hidden fields and the Cal.com booking metadata.
@@ -797,20 +809,19 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 
 | Path | Route | Resulting values |
 |---|---|---|
-| P1 | Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you | flow_entry = cta, source_page = the page with the CTA. last_touch = that page, first_touch = the first marketing touch (the ad) |
-| P2 | Ad, then ad landing, then booking page, calendar, thank you | flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing page |
-| P3 | Targeted ad straight to the calendar, thank you | flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the calendar page the ad opened. No form: identify() goes with meeting_booking_confirmed |
-| P4 | Search, social or direct, any page, header CTA, booking page, calendar, thank you | flow_entry = cta, cta_id = header, source_page = the current page. last_touch = that page |
-| P5 | Search, social or partner, landing page, booking page, calendar, thank you | flow_entry = cta, source_page = /landing-page. last_touch = that landing page |
-| P6 | Marketing email, booking page (or straight to the calendar), thank you | flow_entry = email. No CTA click: last_touch = the booking page or calendar the email link opened, with the email's UTMs |
+| P1 | Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you | flow_entry = cta, source_page = the page with the CTA. first_touch = last_touch = the ad, unless the page with the CTA carried newer parameters |
+| P2 | Ad, then ad landing, then booking page, calendar, thank you | flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing visit (it carried the ad parameters) |
+| P3 | Targeted ad straight to the calendar, thank you | flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: identify() goes with meeting_booking_confirmed |
+| P4 | Search, social or direct, any page, header CTA, booking page, calendar, thank you | flow_entry = cta, cta_id = header, source_page = the current page. last_touch = the latest visit with parameters, if any |
+| P5 | Search, social or partner, landing page, booking page, calendar, thank you | flow_entry = cta, source_page = /landing-page. last_touch = that landing page visit if it carried parameters |
+| P6 | Marketing email, booking page (or straight to the calendar), thank you | flow_entry = email. No CTA click: last_touch = the email visit, with the email's UTMs |
 | P7 | Flow email (reschedule, rebook), calendar, thank you | No new touch. The booking keeps its original first_touch and last_touch |
 
 ## 7. Open points
 
-- Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.
-- UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.
-- email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.
-- Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.
+- Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.
+- hashed_email: confirm the hash (SHA-256 of the trimmed, lowercased email) and whether it also arrives as a URL parameter from marketing emails.
+- Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.
 
 ## Naming: spec name to plan name
 
@@ -838,10 +849,10 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 Strategy Call Booking Flow (2), checked 22 Oct 2026.
 
 - **Event dictionary:** 16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.
-- **Last touch (changed on purpose):** The spec defines last_touch_* as the last marketing touch. This plan defines it as the page where the visitor started the flow (the CTA page), as requested.
+- **Last touch:** Defined as the spec does: the latest visit with tracking parameters (confirmed by Engineering). The CTA page is source_page, on every event.
 - **Context properties:** anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.
 - **Segment calls:** page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says.
 - **Entry paths:** P1 to P7 are all covered, with the events each one fires.
 - **Q4 (decided in this version):** Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it.
 - **New page copy:** The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.
-- **Added beyond the spec:** email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter.
+- **Added beyond the spec:** email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; hashed_email.

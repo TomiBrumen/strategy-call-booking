@@ -4,30 +4,19 @@
   "source": "Strategy Call Booking Flow spec (version 2)",
   "rules": {
     "utm": {
-      "headline": "Every event includes all UTMs, as separate properties.",
-      "body": "Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.",
+      "headline": "Every event includes the UTMs, as separate properties.",
+      "body": "Send each UTM as its own property, never nested, never hardcoded values. The list is source, medium, campaign, content and term until Marketing defines the final one (open point). No ad click ids.",
       "firstTouch": "first_touch_* is the first marketing touch ever.",
-      "lastTouch": "last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA. If that page's URL has no UTMs, the UTM fields stay empty (null); there is no fallback to earlier UTMs.",
+      "lastTouch": "last_touch_* is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.",
       "firstLast": [
         "source",
         "medium",
         "campaign",
         "content",
         "term",
-        "click_id",
-        "click_id_type",
         "landing_page",
         "referrer_domain",
         "at"
-      ],
-      "more": "Any other utm_* parameter is sent the same way (for example utm_id). Confirm the property naming for these with Engineering.",
-      "clickIds": [
-        "gclid",
-        "gbraid",
-        "wbraid",
-        "li_fat_id",
-        "fbclid",
-        "msclkid"
       ]
     },
     "naming": {
@@ -100,7 +89,7 @@
         ]
       ]
     },
-    "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.",
+    "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.",
     "pageCalls": "The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages."
   },
   "contextProperties": [
@@ -171,18 +160,6 @@
       "source": "Touch script"
     },
     {
-      "name": "first_touch_click_id",
-      "type": "string or null",
-      "description": "Ad click id of the first touch. Ad platforms match offline conversions on it.",
-      "source": "Touch script"
-    },
-    {
-      "name": "first_touch_click_id_type",
-      "type": "enum or null",
-      "description": "gclid, gbraid, wbraid, li_fat_id, fbclid or msclkid.",
-      "source": "Touch script"
-    },
-    {
       "name": "first_touch_landing_page",
       "type": "string or null",
       "description": "Path of the first page they landed on. One field of the touch, not the touch itself.",
@@ -203,74 +180,50 @@
     {
       "name": "last_touch_source",
       "type": "string or null",
-      "description": "utm_source of the page where the visitor started the flow (the page where they clicked the CTA). Same shape as first_touch_*.",
-      "source": "Read from that page at the CTA click"
+      "description": "utm_source of the latest visit that carried tracking parameters. A visit with parameters replaces the last touch; a visit without leaves it as it was. Same shape as first_touch_*.",
+      "source": "Touch script"
     },
     {
       "name": "last_touch_medium",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
+      "source": "Touch script"
     },
     {
       "name": "last_touch_campaign",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
+      "source": "Touch script"
     },
     {
       "name": "last_touch_content",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
+      "source": "Touch script"
     },
     {
       "name": "last_touch_term",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
-    },
-    {
-      "name": "last_touch_click_id",
-      "type": "string or null",
-      "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
-    },
-    {
-      "name": "last_touch_click_id_type",
-      "type": "enum or null",
-      "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
+      "source": "Touch script"
     },
     {
       "name": "last_touch_landing_page",
       "type": "string or null",
-      "description": "Path of the page where the CTA was clicked (the same page as source_page).",
-      "source": "Read from that page at the CTA click"
+      "description": "Path of the landing page of that latest visit with tracking parameters.",
+      "source": "Touch script"
     },
     {
       "name": "last_touch_referrer_domain",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Read from the page where the flow started"
+      "source": "Touch script"
     },
     {
       "name": "last_touch_at",
       "type": "ISO datetime",
-      "description": "When the CTA was clicked (UTC).",
-      "source": "Read at the CTA click"
-    },
-    {
-      "name": "first_touch_<other utm_* parameter>",
-      "type": "string or null",
-      "description": "Every other utm_* parameter found on the URL (for example utm_id) is captured the same way. Names follow the same pattern; confirm the exact naming with Engineering.",
+      "description": "When that visit happened (UTC).",
       "source": "Touch script"
-    },
-    {
-      "name": "last_touch_<other utm_* parameter>",
-      "type": "string or null",
-      "description": "Same, read from the page where the flow started.",
-      "source": "Read from the page where the flow started"
     },
     {
       "name": "variant_booking",
@@ -289,6 +242,12 @@
       "type": "string",
       "description": "The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.",
       "source": "Form or calendar details"
+    },
+    {
+      "name": "hashed_email",
+      "type": "string",
+      "description": "SHA-256 of the trimmed, lowercased email, as hex. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.",
+      "source": "Computed from the email"
     },
     {
       "name": "booking_id",
@@ -807,7 +766,8 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com"
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -917,7 +877,8 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com"
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         },
         "context": {
           "page": {
@@ -994,7 +955,8 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com"
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -1045,6 +1007,7 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         },
         "context": {
@@ -1099,6 +1062,7 @@
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         },
         "context": {
@@ -1150,6 +1114,7 @@
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         },
         "context": {
@@ -1171,7 +1136,7 @@
         "P7"
       ],
       "notes": [
-        "Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they are a new last touch (open question Q10).",
+        "Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they carry UTMs, so they replace the last touch like any visit with parameters.",
         "link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple."
       ],
       "specificProperties": [
@@ -1206,6 +1171,7 @@
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         },
         "context": {
@@ -1296,7 +1262,8 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com"
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -1361,7 +1328,8 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com"
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -1416,6 +1384,7 @@
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         }
       },
@@ -1471,7 +1440,8 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com"
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -1527,32 +1497,32 @@
     {
       "id": "P1",
       "route": "Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you",
-      "values": "flow_entry = cta, source_page = the page with the CTA. last_touch = that page, first_touch = the first marketing touch (the ad)"
+      "values": "flow_entry = cta, source_page = the page with the CTA. first_touch = last_touch = the ad, unless the page with the CTA carried newer parameters"
     },
     {
       "id": "P2",
       "route": "Ad, then ad landing, then booking page, calendar, thank you",
-      "values": "flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing page"
+      "values": "flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing visit (it carried the ad parameters)"
     },
     {
       "id": "P3",
       "route": "Targeted ad straight to the calendar, thank you",
-      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the calendar page the ad opened. No form: identify() goes with meeting_booking_confirmed"
+      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: identify() goes with meeting_booking_confirmed"
     },
     {
       "id": "P4",
       "route": "Search, social or direct, any page, header CTA, booking page, calendar, thank you",
-      "values": "flow_entry = cta, cta_id = header, source_page = the current page. last_touch = that page"
+      "values": "flow_entry = cta, cta_id = header, source_page = the current page. last_touch = the latest visit with parameters, if any"
     },
     {
       "id": "P5",
       "route": "Search, social or partner, landing page, booking page, calendar, thank you",
-      "values": "flow_entry = cta, source_page = /landing-page. last_touch = that landing page"
+      "values": "flow_entry = cta, source_page = /landing-page. last_touch = that landing page visit if it carried parameters"
     },
     {
       "id": "P6",
       "route": "Marketing email, booking page (or straight to the calendar), thank you",
-      "values": "flow_entry = email. No CTA click: last_touch = the booking page or calendar the email link opened, with the email's UTMs"
+      "values": "flow_entry = email. No CTA click: last_touch = the email visit, with the email's UTMs"
     },
     {
       "id": "P7",
@@ -1561,10 +1531,9 @@
     }
   ],
   "openPoints": [
-    "Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.",
-    "UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.",
-    "email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.",
-    "Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted."
+    "Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.",
+    "hashed_email: confirm the hash (SHA-256 of the trimmed, lowercased email) and whether it also arrives as a URL parameter from marketing emails.",
+    "Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback."
   ],
   "coverage": {
     "spec": "Strategy Call Booking Flow (2), checked 22 Oct 2026",
@@ -1574,8 +1543,8 @@
         "16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately."
       ],
       [
-        "Last touch (changed on purpose)",
-        "The spec defines last_touch_* as the last marketing touch. This plan defines it as the page where the visitor started the flow (the CTA page), as requested."
+        "Last touch",
+        "Defined as the spec does: the latest visit with tracking parameters (confirmed by Engineering). The CTA page is source_page, on every event."
       ],
       [
         "Context properties",
@@ -1599,7 +1568,7 @@
       ],
       [
         "Added beyond the spec",
-        "email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter."
+        "email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; hashed_email."
       ]
     ]
   }
