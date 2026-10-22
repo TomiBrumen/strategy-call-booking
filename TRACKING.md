@@ -784,6 +784,7 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 
 ## 7. Open points
 
+- Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.
 - last_touch is read from the page where the CTA was clicked. If that page's URL has no UTMs, should last_touch_* be empty, or fall back to the UTMs kept for the visit?
 - UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.
 - email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.
