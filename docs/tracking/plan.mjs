@@ -197,7 +197,7 @@ export const EVENTS = [
     specific: { calendar: 'google' },
   },
   {
-    name: 'meeting_email_sent', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
+    later: true, name: 'meeting_email_sent', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
     when: 'The email platform accepts a send of any flow email.',
     paths: ['P6', 'P7'],
     notes: ['Email opens are not tracked: Apple Mail Privacy Protection inflates them.', 'Built so far: confirmation, reminder_24h, reminder_1h. Spec also lists recovery, no_show and post_call (not designed yet).'],
@@ -205,7 +205,7 @@ export const EVENTS = [
     specific: { email_id: 'confirmation' },
   },
   {
-    name: 'meeting_email_clicked', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
+    later: true, name: 'meeting_email_clicked', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
     when: 'Tracked link click in a flow email.',
     paths: ['P6', 'P7'],
     notes: ['Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they are a new last touch (open question Q10).', 'link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple.'],
@@ -213,7 +213,7 @@ export const EVENTS = [
     specific: { email_id: 'reminder_24h', link_id: 'join' },
   },
   {
-    name: 'meeting_booking_rescheduled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'diagnostic', level: 'booked', new: true,
+    later: true, name: 'meeting_booking_rescheduled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'diagnostic', level: 'booked', new: true,
     when: 'The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.',
     paths: ['P7'],
     notes: ['Not counted as a new booking. Keeps the original attribution and variant.', 'Cal.com issues a new booking id on a reschedule: send it as booking_id and keep the old one as previous_booking_id so the join to the original stays.', 'Carries all the email variables again with the new time, so reminders can be rescheduled and a "your call moved" email can use them.'],
@@ -221,7 +221,7 @@ export const EVENTS = [
     specific: { previous_booking_id: 'wUqtfgWLCft74eKnRrEYYs', old_call_at: '2026-10-28T10:00:00Z', new_call_at: S.callAt, ...bookingProps(ALL_BOOKING) },
   },
   {
-    name: 'meeting_booking_canceled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'counting', level: 'booked', new: true,
+    later: true, name: 'meeting_booking_canceled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'counting', level: 'booked', new: true,
     when: 'A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.',
     paths: ['P7'],
     notes: ['Subtracted from show rate: meeting_call_held / (meeting_booking_confirmed minus meeting_booking_canceled).', 'Stops the HubSpot reminders for this booking id.'],
@@ -229,7 +229,7 @@ export const EVENTS = [
     specific: { canceled_by: 'visitor', reason: 'Need a different time', call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
   },
   {
-    name: 'meeting_call_held', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'counting', level: 'booked',
+    later: true, name: 'meeting_call_held', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'counting', level: 'booked',
     when: 'The visitor joined the call.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Source system is open (Q5): the scheduler, the call recorder or the host in the CRM. Cal.com\'s HubSpot app does not mark no-shows.', 'Primary metric for the confirmation page test: show rate.'],
@@ -237,7 +237,7 @@ export const EVENTS = [
     specific: { duration_min: 52, call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
   },
   {
-    name: 'meeting_call_no_show', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'diagnostic', level: 'booked', new: true,
+    later: true, name: 'meeting_call_no_show', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'diagnostic', level: 'booked', new: true,
     when: 'The visitor has not joined 15 minutes after the start.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar (rebook_reason = no_show).'],
@@ -324,7 +324,7 @@ export function jsonFor(e) {
 export const COVERAGE = {
   spec: 'Strategy Call Booking Flow (2), checked 22 Oct 2026',
   checks: [
-    ['Event dictionary', '16 of 16 spec events are in the plan, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them.'],
+    ['Event dictionary', '16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.'],
     ['Context properties', 'anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.'],
     ['Segment calls', 'page(), track() for the events, and identify() at form submit and at booking, as the spec says.'],
     ['Entry paths', 'P1 to P7 are all covered, with the events each one fires.'],
@@ -340,4 +340,14 @@ export const NAMING = {
   exception: 'meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.',
   renames: [["cta_clicked", "meeting_cta_clicked"], ["booking_page_viewed", "meeting_booking_page_viewed"], ["video_played", "meeting_video_played"], ["form_started", "meeting_form_started"], ["form_submitted", "meeting_form_submitted"], ["calendar_viewed", "meeting_calendar_page_viewed"], ["slot_selected", "meeting_slot_selected"], ["booking_confirmed", "meeting_booking_confirmed"], ["confirmation_viewed", "meeting_confirmation_page_viewed"], ["calendar_added", "meeting_add_to_calendar_clicked"], ["email_sent", "meeting_email_sent"], ["email_clicked", "meeting_email_clicked"], ["booking_rescheduled", "meeting_booking_rescheduled"], ["booking_canceled", "meeting_booking_canceled"], ["call_held", "meeting_call_held"], ["call_no_show", "meeting_call_no_show"]],
 };
-export const SEGMENT_NOTE = 'Every event goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_.';
+export const SEGMENT_NOTE = 'Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_.';
+
+export const LATER = {
+  title: 'Implemented separately',
+  intro: 'The booking lifecycle and call events (reschedule, cancel, call held, no-show) and the email events (sent, clicked) are not part of this build. They are implemented separately, and only if tracking in Mixpanel is needed. Their definitions stay here so the names and data are agreed up front.',
+  effects: [
+    'Show rate (call held divided by confirmed minus canceled) cannot be reported from events until meeting_call_held and meeting_booking_canceled exist.',
+    'The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com\'s webhook through n8n, or the meeting outcome that Cal.com\'s HubSpot app sets (RESCHEDULED, CANCELED).',
+    'Email sends and clicks are already visible inside HubSpot itself.',
+  ],
+};

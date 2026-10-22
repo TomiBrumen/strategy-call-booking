@@ -6,18 +6,19 @@ Every event below has: when it fires, who fires it, and a full example JSON (Seg
 
 ## Contents
 
-1. Events
-2. Page and identify calls
-3. Context on every event (UTMs)
-4. Booking and email variables
-5. Entry paths
-6. Open points
+1. Events in this build
+2. Implemented separately (lifecycle and call, email)
+3. Page and identify calls
+4. Context on every event (UTMs)
+5. Booking and email variables
+6. Entry paths
+7. Open points
 
 ## Naming and Segment
 
 **Rule:** meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.
 
-Every event goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.
+Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.
 
 | Name in the spec | Name in this plan |
 |---|---|
@@ -42,7 +43,7 @@ Every event goes to Segment, each fired from its own source: browser events thro
 
 Strategy Call Booking Flow (2), checked 22 Oct 2026.
 
-- **Event dictionary:** 16 of 16 spec events are in the plan, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them.
+- **Event dictionary:** 16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.
 - **Context properties:** anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.
 - **Segment calls:** page(), track() for the events, and identify() at form submit and at booking, as the spec says.
 - **Entry paths:** P1 to P7 are all covered, with the events each one fires.
@@ -50,7 +51,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 - **New page copy:** The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.
 - **Added beyond the spec:** email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter.
 
-## 1. Events
+## 1. Events in this build
 
 | Event | Step | Fired by | Role | Fires when |
 |---|---|---|---|---|
@@ -64,12 +65,6 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 | `meeting_booking_confirmed` | 2, R, N | Server or webhook | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
 | `meeting_confirmation_page_viewed` | 3 | Browser | diagnostic | Confirmation (thank-you) page loads. |
 | `meeting_add_to_calendar_clicked` *added* | 3 | Browser | diagnostic | Click on an Add to calendar button on the confirmation page. |
-| `meeting_email_sent` | R, 4 to 8, N | Email platform | diagnostic | The email platform accepts a send of any flow email. |
-| `meeting_email_clicked` | R, 4 to 8, N | Email platform | diagnostic | Tracked link click in a flow email. |
-| `meeting_booking_rescheduled` *added* | X | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
-| `meeting_booking_canceled` *added* | X | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
-| `meeting_call_held` | 7 | Server or webhook | counting | The visitor joined the call. |
-| `meeting_call_no_show` *added* | 7 | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
 
 "counting" events feed the success metrics and fire server-side. "diagnostic" events explain drop-off and are logged, not reported.
 
@@ -648,6 +643,23 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
+## 2. Implemented separately
+
+The booking lifecycle and call events (reschedule, cancel, call held, no-show) and the email events (sent, clicked) are not part of this build. They are implemented separately, and only if tracking in Mixpanel is needed. Their definitions stay here so the names and data are agreed up front.
+
+- Show rate (call held divided by confirmed minus canceled) cannot be reported from events until meeting_call_held and meeting_booking_canceled exist.
+- The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com's webhook through n8n, or the meeting outcome that Cal.com's HubSpot app sets (RESCHEDULED, CANCELED).
+- Email sends and clicks are already visible inside HubSpot itself.
+
+| Event | Step | Fired by | Role | Fires when |
+|---|---|---|---|---|
+| `meeting_email_sent` | R, 4 to 8, N | Email platform | diagnostic | The email platform accepts a send of any flow email. |
+| `meeting_email_clicked` | R, 4 to 8, N | Email platform | diagnostic | Tracked link click in a flow email. |
+| `meeting_booking_rescheduled` *added* | X | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
+| `meeting_booking_canceled` *added* | X | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
+| `meeting_call_held` | 7 | Server or webhook | counting | The visitor joined the call. |
+| `meeting_call_no_show` *added* | 7 | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
+
 ### `meeting_email_sent`
 
 - **Step:** R, 4 to 8, N · **Fired by:** Email platform · **Role:** diagnostic
@@ -1007,7 +1019,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-## 2. Page and identify calls
+## 3. Page and identify calls
 
 ### `page()`
 
@@ -1087,7 +1099,7 @@ At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Sa
 }
 ```
 
-## 3. Context on every event (UTMs)
+## 4. Context on every event (UTMs)
 
 **All UTMs are added, dynamically.** A touch script runs on every page load and reads every `utm_*` parameter on the URL, not a fixed list (the five standard ones are `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`), plus the ad click ids (`gclid`, `gbraid`, `wbraid`, `li_fat_id`, `fbclid`, `msclkid`) and the external referrer. Nothing in the examples below is a real UTM value: they are placeholders for whatever is on the URL. It sets `first_touch_*` once and overwrites `last_touch_*` on every new marketing touch (a direct visit never overwrites it). Both live in a first-party cookie on `.databox.com` for 90 days, and travel to the booking in the URL, the cookie, hidden form fields and the Cal.com booking metadata. Cal.com allows 50 metadata keys; 29 are used, and each extra `utm_*` parameter adds two.
 
@@ -1126,7 +1138,7 @@ At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Sa
 | `email` | string | The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added. | Form or calendar details |
 | `booking_id` | string | The Cal.com booking id, on every event once the booking exists. Added. | Cal.com booking response or webhook |
 
-## 4. Booking and email variables
+## 5. Booking and email variables
 
 Carried by `meeting_booking_confirmed` and again by `meeting_booking_rescheduled`. The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.
 
@@ -1161,7 +1173,7 @@ Carried by `meeting_booking_confirmed` and again by `meeting_booking_rescheduled
 | `phone` | string or null | Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added. | `+38640123456` | Booking form |  |
 | `rebook_reason` | enum or null | recovery or no_show when the booking came from a rebook email. Null on a first booking. | `null` | Rebook link in the email |  |
 
-## 5. Entry paths
+## 6. Entry paths
 
 | Path | Route | Resulting values |
 |---|---|---|
@@ -1173,7 +1185,7 @@ Carried by `meeting_booking_confirmed` and again by `meeting_booking_rescheduled
 | P6 | Marketing email, booking page (or straight to the calendar), thank you | flow_entry = email, last_touch = the email campaign. A new last touch |
 | P7 | Flow email (reschedule, rebook), calendar, thank you | No new touch. meeting_booking_rescheduled, or meeting_booking_confirmed with rebook_reason; inherits the original booking |
 
-## 6. Open points
+## 7. Open points
 
 - UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.
 - Event naming: the spec uses snake_case (meeting_booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).

@@ -424,6 +424,7 @@
   ],
   "events": [
     {
+      "inThisBuild": true,
       "name": "meeting_cta_clicked",
       "step": "0",
       "firedBy": "Browser",
@@ -505,6 +506,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_booking_page_viewed",
       "step": "1",
       "firedBy": "Browser",
@@ -581,6 +583,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_video_played",
       "step": "1, 3",
       "firedBy": "Browser",
@@ -658,6 +661,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_form_started",
       "step": "1",
       "firedBy": "Browser",
@@ -719,6 +723,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_form_submitted",
       "step": "1",
       "firedBy": "Server or webhook",
@@ -794,6 +799,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_calendar_page_viewed",
       "step": "2",
       "firedBy": "Browser",
@@ -872,6 +878,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_slot_selected",
       "step": "2",
       "firedBy": "Browser",
@@ -944,6 +951,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_booking_confirmed",
       "step": "2, R, N",
       "firedBy": "Server or webhook",
@@ -1035,6 +1043,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_confirmation_page_viewed",
       "step": "3",
       "firedBy": "Browser",
@@ -1108,6 +1117,7 @@
       }
     },
     {
+      "inThisBuild": true,
       "name": "meeting_add_to_calendar_clicked",
       "step": "3",
       "firedBy": "Browser",
@@ -1180,6 +1190,7 @@
       }
     },
     {
+      "inThisBuild": false,
       "name": "meeting_email_sent",
       "step": "R, 4 to 8, N",
       "firedBy": "Email platform",
@@ -1247,6 +1258,7 @@
       }
     },
     {
+      "inThisBuild": false,
       "name": "meeting_email_clicked",
       "step": "R, 4 to 8, N",
       "firedBy": "Email platform",
@@ -1321,6 +1333,7 @@
       }
     },
     {
+      "inThisBuild": false,
       "name": "meeting_booking_rescheduled",
       "step": "X",
       "firedBy": "Server or webhook",
@@ -1426,6 +1439,7 @@
       }
     },
     {
+      "inThisBuild": false,
       "name": "meeting_booking_canceled",
       "step": "X",
       "firedBy": "Server or webhook",
@@ -1500,6 +1514,7 @@
       }
     },
     {
+      "inThisBuild": false,
       "name": "meeting_call_held",
       "step": "7",
       "firedBy": "Server or webhook",
@@ -1573,6 +1588,7 @@
       }
     },
     {
+      "inThisBuild": false,
       "name": "meeting_call_no_show",
       "step": "7",
       "firedBy": "Server or webhook",
@@ -1707,13 +1723,22 @@
       ]
     ]
   },
-  "segment": "Every event goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.",
+  "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.",
+  "implementedSeparately": {
+    "title": "Implemented separately",
+    "intro": "The booking lifecycle and call events (reschedule, cancel, call held, no-show) and the email events (sent, clicked) are not part of this build. They are implemented separately, and only if tracking in Mixpanel is needed. Their definitions stay here so the names and data are agreed up front.",
+    "effects": [
+      "Show rate (call held divided by confirmed minus canceled) cannot be reported from events until meeting_call_held and meeting_booking_canceled exist.",
+      "The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com's webhook through n8n, or the meeting outcome that Cal.com's HubSpot app sets (RESCHEDULED, CANCELED).",
+      "Email sends and clicks are already visible inside HubSpot itself."
+    ]
+  },
   "coverage": {
     "spec": "Strategy Call Booking Flow (2), checked 22 Oct 2026",
     "checks": [
       [
         "Event dictionary",
-        "16 of 16 spec events are in the plan, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them."
+        "16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately."
       ],
       [
         "Context properties",

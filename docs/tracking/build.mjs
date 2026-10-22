@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EVENTS, CONTEXT_PROPS, BOOKING_VARS, PAGE_CALL, IDENTIFY_CALLS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, jsonFor } from './plan.mjs';
+import { EVENTS, CONTEXT_PROPS, BOOKING_VARS, PAGE_CALL, IDENTIFY_CALLS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, LATER, jsonFor } from './plan.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -19,12 +19,13 @@ const USED_IN = {
 };
 
 const events = EVENTS.map((e) => ({ ...e, json: jsonFor(e) }));
+const inBuild = events.filter((e) => !e.later), later = events.filter((e) => e.later);
 const plan = {
   title: 'Strategy call tracking plan', draft: 'Draft 2, 22 Oct 2026', source: 'Strategy Call Booking Flow spec, draft 7',
   contextProperties: CONTEXT_PROPS.map(([name, type, description, source]) => ({ name, type, description, source })),
   bookingVariables: BOOKING_VARS.map(([name, type, description, example, source]) => ({ name, type, description, example, source, usedInEmail: USED_IN[name] || null })),
-  events: events.map((e) => ({ name: e.name, step: e.step, firedBy: BY[e.by], role: e.role, addedToSpec: !!e.new, when: e.when, paths: e.paths, notes: e.notes, specificProperties: e.props.map(([n, t, d, x]) => ({ name: n, type: t, description: d, example: x })), example: e.json })),
-  naming: NAMING, segment: SEGMENT_NOTE, coverage: COVERAGE, pageCall: PAGE_CALL, identifyCalls: IDENTIFY_CALLS, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS,
+  events: events.map((e) => ({ inThisBuild: !e.later, name: e.name, step: e.step, firedBy: BY[e.by], role: e.role, addedToSpec: !!e.new, when: e.when, paths: e.paths, notes: e.notes, specificProperties: e.props.map(([n, t, d, x]) => ({ name: n, type: t, description: d, example: x })), example: e.json })),
+  naming: NAMING, segment: SEGMENT_NOTE, implementedSeparately: LATER, coverage: COVERAGE, pageCall: PAGE_CALL, identifyCalls: IDENTIFY_CALLS, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS,
 };
 fs.writeFileSync(path.join(dir, 'tracking-plan.json'), J(plan) + '\n');
 
@@ -32,33 +33,39 @@ fs.writeFileSync(path.join(dir, 'tracking-plan.json'), J(plan) + '\n');
 const md = [];
 md.push(`# Strategy call tracking plan\n\n${plan.draft}. Built from the "${plan.source}". Anything marked *added* is not in the spec yet.\n`);
 md.push(`Every event below has: when it fires, who fires it, and a full example JSON (Segment \`track\` call). All events carry the same context block, including the first and last touch UTMs and click ids, so reports can split on them. From the moment the visitor's email is known, every event carries \`email\`, and from the moment the booking exists, every event carries \`booking_id\`.\n`);
-md.push('## Contents\n\n1. Events\n2. Page and identify calls\n3. Context on every event (UTMs)\n4. Booking and email variables\n5. Entry paths\n6. Open points\n');
+md.push('## Contents\n\n1. Events in this build\n2. Implemented separately (lifecycle and call, email)\n3. Page and identify calls\n4. Context on every event (UTMs)\n5. Booking and email variables\n6. Entry paths\n7. Open points\n');
 md.push('## Naming and Segment\n\n**Rule:** ' + NAMING.rule + ' ' + NAMING.exception + '\n\n' + SEGMENT_NOTE + '\n\n| Name in the spec | Name in this plan |\n|---|---|\n' + NAMING.renames.map(([a, b]) => `| \`${a}\` | \`${b}\` |`).join('\n') + '\n');
 md.push('## Check against the spec\n\n' + COVERAGE.spec + '.\n\n' + COVERAGE.checks.map(([a, b]) => `- **${a}:** ${b}`).join('\n') + '\n');
-md.push('## 1. Events\n\n| Event | Step | Fired by | Role | Fires when |\n|---|---|---|---|---|');
-for (const e of events) md.push(`| \`${e.name}\`${e.new ? ' *added*' : ''} | ${e.step} | ${BY[e.by]} | ${e.role} | ${e.when} |`);
+md.push('## 1. Events in this build\n\n| Event | Step | Fired by | Role | Fires when |\n|---|---|---|---|---|');
+for (const e of inBuild) md.push(`| \`${e.name}\`${e.new ? ' *added*' : ''} | ${e.step} | ${BY[e.by]} | ${e.role} | ${e.when} |`);
 md.push('\n"counting" events feed the success metrics and fire server-side. "diagnostic" events explain drop-off and are logged, not reported.\n');
-for (const e of events) {
+const eventMd = (e) => {
   md.push(`### \`${e.name}\`${e.new ? ' *(added)*' : ''}\n`);
   md.push(`- **Step:** ${e.step} · **Fired by:** ${BY[e.by]} · **Role:** ${e.role}\n- **Fires when:** ${e.when}\n- **Entry paths:** ${e.paths.join(', ')}`);
   if (e.props.length) md.push(`- **Properties beyond the context:** ${e.props.map(([n, t, d]) => `\`${n}\` (${t}): ${d}`).join('; ')}`);
   if (e.booking) md.push('- **Properties beyond the context:** all booking and email variables, see section 4.');
   for (const n of e.notes) md.push(`- ${n}`);
   md.push('\n```json\n' + J(e.json) + '\n```\n');
-}
-md.push('## 2. Page and identify calls\n');
+};
+for (const e of inBuild) eventMd(e);
+md.push(`## 2. ${LATER.title}\n\n${LATER.intro}\n\n${LATER.effects.map((x) => `- ${x}`).join('\n')}\n`);
+md.push('| Event | Step | Fired by | Role | Fires when |\n|---|---|---|---|---|');
+for (const e of later) md.push(`| \`${e.name}\`${e.new ? ' *added*' : ''} | ${e.step} | ${BY[e.by]} | ${e.role} | ${e.when} |`);
+md.push('');
+for (const e of later) eventMd(e);
+md.push('## 3. Page and identify calls\n');
 md.push(`### \`page()\`\n\n${PAGE_CALL.when}\n\n${PAGE_CALL.notes.map((n) => `- ${n}`).join('\n')}\n\n\`\`\`json\n${J(PAGE_CALL.json)}\n\`\`\`\n`);
 for (const c of IDENTIFY_CALLS) md.push(`### \`identify()\`\n\n${c.when}\n\n\`\`\`json\n${J(c.json)}\n\`\`\`\n`);
-md.push('## 3. Context on every event (UTMs)\n');
+md.push('## 4. Context on every event (UTMs)\n');
 md.push('**All UTMs are added, dynamically.** A touch script runs on every page load and reads every `utm_*` parameter on the URL, not a fixed list (the five standard ones are `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`), plus the ad click ids (`gclid`, `gbraid`, `wbraid`, `li_fat_id`, `fbclid`, `msclkid`) and the external referrer. Nothing in the examples below is a real UTM value: they are placeholders for whatever is on the URL. It sets `first_touch_*` once and overwrites `last_touch_*` on every new marketing touch (a direct visit never overwrites it). Both live in a first-party cookie on `.databox.com` for 90 days, and travel to the booking in the URL, the cookie, hidden form fields and the Cal.com booking metadata. Cal.com allows 50 metadata keys; 29 are used, and each extra `utm_*` parameter adds two.\n');
 md.push('| Property | Type | What it holds | Where it is set |\n|---|---|---|---|');
 for (const [n, t, d, s] of CONTEXT_PROPS) md.push(`| \`${n}\` | ${t} | ${d} | ${s} |`);
-md.push('\n## 4. Booking and email variables\n\nCarried by `meeting_booking_confirmed` and again by `meeting_booking_rescheduled`. The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.\n');
+md.push('\n## 5. Booking and email variables\n\nCarried by `meeting_booking_confirmed` and again by `meeting_booking_rescheduled`. The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.\n');
 md.push('| Property | Type | What it holds | Example | Where it comes from | Used in email |\n|---|---|---|---|---|---|');
 for (const [n, t, d, x, s] of BOOKING_VARS) md.push(`| \`${n}\` | ${t} | ${d} | \`${x === null ? 'null' : String(x).length > 60 ? String(x).slice(0, 57) + '...' : x}\` | ${s} | ${USED_IN[n] || ''} |`);
-md.push('\n## 5. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');
+md.push('\n## 6. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');
 for (const [id, r, v] of PATHS) md.push(`| ${id} | ${r} | ${v} |`);
-md.push('\n## 6. Open points\n\n' + OPEN_POINTS.map((o) => `- ${o}`).join('\n') + '\n');
+md.push('\n## 7. Open points\n\n' + OPEN_POINTS.map((o) => `- ${o}`).join('\n') + '\n');
 fs.writeFileSync(path.join(dir, '..', '..', 'TRACKING.md'), md.join('\n'));
 
 // ---------------- html ----------------
@@ -79,7 +86,8 @@ const card = (e) => {
 </details>`;
 };
 const groups = ['Site', 'Email', 'Booking lifecycle and call'];
-const rows = events.map((e) => `<tr><td><a href="#ev-${e.name}"><code>${e.name}</code></a>${e.new ? '<span class="tag">Added</span>' : ''}</td><td>${esc(e.step)}</td><td><i class="dot ${DOT[e.by]}"></i> ${BY[e.by]}</td><td><span class="role ${e.role}">${e.role}</span></td><td>${esc(e.when)}</td></tr>`).join('');
+const rowsOf = (list) => list.map((e) => `<tr><td><a href="#ev-${e.name}"><code>${e.name}</code></a>${e.new ? '<span class="tag">Added</span>' : ''}</td><td>${esc(e.step)}</td><td><i class="dot ${DOT[e.by]}"></i> ${BY[e.by]}</td><td><span class="role ${e.role}">${e.role}</span></td><td>${esc(e.when)}</td></tr>`).join('');
+const rows = rowsOf(inBuild), rowsLater = rowsOf(later);
 const html = `<title>Strategy Call Tracking Plan</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
@@ -142,9 +150,9 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <header>
     <div class="eyebrow">Databox · Strategy call booking · Tracking plan · ${plan.draft}</div>
     <h1>Strategy call tracking plan</h1>
-    <p class="lede">Every event in the flow, when it fires, who fires it, and an example JSON for each. All events carry the full UTM context (first and last touch), the email once it is known, and the booking id once the booking exists. The booking events also carry every value the emails need. Checked against the strategy call spec (version 2). Every event name starts with meeting_ so the whole flow filters in one go, and every event goes to Segment. Event and property names marked Added are not in the spec yet.</p>
+    <p class="lede">Every event in the flow, when it fires, who fires it, and an example JSON for each. All events carry the full UTM context (first and last touch), the email once it is known, and the booking id once the booking exists. The booking events also carry every value the emails need. Checked against the strategy call spec (version 2). Every event name starts with meeting_ so the whole flow filters in one go, and every event of this build goes to Segment. The lifecycle, call and email events are defined but implemented separately. Event and property names marked Added are not in the spec yet.</p>
   </header>
-  <nav class="sec" aria-label="Sections"><a href="#naming">Naming and Segment</a><a href="#coverage">Spec check</a><a href="#events">Events</a><a href="#calls">Page and identify</a><a href="#context">Context and UTMs</a><a href="#variables">Booking and email variables</a><a href="#paths">Entry paths</a><a href="#open">Open points</a></nav>
+  <nav class="sec" aria-label="Sections"><a href="#naming">Naming and Segment</a><a href="#coverage">Spec check</a><a href="#events">Events in this build</a><a href="#later">Implemented separately</a><a href="#calls">Page and identify</a><a href="#context">Context and UTMs</a><a href="#variables">Booking and email variables</a><a href="#paths">Entry paths</a><a href="#open">Open points</a></nav>
 
   <section id="naming" aria-labelledby="h-naming">
     <h2 id="h-naming">Naming and Segment</h2>
@@ -160,12 +168,20 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   </section>
 
   <section id="events" aria-labelledby="h-events">
-    <h2 id="h-events">Events</h2>
+    <h2 id="h-events">Events in this build</h2>
     <div class="legend"><span><i class="dot b"></i>Fired by the browser</span><span><i class="dot s"></i>Fired by our server or a webhook</span><span><i class="dot m"></i>Fired by the email platform</span><span><span class="role counting">counting</span> feeds the success metrics</span><span><span class="role diagnostic">diagnostic</span> explains drop-off, logged only</span></div>
     <div class="tw"><table><thead><tr><th>Event</th><th>Step</th><th>Fired by</th><th>Role</th><th>Fires when</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="tools"><input id="q" type="search" placeholder="Filter events by name, trigger or path (for example P3)" aria-label="Filter events"><button class="btn" type="button" id="all-b" aria-pressed="false" data-by="browser">Browser</button><button class="btn" type="button" id="all-s" aria-pressed="false" data-by="server">Server</button><button class="btn" type="button" id="all-m" aria-pressed="false" data-by="email">Email</button><button class="btn" type="button" id="expand">Expand all</button></div>
-    ${groups.map((g) => `<div class="gh">${g}</div>${events.filter((e) => e.group === g).map(card).join('\n')}`).join('\n')}
+    ${inBuild.map(card).join('\n')}
     <p class="mut" id="none" hidden>No event matches.</p>
+  </section>
+
+  <section id="later" aria-labelledby="h-later">
+    <h2 id="h-later">${esc(LATER.title)}</h2>
+    <div class="note">${esc(LATER.intro)}</div>
+    <ul class="op">${LATER.effects.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="tw"><table><thead><tr><th>Event</th><th>Step</th><th>Fired by</th><th>Role</th><th>Fires when</th></tr></thead><tbody>${rowsLater}</tbody></table></div>
+    ${later.map(card).join('\n')}
   </section>
 
   <section id="calls" aria-labelledby="h-calls">

@@ -63,6 +63,9 @@ booking time. Check this before building.
 
 ## To confirm before building
 
+- Cancel and reschedule events are implemented separately from this build, so the workflow cannot rely on them to stop or move
+  reminders. Use Cal.com's webhook through n8n, or the meeting outcome Cal.com's HubSpot app sets (RESCHEDULED, CANCELED).
+
 - On a reschedule, should the guest get the full confirmation again, or a short "your call moved" email?
   (Only the three emails above are designed.)
 - Email 1 says "Your join link is in this email", but the design has no join button. Add one or reword.
