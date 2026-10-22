@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   EVENTS, CONTEXT_PROPS, BOOKING_VARS, IDENTIFY_CALLS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, LATER,
-  UTM_RULE, PAGE_NOTE, callOf, jsonFor,
+  UTM_RULE, PAGE_NOTE, SEGMENT_SOURCE, callOf, jsonFor,
 } from './plan.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
@@ -52,6 +52,7 @@ md.push(`3. **Call type:** ${PAGE_NOTE} Everything else is a \`track\` call.`);
 md.push(`4. ${SEGMENT_NOTE}`);
 md.push('5. **Also on every event:** `email` as soon as it is known, and `booking_id` once the booking exists. The flow properties are in section 4.\n');
 const row = (e) => `| \`${e.name}\` | ${e.call} | ${(e.byLabel || BY[e.by])} | ${e.role} | ${e.when} |`;
+md.push(`## Where to send\n\n- Segment workspace \`${SEGMENT_SOURCE.workspace}\`, source \`${SEGMENT_SOURCE.source}\`, source ID \`${SEGMENT_SOURCE.sourceId}\`. Keys page: ${SEGMENT_SOURCE.keysPage}\n${SEGMENT_SOURCE.lines.map((l) => `- ${l}`).join('\n')}\n`);
 md.push('## 1. Events in this build\n');
 md.push('| Event | Segment call | Fired by | Role | Fires when |\n|---|---|---|---|---|');
 for (const e of inBuild) md.push(row(e));
@@ -167,6 +168,11 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
       <li><b>Segment call type.</b> ${esc(PAGE_NOTE)} Everything else is a <code>track</code> call.</li>
       <li><b>Who and what:</b> <code>email</code> as soon as it is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
     </ol>
+  </section>
+
+  <section aria-labelledby="h-send">
+    <h2 id="h-send">Where to send</h2>
+    <div class="rules"><ul class="op"><li>Segment workspace <code>${SEGMENT_SOURCE.workspace}</code>, source <code>${SEGMENT_SOURCE.source}</code>, source ID <code>${SEGMENT_SOURCE.sourceId}</code>. <a href="${SEGMENT_SOURCE.keysPage}" target="_blank" rel="noreferrer">Keys page</a></li>${SEGMENT_SOURCE.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>
   </section>
 
   <section id="events" aria-labelledby="h-events">

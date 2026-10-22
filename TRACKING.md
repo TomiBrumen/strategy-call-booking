@@ -10,6 +10,13 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.
 5. **Also on every event:** `email` as soon as it is known, and `booking_id` once the booking exists. The flow properties are in section 4.
 
+## Where to send
+
+- Segment workspace `databox`, source `2.0`, source ID `8fTp1ss7b1`. Keys page: https://app.segment.com/databox/sources/2.0/settings/keys
+- Browser events: Analytics.js with the source write key. Server events: the Segment HTTP Tracking API with the same write key.
+- The write key is not in this document or in the repo. Take it from the vault, or from the source's Settings, Keys page.
+- This is the production source and it feeds downstream tools such as HubSpot and Mixpanel. Do not send test or demo data to it: test against a development source first.
+
 ## 1. Events in this build
 
 | Event | Segment call | Fired by | Role | Fires when |
