@@ -785,7 +785,6 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 
 - last_touch is read from the page where the CTA was clicked. If that page's URL has no UTMs, should last_touch_* be empty, or fall back to the UTMs kept for the visit?
 - UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.
-- Naming: Segment's own convention is title case; this plan uses snake_case with a meeting_ prefix. Match the Databox Segment workspace before building (Q11).
 - email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.
 - host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small host list on our side, keyed by host_username.
 - Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.
