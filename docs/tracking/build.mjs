@@ -53,7 +53,7 @@ md.push(`3. **Call type:** ${PAGE_NOTE} Everything else is a \`track\` call.`);
 md.push(`4. ${SEGMENT_NOTE}`);
 md.push('5. **Also on every event:** `email` and `hashed_email` as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.\n');
 const row = (e) => `| \`${e.name}\` | ${e.call} | ${(e.byLabel || BY[e.by])} | ${e.role} | ${e.when} |`;
-md.push(`## Where to send\n\n- Segment workspace \`${SEGMENT_SOURCE.workspace}\`, source \`${SEGMENT_SOURCE.source}\`, source ID \`${SEGMENT_SOURCE.sourceId}\`. Keys page: ${SEGMENT_SOURCE.keysPage}\n${SEGMENT_SOURCE.lines.map((l) => `- ${l}`).join('\n')}\n`);
+md.push(`## Where to send\n\n- Segment workspace \`${SEGMENT_SOURCE.workspace}\`, source \`${SEGMENT_SOURCE.source}\`. Keys page: ${SEGMENT_SOURCE.keysPage}\n${SEGMENT_SOURCE.lines.map((l) => `- ${l}`).join('\n')}\n`);
 md.push('## 1. Events in this build\n');
 md.push('| Event | Segment call | Fired by | Role | Fires when |\n|---|---|---|---|---|');
 for (const e of inBuild) md.push(row(e));
@@ -173,7 +173,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section aria-labelledby="h-send">
     <h2 id="h-send">Where to send</h2>
-    <div class="rules"><ul class="op"><li>Segment workspace <code>${SEGMENT_SOURCE.workspace}</code>, source <code>${SEGMENT_SOURCE.source}</code>, source ID <code>${SEGMENT_SOURCE.sourceId}</code>. <a href="${SEGMENT_SOURCE.keysPage}" target="_blank" rel="noreferrer">Keys page</a></li>${SEGMENT_SOURCE.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>
+    <div class="rules"><ul class="op"><li>Segment workspace <code>${SEGMENT_SOURCE.workspace}</code>, source <code>${SEGMENT_SOURCE.source}</code>. <a href="${SEGMENT_SOURCE.keysPage}" target="_blank" rel="noreferrer">Keys page</a></li>${SEGMENT_SOURCE.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>
   </section>
 
   <section aria-labelledby="h-props">

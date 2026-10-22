@@ -12,8 +12,9 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 
 ## Where to send
 
-- Segment workspace `databox`, source `2.0`, source ID `8fTp1ss7b1`. Keys page: https://app.segment.com/databox/sources/2.0/settings/keys
+- Segment workspace `databox`, source `leads`. Keys page: https://app.segment.com/databox/sources/leads/settings/keys
 - Browser events: Analytics.js with the source write key. Server events: the Segment HTTP Tracking API with the same write key.
+- This source is only for contacts without a Databox account. Once someone has an account, their events go to the production source.
 
 ## 1. Events in this build
 

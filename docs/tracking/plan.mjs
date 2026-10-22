@@ -330,10 +330,10 @@ export const LATER = {
 // ---------- where the events go (no key here on purpose) ----------
 export const SEGMENT_SOURCE = {
   workspace: 'databox',
-  source: '2.0',
-  sourceId: '8fTp1ss7b1',
-  keysPage: 'https://app.segment.com/databox/sources/2.0/settings/keys',
+  source: 'leads',
+  keysPage: 'https://app.segment.com/databox/sources/leads/settings/keys',
   lines: [
     'Browser events: Analytics.js with the source write key. Server events: the Segment HTTP Tracking API with the same write key.',
+    'This source is only for contacts without a Databox account. Once someone has an account, their events go to the production source.',
   ],
 };
