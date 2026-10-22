@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  EVENTS, CONTEXT_PROPS, BOOKING_VARS, IDENTIFY_CALLS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, LATER,
+  EVENTS, CONTEXT_PROPS, BOOKING_VARS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, LATER,
   UTM_RULE, PAGE_NOTE, SEGMENT_SOURCE, callOf, jsonFor,
 } from './plan.mjs';
 
@@ -39,7 +39,7 @@ const plan = {
     specificProperties: e.props.map(([n, t, d, x]) => ({ name: n, type: t, description: d, example: x })),
     example: e.json, plusUtms: 'All UTMs are also sent on this event, as separate properties.',
   })),
-  implementedSeparately: LATER, identifyCalls: IDENTIFY_CALLS, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS, coverage: COVERAGE,
+  implementedSeparately: LATER, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS, coverage: COVERAGE,
 };
 fs.writeFileSync(path.join(dir, 'tracking-plan.json'), J(plan) + '\n');
 
@@ -51,7 +51,7 @@ md.push(`1. **${UTM_RULE.headline}** ${UTM_RULE.body} ${UTM_RULE.firstTouch} ${U
 md.push(`2. **Names** follow this rule: ${NAMING.rule} ${NAMING.exception}`);
 md.push(`3. **Call type:** ${PAGE_NOTE} Everything else is a \`track\` call.`);
 md.push(`4. ${SEGMENT_NOTE}`);
-md.push('5. **Also on every event:** `email` and `hashed_email` as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.\n');
+md.push('5. **Also on every event:** `hutk` (the HubSpot cookie), `email` and `hashed_email` as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.\n');
 const row = (e) => `| \`${e.name}\` | ${e.call} | ${(e.byLabel || BY[e.by])} | ${e.role} | ${e.when} |`;
 md.push(`## Where to send\n\n- Segment workspace \`${SEGMENT_SOURCE.workspace}\`, source \`${SEGMENT_SOURCE.source}\`. Keys page: ${SEGMENT_SOURCE.keysPage}\n${SEGMENT_SOURCE.lines.map((l) => `- ${l}`).join('\n')}\n`);
 md.push('## 1. Events in this build\n');
@@ -72,18 +72,16 @@ md.push('| Event | Segment call | Fired by | Role | Fires when |\n|---|---|---|-
 for (const e of later) md.push(row(e));
 md.push('');
 for (const e of later) eventMd(e);
-md.push('## 3. Identify call\n');
-for (const c of IDENTIFY_CALLS) md.push(`${c.when}\n\n\`\`\`json\n${J(c.json)}\n\`\`\`\n`);
-md.push('## 4. Flow properties on every event\n');
+md.push('## 3. Flow properties on every event\n');
 md.push('| Property | Type | What it holds | Where it is set |\n|---|---|---|---|');
 for (const [n, t, d, s] of flowProps) md.push(`| \`${n}\` | ${t} | ${d} | ${s} |`);
 md.push('\nUTMs: see rule 1. They are also passed to the booking in the URL, hidden fields and the Cal.com booking metadata.\n');
-md.push('## 5. Booking and email variables\n\nCarried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The seven emails read these as custom tokens.\n');
+md.push('## 4. Booking and email variables\n\nCarried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The seven emails read these as custom tokens.\n');
 md.push('| Property | Type | What it holds | Example | Where it comes from | Used in email |\n|---|---|---|---|---|---|');
 for (const [n, t, d, x, s] of BOOKING_VARS) md.push(`| \`${n}\` | ${t} | ${d} | \`${x === null ? 'null' : String(x).length > 60 ? String(x).slice(0, 57) + '...' : x}\` | ${s} | ${USED_IN[n] || ''} |`);
-md.push('\n## 6. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');
+md.push('\n## 5. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');
 for (const [id, r, v] of PATHS) md.push(`| ${id} | ${r} | ${v} |`);
-md.push('\n## 7. Open points\n\n' + OPEN_POINTS.map((o) => `- ${o}`).join('\n') + '\n');
+md.push('\n## 6. Open points\n\n' + OPEN_POINTS.map((o) => `- ${o}`).join('\n') + '\n');
 md.push('## Naming: spec name to plan name\n\n| Spec | Plan |\n|---|---|\n' + NAMING.renames.map(([a, b]) => `| \`${a}\` | \`${b}\` |`).join('\n') + '\n');
 md.push('## Check against the spec\n\n' + COVERAGE.spec + '.\n\n' + COVERAGE.checks.map(([a, b]) => `- **${a}:** ${b}`).join('\n') + '\n');
 fs.writeFileSync(path.join(dir, '..', '..', 'TRACKING.md'), md.join('\n'));
@@ -167,7 +165,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
       <li><b>${esc(UTM_RULE.headline)}</b> ${esc(UTM_RULE.body)}
         <div class="utmbox"><b>first_touch_*</b> ${esc(UTM_RULE.firstTouch.replace("first_touch_* is ", "is "))}<br><b>last_touch_*</b> ${esc(UTM_RULE.lastTouch.replace("last_touch_* is ", "is "))}</div></li>
       <li><b>Segment call type.</b> ${esc(PAGE_NOTE)} Everything else is a <code>track</code> call.</li>
-      <li><b>Who and what:</b> <code>email</code> and <code>hashed_email</code> as soon as the email is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
+      <li><b>Who and what:</b> <code>hutk</code> (the HubSpot cookie), <code>email</code> and <code>hashed_email</code> as soon as the email is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
     </ol>
   </section>
 
@@ -192,12 +190,6 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <h2 id="h-vars">What the booking event carries</h2>
     <p class="lede"><code>meeting_booking_confirmed</code> carries every value the emails need, so nothing is looked up later.</p>
     <div class="tw"><table><thead><tr><th>Property</th><th>Example</th><th>Where it comes from</th></tr></thead><tbody>${BOOKING_VARS.map(([n, , , x, s]) => `<tr><td><code>${n}</code></td><td><code>${esc(x === null ? 'null' : String(x).length > 48 ? String(x).slice(0, 45) + '...' : x)}</code></td><td>${esc(s)}</td></tr>`).join('')}</tbody></table></div>
-  </section>
-
-  <section aria-labelledby="h-id">
-    <h2 id="h-id">Identify</h2>
-    <p class="lede">${esc(IDENTIFY_CALLS[0].when)} The same call goes out at <code>meeting_booking_confirmed</code> when no form ran (targeted ads, direct email links).</p>
-    <details class="ev"><summary><span class="nm"><i class="dot s"></i><code>identify()</code></span><span class="meta"><span class="by">Server</span></span></summary><div class="body"><div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>${esc(J(IDENTIFY_CALLS[0].json))}</code></pre></div></details>
   </section>
 
   <section aria-labelledby="h-later">

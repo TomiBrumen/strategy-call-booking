@@ -91,7 +91,7 @@
         ]
       ]
     },
-    "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.",
+    "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. HubSpot creates or updates the contact from meeting_form_submitted (and from meeting_booking_confirmed when no form ran), matched on email; hutk goes with the event so the visit is tied to that contact. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.",
     "pageCalls": "The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages."
   },
   "contextProperties": [
@@ -100,6 +100,12 @@
       "type": "string",
       "description": "Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains.",
       "source": "Segment cookie"
+    },
+    {
+      "name": "hutk",
+      "type": "string or null",
+      "description": "The HubSpot tracking cookie (hubspotutk). Ties the visitor's HubSpot activity, such as the ad click, to the contact. Null if the HubSpot script did not run or cookies were declined. Also sent in the Cal.com booking metadata. Added.",
+      "source": "Cookie hubspotutk on .databox.com"
     },
     {
       "name": "booking_session_id",
@@ -266,7 +272,7 @@
     {
       "name": "email",
       "type": "string",
-      "description": "The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.",
+      "description": "The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that: join those earlier events to the later ones on anonymous_id or booking_session_id (hutk also works in HubSpot). Added.",
       "source": "Form or calendar details"
     },
     {
@@ -551,13 +557,13 @@
         "type": "track",
         "event": "meeting_cta_clicked",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "cta_id": "xyz_inline",
           "source_page": "/page-xyz",
           "cta_text": "Book a strategy call",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -611,12 +617,12 @@
         "category": "meeting",
         "name": "meeting_booking_page_viewed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "variant_booking": "A",
           "flow_entry": "cta",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
@@ -668,12 +674,12 @@
         "type": "track",
         "event": "meeting_video_played",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "page": "booking",
           "pct_watched": 0,
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -713,10 +719,10 @@
         "type": "track",
         "event": "meeting_form_started",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -740,7 +746,7 @@
       "step": "1",
       "firedBy": "Server",
       "role": "diagnostic",
-      "when": "Form accepted and the contact is created or matched. Sent together with identify().",
+      "when": "Form accepted. The contact is created or updated in HubSpot from this event, matched on email.",
       "paths": [
         "P1",
         "P2",
@@ -750,7 +756,7 @@
       ],
       "notes": [
         "The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.",
-        "Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.",
+        "Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so the contact is created from meeting_booking_confirmed instead.",
         "Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.",
         "Fires from our server so ad blockers and consent choices cannot drop it."
       ],
@@ -762,9 +768,33 @@
           "example": "acme.com"
         },
         {
+          "name": "name",
+          "type": "string",
+          "description": "Name and surname as typed.",
+          "example": "Ana Novak"
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "description": "Split from name on the first space.",
+          "example": "Ana"
+        },
+        {
+          "name": "last_name",
+          "type": "string or empty",
+          "description": "Rest of the name.",
+          "example": "Novak"
+        },
+        {
+          "name": "phone",
+          "type": "string or null",
+          "description": "Optional.",
+          "example": "+38640123456"
+        },
+        {
           "name": "contact_id",
           "type": "string",
-          "description": "CRM contact id, also the Segment userId.",
+          "description": "CRM contact id.",
           "example": "contact_8812"
         },
         {
@@ -778,13 +808,17 @@
         "type": "track",
         "event": "meeting_form_submitted",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "email_domain": "acme.com",
+          "name": "Ana Novak",
+          "first_name": "Ana",
+          "last_name": "Novak",
+          "phone": "+38640123456",
           "contact_id": "contact_8812",
           "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -839,12 +873,12 @@
         "category": "meeting",
         "name": "meeting_calendar_page_viewed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "flow_start": "booking_page",
           "flow_entry": "cta",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
@@ -891,11 +925,11 @@
         "type": "track",
         "event": "meeting_slot_selected",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "days_ahead": 7,
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -933,7 +967,7 @@
       ],
       "notes": [
         "The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.",
-        "Sent with identify() when no form ran (P3, direct P6).",
+        "It carries name, email and phone, so the contact is created or updated from it when no form ran (P3, direct P6).",
         "This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.",
         "Starts the HubSpot workflow: confirmation email now, reminders from call_at."
       ],
@@ -942,7 +976,6 @@
         "type": "track",
         "event": "meeting_booking_confirmed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
@@ -974,6 +1007,7 @@
           "last_name": "Novak",
           "phone": "+38640123456",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1021,11 +1055,11 @@
         "category": "meeting",
         "name": "meeting_confirmation_page_viewed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "variant_confirmation": "A",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1075,11 +1109,11 @@
         "type": "track",
         "event": "meeting_add_to_calendar_clicked",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "calendar": "google",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1127,11 +1161,11 @@
         "type": "track",
         "event": "meeting_email_sent",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "email_id": "confirmation",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1183,12 +1217,12 @@
         "type": "track",
         "event": "meeting_email_clicked",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "email_id": "reminder_24h",
           "link_id": "join",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1246,7 +1280,6 @@
         "type": "track",
         "event": "meeting_booking_rescheduled",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "previous_booking_id": "wUqtfgWLCft74eKnRrEYYs",
@@ -1281,6 +1314,7 @@
           "last_name": "Novak",
           "phone": "+38640123456",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1327,7 +1361,6 @@
         "type": "track",
         "event": "meeting_booking_canceled",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "canceled_by": "visitor",
@@ -1347,6 +1380,7 @@
           "first_name": "Ana",
           "last_name": "Novak",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1393,7 +1427,6 @@
         "type": "track",
         "event": "meeting_call_held",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "duration_min": 52,
@@ -1402,6 +1435,7 @@
           "host_name": "Alex Rivera",
           "host_username": "alex-rivera",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1441,7 +1475,6 @@
         "type": "track",
         "event": "meeting_call_no_show",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
@@ -1459,6 +1492,7 @@
           "first_name": "Ana",
           "last_name": "Novak",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
@@ -1483,42 +1517,6 @@
       "Email sends and clicks are already visible inside HubSpot itself."
     ]
   },
-  "identifyCalls": [
-    {
-      "when": "At meeting_form_submitted (server).",
-      "json": {
-        "type": "identify",
-        "userId": "contact_8812",
-        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "timestamp": "2026-10-22T09:14:40.108Z",
-        "traits": {
-          "email": "ana.novak@acme.com",
-          "name": "Ana Novak",
-          "first_name": "Ana",
-          "last_name": "Novak",
-          "phone": "+38640123456",
-          "email_domain": "acme.com"
-        }
-      }
-    },
-    {
-      "when": "At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.",
-      "json": {
-        "type": "identify",
-        "userId": "contact_8812",
-        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-        "timestamp": "2026-10-22T09:17:11.530Z",
-        "traits": {
-          "email": "ana.novak@acme.com",
-          "name": "Ana Novak",
-          "first_name": "Ana",
-          "last_name": "Novak",
-          "phone": null,
-          "email_domain": "acme.com"
-        }
-      }
-    }
-  ],
   "entryPaths": [
     {
       "id": "P1",
@@ -1533,7 +1531,7 @@
     {
       "id": "P3",
       "route": "Targeted ad straight to the calendar, thank you",
-      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: identify() goes with meeting_booking_confirmed"
+      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: the contact is created from meeting_booking_confirmed"
     },
     {
       "id": "P4",
@@ -1558,6 +1556,7 @@
   ],
   "openPoints": [
     "Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).",
+    "Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.",
     "Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback."
   ],
   "coverage": {
@@ -1577,7 +1576,7 @@
       ],
       [
         "Segment calls",
-        "page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says."
+        "page() for the three page-view events and track() for the rest. No identify() calls (the spec lists them; dropped on purpose): the contact is created from the track events."
       ],
       [
         "Entry paths",

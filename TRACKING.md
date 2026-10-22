@@ -7,8 +7,8 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 1. **Every event includes the UTMs, as separate properties.** Send each UTM as its own property, never nested, never hardcoded values. We need all the UTM parameters we use now for tracking ads, plus two new ones: utm_location and utm_team. No ad click ids. first_touch_* is the first marketing touch ever. last_touch_* is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.
 2. **Names** follow this rule: meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.
 3. **Call type:** The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a `track` call.
-4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.
-5. **Also on every event:** `email` and `hashed_email` as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.
+4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. HubSpot creates or updates the contact from meeting_form_submitted (and from meeting_booking_confirmed when no form ran), matched on email; hutk goes with the event so the visit is tied to that contact. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.
+5. **Also on every event:** `hutk` (the HubSpot cookie), `email` and `hashed_email` as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.
 
 ## Where to send
 
@@ -24,7 +24,7 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 | `meeting_booking_page_viewed` | page | Browser | counting | Booking page loads. Replaces the old page_view. |
 | `meeting_video_played` | track | Browser | diagnostic | Play pressed on the video of an A variant (booking page or confirmation page). |
 | `meeting_form_started` | track | Browser | diagnostic | First field of the booking form gets focus. |
-| `meeting_form_submitted` | track | Server | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
+| `meeting_form_submitted` | track | Server | diagnostic | Form accepted. The contact is created or updated in HubSpot from this event, matched on email. |
 | `meeting_calendar_page_viewed` | page | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
 | `meeting_slot_selected` | track | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
 | `meeting_booking_confirmed` | track | Server | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
@@ -47,13 +47,13 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
   "type": "track",
   "event": "meeting_cta_clicked",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "cta_id": "xyz_inline",
     "source_page": "/page-xyz",
     "cta_text": "Book a strategy call",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -85,12 +85,12 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "category": "meeting",
   "name": "meeting_booking_page_viewed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "variant_booking": "A",
     "flow_entry": "cta",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_start": "booking_page",
     "source_page": "/page-xyz",
@@ -120,12 +120,12 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_video_played",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "page": "booking",
     "pct_watched": 0,
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -155,10 +155,10 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_form_started",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -179,11 +179,11 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ### `meeting_form_submitted`
 
 - **Segment call:** track · **Fired by:** Server · **Role:** diagnostic · **Step:** 1
-- **Fires when:** Form accepted and the contact is created or matched. Sent together with identify().
+- **Fires when:** Form accepted. The contact is created or updated in HubSpot from this event, matched on email.
 - **Entry paths:** P1, P2, P4, P5, P6
-- **Properties:** `email_domain` (string): Domain of the work email.; `contact_id` (string): CRM contact id, also the Segment userId.; `rebook_url` (string): Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.
+- **Properties:** `email_domain` (string): Domain of the work email.; `name` (string): Name and surname as typed.; `first_name` (string): Split from name on the first space.; `last_name` (string or empty): Rest of the name.; `phone` (string or null): Optional.; `contact_id` (string): CRM contact id.; `rebook_url` (string): Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.
 - The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.
-- Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.
+- Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so the contact is created from meeting_booking_confirmed instead.
 - Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.
 - Fires from our server so ad blockers and consent choices cannot drop it.
 
@@ -192,13 +192,17 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_form_submitted",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "email_domain": "acme.com",
+    "name": "Ana Novak",
+    "first_name": "Ana",
+    "last_name": "Novak",
+    "phone": "+38640123456",
     "contact_id": "contact_8812",
     "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -229,12 +233,12 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "category": "meeting",
   "name": "meeting_calendar_page_viewed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "flow_start": "booking_page",
     "flow_entry": "cta",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "source_page": "/page-xyz",
     "cta_id": "xyz_inline",
@@ -263,11 +267,11 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_slot_selected",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "days_ahead": 7,
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -294,7 +298,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 - **Entry paths:** P1, P2, P3, P4, P5, P6, P7
 - **Properties:** all booking and email variables, see section 5.
 - The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.
-- Sent with identify() when no form ran (P3, direct P6).
+- It carries name, email and phone, so the contact is created or updated from it when no form ran (P3, direct P6).
 - This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.
 - Starts the HubSpot workflow: confirmation email now, reminders from call_at.
 
@@ -303,7 +307,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_booking_confirmed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
@@ -335,6 +338,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "last_name": "Novak",
     "phone": "+38640123456",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -364,11 +368,11 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "category": "meeting",
   "name": "meeting_confirmation_page_viewed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "variant_confirmation": "A",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -401,11 +405,11 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_add_to_calendar_clicked",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "calendar": "google",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -458,11 +462,11 @@ The booking lifecycle and call events (reschedule, cancel, call held, no-show) a
   "type": "track",
   "event": "meeting_email_sent",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "email_id": "confirmation",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -495,12 +499,12 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_email_clicked",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "email_id": "reminder_24h",
     "link_id": "join",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -534,7 +538,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_booking_rescheduled",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "previous_booking_id": "wUqtfgWLCft74eKnRrEYYs",
@@ -569,6 +572,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "last_name": "Novak",
     "phone": "+38640123456",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -597,7 +601,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_booking_canceled",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "canceled_by": "visitor",
@@ -617,6 +620,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "first_name": "Ana",
     "last_name": "Novak",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -645,7 +649,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_call_held",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "duration_min": 52,
@@ -654,6 +657,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "host_name": "Alex Rivera",
     "host_username": "alex-rivera",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -681,7 +685,6 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "type": "track",
   "event": "meeting_call_no_show",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
@@ -699,6 +702,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "first_name": "Ana",
     "last_name": "Novak",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+    "hutk": "2c1f3b8d9e4a47f6a0b5c7d8e9f01234",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
     "flow_start": "booking_page",
@@ -713,51 +717,12 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-## 3. Identify call
-
-At meeting_form_submitted (server).
-
-```json
-{
-  "type": "identify",
-  "userId": "contact_8812",
-  "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "timestamp": "2026-10-22T09:14:40.108Z",
-  "traits": {
-    "email": "ana.novak@acme.com",
-    "name": "Ana Novak",
-    "first_name": "Ana",
-    "last_name": "Novak",
-    "phone": "+38640123456",
-    "email_domain": "acme.com"
-  }
-}
-```
-
-At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.
-
-```json
-{
-  "type": "identify",
-  "userId": "contact_8812",
-  "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-  "timestamp": "2026-10-22T09:17:11.530Z",
-  "traits": {
-    "email": "ana.novak@acme.com",
-    "name": "Ana Novak",
-    "first_name": "Ana",
-    "last_name": "Novak",
-    "phone": null,
-    "email_domain": "acme.com"
-  }
-}
-```
-
-## 4. Flow properties on every event
+## 3. Flow properties on every event
 
 | Property | Type | What it holds | Where it is set |
 |---|---|---|---|
 | `anonymous_id` | string | Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains. | Segment cookie |
+| `hutk` | string or null | The HubSpot tracking cookie (hubspotutk). Ties the visitor's HubSpot activity, such as the ad click, to the contact. Null if the HubSpot script did not run or cookies were declined. Also sent in the Cal.com booking metadata. Added. | Cookie hubspotutk on .databox.com |
 | `booking_session_id` | string | Created at the CTA click, or at the first flow page if there was no click. The one id the scheduler must return. | URL param, cookie, hidden field, Cal.com metadata |
 | `flow_entry` | enum | What delivered the visitor to the flow: cta, ad, email, direct. | Read at the booking page or calendar |
 | `flow_start` | enum | Which page they entered the flow on: booking_page or calendar. | Read at the booking page or calendar |
@@ -765,13 +730,13 @@ At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Sa
 | `cta_id` | string or null | The data-cta id of the clicked CTA. For marketing emails: email id plus link id. | Written at the CTA click |
 | `variant_booking` | enum A or B | Booking page A/B variant. Sticky per visitor, stored on the booking. | Assigned on first view, cookie |
 | `variant_confirmation` | enum A or B | Confirmation page A/B variant. Sticky per visitor. | Assigned on first view, cookie |
-| `email` | string | The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added. | Form or calendar details |
+| `email` | string | The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that: join those earlier events to the later ones on anonymous_id or booking_session_id (hutk also works in HubSpot). Added. | Form or calendar details |
 | `hashed_email` | string | The hashed email. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added. | Computed from the email |
 | `booking_id` | string | The Cal.com booking id, on every event once the booking exists. Added. | Cal.com booking response or webhook |
 
 UTMs: see rule 1. They are also passed to the booking in the URL, hidden fields and the Cal.com booking metadata.
 
-## 5. Booking and email variables
+## 4. Booking and email variables
 
 Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The seven emails read these as custom tokens.
 
@@ -806,21 +771,22 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 | `last_name` | string or empty | Rest of name after the first space. Empty if only one word was typed. Added. | `Novak` | Derived from name | 1 |
 | `phone` | string or null | Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added. | `+38640123456` | Booking form |  |
 
-## 6. Entry paths
+## 5. Entry paths
 
 | Path | Route | Resulting values |
 |---|---|---|
 | P1 | Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you | flow_entry = cta, source_page = the page with the CTA. first_touch = last_touch = the ad, unless the page with the CTA carried newer parameters |
 | P2 | Ad, then ad landing, then booking page, calendar, thank you | flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing visit (it carried the ad parameters) |
-| P3 | Targeted ad straight to the calendar, thank you | flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: identify() goes with meeting_booking_confirmed |
+| P3 | Targeted ad straight to the calendar, thank you | flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: the contact is created from meeting_booking_confirmed |
 | P4 | Search, social or direct, any page, header CTA, booking page, calendar, thank you | flow_entry = cta, cta_id = header, source_page = the current page. last_touch = the latest visit with parameters, if any |
 | P5 | Search, social or partner, landing page, booking page, calendar, thank you | flow_entry = cta, source_page = /landing-page. last_touch = that landing page visit if it carried parameters |
 | P6 | Marketing email, booking page (or straight to the calendar), thank you | flow_entry = email. No CTA click: last_touch = the email visit, with the email's UTMs |
 | P7 | Flow email (reschedule, rebook), calendar, thank you | No new touch. The booking keeps its original first_touch and last_touch |
 
-## 7. Open points
+## 6. Open points
 
 - Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).
+- Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.
 - Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.
 
 ## Naming: spec name to plan name
@@ -851,7 +817,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 - **Event dictionary:** 16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.
 - **Last touch:** Defined as the spec does: the latest visit with tracking parameters (Gregor, in Slack). The CTA page is source_page, on every event.
 - **Context properties:** anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.
-- **Segment calls:** page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says.
+- **Segment calls:** page() for the three page-view events and track() for the rest. No identify() calls (the spec lists them; dropped on purpose): the contact is created from the track events.
 - **Entry paths:** P1 to P7 are all covered, with the events each one fires.
 - **Q4 (decided in this version):** Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it.
 - **New page copy:** The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.

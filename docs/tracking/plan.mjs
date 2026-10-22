@@ -8,6 +8,7 @@ export const S = {
   userId: 'contact_8812',
   bookingSessionId: 'bs_7f3a91c2',
   email: 'ana.novak@acme.com',
+  hutk: '2c1f3b8d9e4a47f6a0b5c7d8e9f01234',
   hashedEmail: 'ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84',
   bookingId: 'k9Zp3QmV7sLw2TnXb8Rc4D',
   firstTouchAt: '2026-10-19T09:12:00Z',
@@ -17,6 +18,7 @@ export const S = {
 // ---------- properties every event carries ("the full context") ----------
 export const CONTEXT_PROPS = [
   ['anonymous_id', 'string', 'Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains.', 'Segment cookie'],
+  ['hutk', 'string or null', 'The HubSpot tracking cookie (hubspotutk). Ties the visitor\'s HubSpot activity, such as the ad click, to the contact. Null if the HubSpot script did not run or cookies were declined. Also sent in the Cal.com booking metadata. Added.', 'Cookie hubspotutk on .databox.com'],
   ['booking_session_id', 'string', 'Created at the CTA click, or at the first flow page if there was no click. The one id the scheduler must return.', 'URL param, cookie, hidden field, Cal.com metadata'],
   ['flow_entry', 'enum', 'What delivered the visitor to the flow: cta, ad, email, direct.', 'Read at the booking page or calendar'],
   ['flow_start', 'enum', 'Which page they entered the flow on: booking_page or calendar.', 'Read at the booking page or calendar'],
@@ -44,7 +46,7 @@ export const CONTEXT_PROPS = [
   ['last_touch_at', 'ISO datetime', 'When that visit happened (UTC).', 'Touch script'],
     ['variant_booking', 'enum A or B', 'Booking page A/B variant. Sticky per visitor, stored on the booking.', 'Assigned on first view, cookie'],
   ['variant_confirmation', 'enum A or B', 'Confirmation page A/B variant. Sticky per visitor.', 'Assigned on first view, cookie'],
-  ['email', 'string', 'The visitor\'s email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.', 'Form or calendar details'],
+  ['email', 'string', 'The visitor\'s email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that: join those earlier events to the later ones on anonymous_id or booking_session_id (hutk also works in HubSpot). Added.', 'Form or calendar details'],
   ['hashed_email', 'string', 'The hashed email. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.', 'Computed from the email'],
   ['booking_id', 'string', 'The Cal.com booking id, on every event once the booking exists. Added.', 'Cal.com booking response or webhook'],
 ];
@@ -54,7 +56,7 @@ export const CONTEXT_PROPS = [
 export function context(level) {
   // UTM and touch properties are NOT repeated here: every event must also include them, as separate properties.
   const c = {
-    anonymous_id: S.anonymousId, booking_session_id: S.bookingSessionId,
+    anonymous_id: S.anonymousId, hutk: S.hutk, booking_session_id: S.bookingSessionId,
     flow_entry: 'cta', flow_start: 'booking_page', source_page: '/page-xyz', cta_id: 'xyz_inline',
     variant_booking: 'A', variant_confirmation: 'A',
   };
@@ -140,12 +142,11 @@ export const EVENTS = [
   },
   {
     name: 'meeting_form_submitted', group: 'Site', step: '1', by: 'server', byLabel: 'Server', role: 'diagnostic', level: 'known',
-    when: 'Form accepted and the contact is created or matched. Sent together with identify().',
+    when: 'Form accepted. The contact is created or updated in HubSpot from this event, matched on email.',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
-    notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
-    props: [['email_domain', 'string', 'Domain of the work email.', 'acme.com'], ['contact_id', 'string', 'CRM contact id, also the Segment userId.', S.userId], ['rebook_url', 'string', 'Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.', 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>']],
-    specific: { email_domain: 'acme.com', contact_id: S.userId, rebook_url: 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>' },
-    identify: true,
+    notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so the contact is created from meeting_booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
+    props: [['email_domain', 'string', 'Domain of the work email.', 'acme.com'], ['name', 'string', 'Name and surname as typed.', 'Ana Novak'], ['first_name', 'string', 'Split from name on the first space.', 'Ana'], ['last_name', 'string or empty', 'Rest of the name.', 'Novak'], ['phone', 'string or null', 'Optional.', '+38640123456'], ['contact_id', 'string', 'CRM contact id.', S.userId], ['rebook_url', 'string', 'Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.', 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>']],
+    specific: { email_domain: 'acme.com', name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: '+38640123456', contact_id: S.userId, rebook_url: 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>' },
   },
   {
     call: 'page', name: 'meeting_calendar_page_viewed', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'any', new: true,
@@ -167,9 +168,8 @@ export const EVENTS = [
     name: 'meeting_booking_confirmed', group: 'Site', step: '2, R, N', by: 'server', role: 'counting', level: 'booked',
     when: 'A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
-    notes: ['The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.', 'Sent with identify() when no form ran (P3, direct P6).', 'This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.', 'Starts the HubSpot workflow: confirmation email now, reminders from call_at.'],
+    notes: ['The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.', 'It carries name, email and phone, so the contact is created or updated from it when no form ran (P3, direct P6).', 'This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.', 'Starts the HubSpot workflow: confirmation email now, reminders from call_at.'],
     props: [], specific: bookingProps(ALL_BOOKING), booking: true,
-    identify: true,
   },
   {
     call: 'page', name: 'meeting_confirmation_page_viewed', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked',
@@ -239,28 +239,12 @@ export const EVENTS = [
 // ---------- Segment calls ----------
 export const PAGE_NOTE = 'The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages.';
 
-export const IDENTIFY_CALLS = [
-  {
-    when: 'At meeting_form_submitted (server).',
-    json: {
-      type: 'identify', userId: S.userId, anonymousId: S.anonymousId, timestamp: '2026-10-22T09:14:40.108Z',
-      traits: { email: S.email, name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: '+38640123456', email_domain: 'acme.com' },
-    },
-  },
-  {
-    when: 'At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.',
-    json: {
-      type: 'identify', userId: S.userId, anonymousId: S.anonymousId, timestamp: '2026-10-22T09:17:11.530Z',
-      traits: { email: S.email, name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: null, email_domain: 'acme.com' },
-    },
-  },
-];
 
 // ---------- entry paths from the spec ----------
 export const PATHS = [
   ['P1', 'Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you', 'flow_entry = cta, source_page = the page with the CTA. first_touch = last_touch = the ad, unless the page with the CTA carried newer parameters'],
   ['P2', 'Ad, then ad landing, then booking page, calendar, thank you', 'flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing visit (it carried the ad parameters)'],
-  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: identify() goes with meeting_booking_confirmed'],
+  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the ad visit that opened the calendar. No form: the contact is created from meeting_booking_confirmed'],
   ['P4', 'Search, social or direct, any page, header CTA, booking page, calendar, thank you', 'flow_entry = cta, cta_id = header, source_page = the current page. last_touch = the latest visit with parameters, if any'],
   ['P5', 'Search, social or partner, landing page, booking page, calendar, thank you', 'flow_entry = cta, source_page = /landing-page. last_touch = that landing page visit if it carried parameters'],
   ['P6', 'Marketing email, booking page (or straight to the calendar), thank you', 'flow_entry = email. No CTA click: last_touch = the email visit, with the email\'s UTMs'],
@@ -269,6 +253,7 @@ export const PATHS = [
 
 export const OPEN_POINTS = [
   'Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).',
+  'Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.',
 ];// ---------- JSON builder ----------
 export const callOf = (e) => e.call || 'track';
@@ -278,7 +263,7 @@ export function jsonFor(e) {
   for (const k of Object.keys(e.specific)) ordered[k] = e.specific[k];
   for (const k of Object.keys(ctx)) if (!(k in ordered)) ordered[k] = ctx[k];
   const identified = e.level === 'known' || e.level === 'booked';
-  const base = { anonymousId: S.anonymousId, userId: identified ? S.userId : null, timestamp: '2026-10-22T09:15:02.771Z' };
+  const base = { anonymousId: S.anonymousId, timestamp: '2026-10-22T09:15:02.771Z' };
   if (callOf(e) === 'page') {
     return { type: 'page', category: 'meeting', name: e.name, ...base, properties: ordered, context: { page: { path: '/strategy-call' } } };
   }
@@ -303,7 +288,7 @@ export const COVERAGE = {
     ['Event dictionary', '16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.'],
     ['Last touch', 'Defined as the spec does: the latest visit with tracking parameters (Gregor, in Slack). The CTA page is source_page, on every event.'],
     ['Context properties', 'anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.'],
-    ['Segment calls', 'page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says.'],
+    ['Segment calls', 'page() for the three page-view events and track() for the rest. No identify() calls (the spec lists them; dropped on purpose): the contact is created from the track events.'],
     ['Entry paths', 'P1 to P7 are all covered, with the events each one fires.'],
     ['Q4 (decided in this version)', 'Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it.'],
     ['New page copy', 'The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.'],
@@ -318,7 +303,7 @@ export const NAMING = {
   renames: [["cta_clicked", "meeting_cta_clicked"], ["booking_page_viewed", "meeting_booking_page_viewed"], ["video_played", "meeting_video_played"], ["form_started", "meeting_form_started"], ["form_submitted", "meeting_form_submitted"], ["calendar_viewed", "meeting_calendar_page_viewed"], ["slot_selected", "meeting_slot_selected"], ["booking_confirmed", "meeting_booking_confirmed"], ["confirmation_viewed", "meeting_confirmation_page_viewed"], ["calendar_added", "meeting_add_to_calendar_clicked"], ["email_sent", "meeting_email_sent"], ["email_clicked", "meeting_email_clicked"], ["booking_rescheduled", "meeting_booking_rescheduled"], ["booking_canceled", "meeting_booking_canceled"], ["call_held", "meeting_call_held"], ["call_no_show", "meeting_call_no_show"]],
 };
 
-export const SEGMENT_NOTE = 'Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.';
+export const SEGMENT_NOTE = 'Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_. HubSpot creates or updates the contact from meeting_form_submitted (and from meeting_booking_confirmed when no form ran), matched on email; hutk goes with the event so the visit is tied to that contact. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.';
 
 export const LATER = {
   title: 'Implemented separately',

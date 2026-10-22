@@ -59,7 +59,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
       <li><b>Every event includes the UTMs, as separate properties.</b> Send each UTM as its own property, never nested, never hardcoded values. We need all the UTM parameters we use now for tracking ads, plus two new ones: utm_location and utm_team. No ad click ids.
         <div class="utmbox"><b>first_touch_*</b> is the first marketing touch ever.<br><b>last_touch_*</b> is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.</div></li>
       <li><b>Segment call type.</b> The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a <code>track</code> call.</li>
-      <li><b>Who and what:</b> <code>email</code> and <code>hashed_email</code> as soon as the email is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
+      <li><b>Who and what:</b> <code>hutk</code> (the HubSpot cookie), <code>email</code> and <code>hashed_email</code> as soon as the email is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
     </ol>
   </section>
 
@@ -71,12 +71,12 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <section aria-labelledby="h-props">
     <h2 id="h-props">Properties on every event</h2>
     <p class="lede">Besides the UTMs (rule 1), every event carries these.</p>
-    <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th></tr></thead><tbody><tr><td><code>anonymous_id</code></td><td>string</td><td>Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains.</td></tr><tr><td><code>booking_session_id</code></td><td>string</td><td>Created at the CTA click, or at the first flow page if there was no click. The one id the scheduler must return.</td></tr><tr><td><code>flow_entry</code></td><td>enum</td><td>What delivered the visitor to the flow: cta, ad, email, direct.</td></tr><tr><td><code>flow_start</code></td><td>enum</td><td>Which page they entered the flow on: booking_page or calendar.</td></tr><tr><td><code>source_page</code></td><td>string or null</td><td>Path of the page where the CTA was clicked. Null on targeted ads, marketing emails and direct visits. Never the booking page itself.</td></tr><tr><td><code>cta_id</code></td><td>string or null</td><td>The data-cta id of the clicked CTA. For marketing emails: email id plus link id.</td></tr><tr><td><code>variant_booking</code></td><td>enum A or B</td><td>Booking page A/B variant. Sticky per visitor, stored on the booking.</td></tr><tr><td><code>variant_confirmation</code></td><td>enum A or B</td><td>Confirmation page A/B variant. Sticky per visitor.</td></tr><tr><td><code>email</code></td><td>string</td><td>The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.</td></tr><tr><td><code>hashed_email</code></td><td>string</td><td>The hashed email. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.</td></tr><tr><td><code>booking_id</code></td><td>string</td><td>The Cal.com booking id, on every event once the booking exists. Added.</td></tr></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th></tr></thead><tbody><tr><td><code>anonymous_id</code></td><td>string</td><td>Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains.</td></tr><tr><td><code>hutk</code></td><td>string or null</td><td>The HubSpot tracking cookie (hubspotutk). Ties the visitor's HubSpot activity, such as the ad click, to the contact. Null if the HubSpot script did not run or cookies were declined. Also sent in the Cal.com booking metadata. Added.</td></tr><tr><td><code>booking_session_id</code></td><td>string</td><td>Created at the CTA click, or at the first flow page if there was no click. The one id the scheduler must return.</td></tr><tr><td><code>flow_entry</code></td><td>enum</td><td>What delivered the visitor to the flow: cta, ad, email, direct.</td></tr><tr><td><code>flow_start</code></td><td>enum</td><td>Which page they entered the flow on: booking_page or calendar.</td></tr><tr><td><code>source_page</code></td><td>string or null</td><td>Path of the page where the CTA was clicked. Null on targeted ads, marketing emails and direct visits. Never the booking page itself.</td></tr><tr><td><code>cta_id</code></td><td>string or null</td><td>The data-cta id of the clicked CTA. For marketing emails: email id plus link id.</td></tr><tr><td><code>variant_booking</code></td><td>enum A or B</td><td>Booking page A/B variant. Sticky per visitor, stored on the booking.</td></tr><tr><td><code>variant_confirmation</code></td><td>enum A or B</td><td>Confirmation page A/B variant. Sticky per visitor.</td></tr><tr><td><code>email</code></td><td>string</td><td>The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that: join those earlier events to the later ones on anonymous_id or booking_session_id (hutk also works in HubSpot). Added.</td></tr><tr><td><code>hashed_email</code></td><td>string</td><td>The hashed email. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.</td></tr><tr><td><code>booking_id</code></td><td>string</td><td>The Cal.com booking id, on every event once the booking exists. Added.</td></tr></tbody></table></div>
   </section>
 
   <section id="events" aria-labelledby="h-events">
     <div class="row"><h2 id="h-events">Events</h2><button class="btn" type="button" id="expand">Expand all</button></div>
-    <div class="tw"><table><thead><tr><th>Event</th><th>Call</th><th>Fired by</th><th>Fires when</th></tr></thead><tbody><tr><td><a href="#ev-meeting_cta_clicked"><code>meeting_cta_clicked</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Click on any element with a data-cta attribute, on any site, blog or product page.</td></tr><tr><td><a href="#ev-meeting_booking_page_viewed"><code>meeting_booking_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Booking page loads. Replaces the old page_view.</td></tr><tr><td><a href="#ev-meeting_video_played"><code>meeting_video_played</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Play pressed on the video of an A variant (booking page or confirmation page).</td></tr><tr><td><a href="#ev-meeting_form_started"><code>meeting_form_started</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>First field of the booking form gets focus.</td></tr><tr><td><a href="#ev-meeting_form_submitted"><code>meeting_form_submitted</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot s"></i> Server</td><td>Form accepted and the contact is created or matched. Sent together with identify().</td></tr><tr><td><a href="#ev-meeting_calendar_page_viewed"><code>meeting_calendar_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Calendar loads, including direct entry from ads and emails.</td></tr><tr><td><a href="#ev-meeting_slot_selected"><code>meeting_slot_selected</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>A time slot is picked, before the booking is confirmed.</td></tr><tr><td><a href="#ev-meeting_booking_confirmed"><code>meeting_booking_confirmed</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot s"></i> Server</td><td>A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</td></tr><tr><td><a href="#ev-meeting_confirmation_page_viewed"><code>meeting_confirmation_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Confirmation (thank-you) page loads.</td></tr><tr><td><a href="#ev-meeting_add_to_calendar_clicked"><code>meeting_add_to_calendar_clicked</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Click on an Add to calendar button on the confirmation page.</td></tr></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Event</th><th>Call</th><th>Fired by</th><th>Fires when</th></tr></thead><tbody><tr><td><a href="#ev-meeting_cta_clicked"><code>meeting_cta_clicked</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Click on any element with a data-cta attribute, on any site, blog or product page.</td></tr><tr><td><a href="#ev-meeting_booking_page_viewed"><code>meeting_booking_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Booking page loads. Replaces the old page_view.</td></tr><tr><td><a href="#ev-meeting_video_played"><code>meeting_video_played</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Play pressed on the video of an A variant (booking page or confirmation page).</td></tr><tr><td><a href="#ev-meeting_form_started"><code>meeting_form_started</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>First field of the booking form gets focus.</td></tr><tr><td><a href="#ev-meeting_form_submitted"><code>meeting_form_submitted</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot s"></i> Server</td><td>Form accepted. The contact is created or updated in HubSpot from this event, matched on email.</td></tr><tr><td><a href="#ev-meeting_calendar_page_viewed"><code>meeting_calendar_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Calendar loads, including direct entry from ads and emails.</td></tr><tr><td><a href="#ev-meeting_slot_selected"><code>meeting_slot_selected</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>A time slot is picked, before the booking is confirmed.</td></tr><tr><td><a href="#ev-meeting_booking_confirmed"><code>meeting_booking_confirmed</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot s"></i> Server</td><td>A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</td></tr><tr><td><a href="#ev-meeting_confirmation_page_viewed"><code>meeting_confirmation_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Confirmation (thank-you) page loads.</td></tr><tr><td><a href="#ev-meeting_add_to_calendar_clicked"><code>meeting_add_to_calendar_clicked</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Click on an Add to calendar button on the confirmation page.</td></tr></tbody></table></div>
     <details class="ev" id="ev-meeting_cta_clicked">
   <summary><span class="nm"><i class="dot b"></i><code>meeting_cta_clicked</code></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
   <div class="body">
@@ -88,13 +88,13 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_cta_clicked&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;cta_id&quot;: &quot;xyz_inline&quot;,
     &quot;source_page&quot;: &quot;/page-xyz&quot;,
     &quot;cta_text&quot;: &quot;Book a strategy call&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -122,12 +122,12 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;category&quot;: &quot;meeting&quot;,
   &quot;name&quot;: &quot;meeting_booking_page_viewed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;variant_booking&quot;: &quot;A&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
     &quot;source_page&quot;: &quot;/page-xyz&quot;,
@@ -154,12 +154,12 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_video_played&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;page&quot;: &quot;booking&quot;,
     &quot;pct_watched&quot;: 0,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -188,10 +188,10 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_form_started&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -212,21 +212,25 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 <details class="ev" id="ev-meeting_form_submitted">
   <summary><span class="nm"><i class="dot s"></i><code>meeting_form_submitted</code></span><span class="meta"><span class="chip call-track">track</span><span class="by">Server</span></span></summary>
   <div class="body">
-    <p><b>Fires when</b> Form accepted and the contact is created or matched. Sent together with identify().</p>
-    <p class="pr"><b>Extra properties</b> <code>email_domain</code> <span class="mut">string, e.g. &quot;acme.com&quot;</span> · <code>contact_id</code> <span class="mut">string, e.g. &quot;contact_8812&quot;</span> · <code>rebook_url</code> <span class="mut">string, e.g. &quot;https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&amp;token=&lt;opaque contact token&gt;&quot;</span></p>
-    <ul><li>The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.</li><li>Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.</li></ul>
+    <p><b>Fires when</b> Form accepted. The contact is created or updated in HubSpot from this event, matched on email.</p>
+    <p class="pr"><b>Extra properties</b> <code>email_domain</code> <span class="mut">string, e.g. &quot;acme.com&quot;</span> · <code>name</code> <span class="mut">string, e.g. &quot;Ana Novak&quot;</span> · <code>first_name</code> <span class="mut">string, e.g. &quot;Ana&quot;</span> · <code>last_name</code> <span class="mut">string or empty, e.g. &quot;Novak&quot;</span> · <code>phone</code> <span class="mut">string or null, e.g. &quot;+38640123456&quot;</span> · <code>contact_id</code> <span class="mut">string, e.g. &quot;contact_8812&quot;</span> · <code>rebook_url</code> <span class="mut">string, e.g. &quot;https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&amp;token=&lt;opaque contact token&gt;&quot;</span></p>
+    <ul><li>The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.</li><li>Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so the contact is created from meeting_booking_confirmed instead.</li></ul>
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_form_submitted&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;email_domain&quot;: &quot;acme.com&quot;,
+    &quot;name&quot;: &quot;Ana Novak&quot;,
+    &quot;first_name&quot;: &quot;Ana&quot;,
+    &quot;last_name&quot;: &quot;Novak&quot;,
+    &quot;phone&quot;: &quot;+38640123456&quot;,
     &quot;contact_id&quot;: &quot;contact_8812&quot;,
     &quot;rebook_url&quot;: &quot;https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&amp;token=&lt;opaque contact token&gt;&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -253,12 +257,12 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;category&quot;: &quot;meeting&quot;,
   &quot;name&quot;: &quot;meeting_calendar_page_viewed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;flow_start&quot;: &quot;booking_page&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;source_page&quot;: &quot;/page-xyz&quot;,
     &quot;cta_id&quot;: &quot;xyz_inline&quot;,
@@ -285,11 +289,11 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_slot_selected&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;days_ahead&quot;: 7,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -314,13 +318,12 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <div class="body">
     <p><b>Fires when</b> A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</p>
     <p class="pr"><b>Extra properties</b> every value in the table "What the booking event carries".</p>
-    <ul><li>The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.</li><li>Sent with identify() when no form ran (P3, direct P6).</li></ul>
+    <ul><li>The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.</li><li>It carries name, email and phone, so the contact is created or updated from it when no form ran (P3, direct P6).</li></ul>
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_booking_confirmed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;booking_id&quot;: &quot;k9Zp3QmV7sLw2TnXb8Rc4D&quot;,
@@ -352,6 +355,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;last_name&quot;: &quot;Novak&quot;,
     &quot;phone&quot;: &quot;+38640123456&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -378,11 +382,11 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;category&quot;: &quot;meeting&quot;,
   &quot;name&quot;: &quot;meeting_confirmation_page_viewed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;variant_confirmation&quot;: &quot;A&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -413,11 +417,11 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   &quot;type&quot;: &quot;track&quot;,
   &quot;event&quot;: &quot;meeting_add_to_calendar_clicked&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
   &quot;properties&quot;: {
     &quot;calendar&quot;: &quot;google&quot;,
     &quot;anonymous_id&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
+    &quot;hutk&quot;: &quot;2c1f3b8d9e4a47f6a0b5c7d8e9f01234&quot;,
     &quot;booking_session_id&quot;: &quot;bs_7f3a91c2&quot;,
     &quot;flow_entry&quot;: &quot;cta&quot;,
     &quot;flow_start&quot;: &quot;booking_page&quot;,
@@ -446,25 +450,6 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="tw"><table><thead><tr><th>Property</th><th>Example</th><th>Where it comes from</th></tr></thead><tbody><tr><td><code>booking_id</code></td><td><code>k9Zp3QmV7sLw2TnXb8Rc4D</code></td><td>Cal.com webhook: payload.uid</td></tr><tr><td><code>call_at</code></td><td><code>2026-10-29T14:30:00Z</code></td><td>Cal.com webhook: payload.startTime</td></tr><tr><td><code>call_end_at</code></td><td><code>2026-10-29T15:30:00Z</code></td><td>Cal.com webhook: payload.endTime</td></tr><tr><td><code>duration_min</code></td><td><code>60</code></td><td>Cal.com webhook: end minus start</td></tr><tr><td><code>lead_time_h</code></td><td><code>173</code></td><td>Computed</td></tr><tr><td><code>time_zone</code></td><td><code>Europe/Ljubljana</code></td><td>Cal.com webhook: attendees[0].timeZone</td></tr><tr><td><code>call_weekday</code></td><td><code>Thursday</code></td><td>Computed in the visitor's time zone</td></tr><tr><td><code>call_date_text</code></td><td><code>Thursday, 29 October</code></td><td>Computed</td></tr><tr><td><code>call_time_text</code></td><td><code>15:30 (CET)</code></td><td>Computed</td></tr><tr><td><code>join_url</code></td><td><code>https://meet.google.com/abc-defg-hij</code></td><td>Cal.com webhook: payload.videoCallData.url or location</td></tr><tr><td><code>meeting_location</code></td><td><code>Video call</code></td><td>Cal.com webhook: payload.location</td></tr><tr><td><code>host_id</code></td><td><code>1001</code></td><td>Cal.com webhook: organizer.id</td></tr><tr><td><code>host_name</code></td><td><code>Alex Rivera</code></td><td>Cal.com webhook: organizer.name</td></tr><tr><td><code>host_first_name</code></td><td><code>Alex</code></td><td>Our host list, or split from host_name</td></tr><tr><td><code>host_email</code></td><td><code>alex.rivera@databox.com</code></td><td>Cal.com webhook: organizer.email</td></tr><tr><td><code>host_username</code></td><td><code>alex-rivera</code></td><td>Cal.com webhook: organizer.username</td></tr><tr><td><code>host_role</code></td><td><code>Head of Sales</code></td><td>Our host list, keyed by host_username</td></tr><tr><td><code>host_photo_url</code></td><td><code>https://cdn.example.com/hosts/alex-rivera-288...</code></td><td>Our host list, keyed by host_username</td></tr><tr><td><code>calendar_google_url</code></td><td><code>https://calendar.google.com/calendar/render?a...</code></td><td>Computed from call_at, call_end_at, join_url</td></tr><tr><td><code>calendar_outlook_url</code></td><td><code>https://outlook.live.com/calendar/0/deeplink/...</code></td><td>Computed</td></tr><tr><td><code>calendar_ics_url</code></td><td><code>https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb...</code></td><td>Needs a place to host the file</td></tr><tr><td><code>rebook_url</code></td><td><code>https://www.databox.com/strategy-call/calenda...</code></td><td>Computed: calendar URL, booking_session_id and an opaque contact token (spec Q10)</td></tr><tr><td><code>reschedule_url</code></td><td><code>https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8...</code></td><td>Computed from booking_id</td></tr><tr><td><code>cancel_url</code></td><td><code>https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4...</code></td><td>Computed from booking_id</td></tr><tr><td><code>name</code></td><td><code>Ana Novak</code></td><td>Booking form, or Cal.com attendee name</td></tr><tr><td><code>first_name</code></td><td><code>Ana</code></td><td>Derived from name</td></tr><tr><td><code>last_name</code></td><td><code>Novak</code></td><td>Derived from name</td></tr><tr><td><code>phone</code></td><td><code>+38640123456</code></td><td>Booking form</td></tr></tbody></table></div>
   </section>
 
-  <section aria-labelledby="h-id">
-    <h2 id="h-id">Identify</h2>
-    <p class="lede">At meeting_form_submitted (server). The same call goes out at <code>meeting_booking_confirmed</code> when no form ran (targeted ads, direct email links).</p>
-    <details class="ev"><summary><span class="nm"><i class="dot s"></i><code>identify()</code></span><span class="meta"><span class="by">Server</span></span></summary><div class="body"><div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>{
-  &quot;type&quot;: &quot;identify&quot;,
-  &quot;userId&quot;: &quot;contact_8812&quot;,
-  &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
-  &quot;timestamp&quot;: &quot;2026-10-22T09:14:40.108Z&quot;,
-  &quot;traits&quot;: {
-    &quot;email&quot;: &quot;ana.novak@acme.com&quot;,
-    &quot;name&quot;: &quot;Ana Novak&quot;,
-    &quot;first_name&quot;: &quot;Ana&quot;,
-    &quot;last_name&quot;: &quot;Novak&quot;,
-    &quot;phone&quot;: &quot;+38640123456&quot;,
-    &quot;email_domain&quot;: &quot;acme.com&quot;
-  }
-}</code></pre></div></details>
-  </section>
-
   <section aria-labelledby="h-later">
     <h2 id="h-later">Implemented separately</h2>
     <p class="lede">The booking lifecycle and call events (reschedule, cancel, call held, no-show) and the email events (sent, clicked) are not part of this build. They are implemented separately, and only if tracking in Mixpanel is needed. Their definitions stay here so the names and data are agreed up front.</p>
@@ -473,7 +458,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section aria-labelledby="h-open">
     <h2 id="h-open">Open points</h2>
-    <ul class="op"><li>Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).</li><li>Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.</li></ul>
+    <ul class="op"><li>Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).</li><li>Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.</li><li>Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.</li></ul>
   </section>
 </div>
 <script>
