@@ -60,9 +60,16 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <header>
     <div class="eyebrow">Databox · Strategy call booking · Tracking plan · Draft 2, 22 Oct 2026</div>
     <h1>Strategy call tracking plan</h1>
-    <p class="lede">Every event in the flow, when it fires, who fires it, and an example JSON for each. All events carry the full UTM context (first and last touch), the email once it is known, and the booking id once the booking exists. The booking events also carry every value the emails need. Checked against the strategy call spec (version 2). Event and property names marked Added are not in the spec yet.</p>
+    <p class="lede">Every event in the flow, when it fires, who fires it, and an example JSON for each. All events carry the full UTM context (first and last touch), the email once it is known, and the booking id once the booking exists. The booking events also carry every value the emails need. Checked against the strategy call spec (version 2). Every event name starts with meeting_ so the whole flow filters in one go, and every event goes to Segment. Event and property names marked Added are not in the spec yet.</p>
   </header>
-  <nav class="sec" aria-label="Sections"><a href="#coverage">Spec check</a><a href="#events">Events</a><a href="#calls">Page and identify</a><a href="#context">Context and UTMs</a><a href="#variables">Booking and email variables</a><a href="#paths">Entry paths</a><a href="#open">Open points</a></nav>
+  <nav class="sec" aria-label="Sections"><a href="#naming">Naming and Segment</a><a href="#coverage">Spec check</a><a href="#events">Events</a><a href="#calls">Page and identify</a><a href="#context">Context and UTMs</a><a href="#variables">Booking and email variables</a><a href="#paths">Entry paths</a><a href="#open">Open points</a></nav>
+
+  <section id="naming" aria-labelledby="h-naming">
+    <h2 id="h-naming">Naming and Segment</h2>
+    <p class="lede"><b>Rule:</b> meeting_&lt;thing&gt;_&lt;what happened&gt;, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.</p>
+    <p class="lede">Every event goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.</p>
+    <div class="tw"><table><thead><tr><th>Name in the spec</th><th>Name in this plan</th></tr></thead><tbody><tr><td><code>cta_clicked</code></td><td><code>meeting_cta_clicked</code></td></tr><tr><td><code>booking_page_viewed</code></td><td><code>meeting_booking_page_viewed</code></td></tr><tr><td><code>video_played</code></td><td><code>meeting_video_played</code></td></tr><tr><td><code>form_started</code></td><td><code>meeting_form_started</code></td></tr><tr><td><code>form_submitted</code></td><td><code>meeting_form_submitted</code></td></tr><tr><td><code>calendar_viewed</code></td><td><code>meeting_calendar_page_viewed</code></td></tr><tr><td><code>slot_selected</code></td><td><code>meeting_slot_selected</code></td></tr><tr><td><code>booking_confirmed</code></td><td><code>meeting_booking_confirmed</code></td></tr><tr><td><code>confirmation_viewed</code></td><td><code>meeting_confirmation_page_viewed</code></td></tr><tr><td><code>calendar_added</code></td><td><code>meeting_add_to_calendar_clicked</code></td></tr><tr><td><code>email_sent</code></td><td><code>meeting_email_sent</code></td></tr><tr><td><code>email_clicked</code></td><td><code>meeting_email_clicked</code></td></tr><tr><td><code>booking_rescheduled</code></td><td><code>meeting_booking_rescheduled</code></td></tr><tr><td><code>booking_canceled</code></td><td><code>meeting_booking_canceled</code></td></tr><tr><td><code>call_held</code></td><td><code>meeting_call_held</code></td></tr><tr><td><code>call_no_show</code></td><td><code>meeting_call_no_show</code></td></tr></tbody></table></div>
+  </section>
 
   <section id="coverage" aria-labelledby="h-cov">
     <h2 id="h-cov">Check against the spec</h2>
@@ -73,10 +80,10 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <section id="events" aria-labelledby="h-events">
     <h2 id="h-events">Events</h2>
     <div class="legend"><span><i class="dot b"></i>Fired by the browser</span><span><i class="dot s"></i>Fired by our server or a webhook</span><span><i class="dot m"></i>Fired by the email platform</span><span><span class="role counting">counting</span> feeds the success metrics</span><span><span class="role diagnostic">diagnostic</span> explains drop-off, logged only</span></div>
-    <div class="tw"><table><thead><tr><th>Event</th><th>Step</th><th>Fired by</th><th>Role</th><th>Fires when</th></tr></thead><tbody><tr><td><a href="#ev-cta_clicked"><code>cta_clicked</code></a><span class="tag">Added</span></td><td>0</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Click on any element with a data-cta attribute, on any site, blog or product page.</td></tr><tr><td><a href="#ev-booking_page_viewed"><code>booking_page_viewed</code></a></td><td>1</td><td><i class="dot b"></i> Browser</td><td><span class="role counting">counting</span></td><td>Booking page loads. Replaces the old page_view.</td></tr><tr><td><a href="#ev-video_played"><code>video_played</code></a><span class="tag">Added</span></td><td>1, 3</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Play pressed on the video of an A variant (booking page or confirmation page).</td></tr><tr><td><a href="#ev-form_started"><code>form_started</code></a></td><td>1</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>First field of the booking form gets focus.</td></tr><tr><td><a href="#ev-form_submitted"><code>form_submitted</code></a></td><td>1</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role diagnostic">diagnostic</span></td><td>Form accepted and the contact is created or matched. Sent together with identify().</td></tr><tr><td><a href="#ev-calendar_viewed"><code>calendar_viewed</code></a><span class="tag">Added</span></td><td>2</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Calendar loads, including direct entry from ads and emails.</td></tr><tr><td><a href="#ev-slot_selected"><code>slot_selected</code></a><span class="tag">Added</span></td><td>2</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>A time slot is picked, before the booking is confirmed.</td></tr><tr><td><a href="#ev-booking_confirmed"><code>booking_confirmed</code></a></td><td>2, R, N</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role counting">counting</span></td><td>A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</td></tr><tr><td><a href="#ev-confirmation_viewed"><code>confirmation_viewed</code></a></td><td>3</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Confirmation (thank-you) page loads.</td></tr><tr><td><a href="#ev-calendar_added"><code>calendar_added</code></a><span class="tag">Added</span></td><td>3</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Click on an Add to calendar button on the confirmation page.</td></tr><tr><td><a href="#ev-email_sent"><code>email_sent</code></a></td><td>R, 4 to 8, N</td><td><i class="dot m"></i> Email platform</td><td><span class="role diagnostic">diagnostic</span></td><td>The email platform accepts a send of any flow email.</td></tr><tr><td><a href="#ev-email_clicked"><code>email_clicked</code></a></td><td>R, 4 to 8, N</td><td><i class="dot m"></i> Email platform</td><td><span class="role diagnostic">diagnostic</span></td><td>Tracked link click in a flow email.</td></tr><tr><td><a href="#ev-booking_rescheduled"><code>booking_rescheduled</code></a><span class="tag">Added</span></td><td>X</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role diagnostic">diagnostic</span></td><td>The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.</td></tr><tr><td><a href="#ev-booking_canceled"><code>booking_canceled</code></a><span class="tag">Added</span></td><td>X</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role counting">counting</span></td><td>A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.</td></tr><tr><td><a href="#ev-call_held"><code>call_held</code></a></td><td>7</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role counting">counting</span></td><td>The visitor joined the call.</td></tr><tr><td><a href="#ev-call_no_show"><code>call_no_show</code></a><span class="tag">Added</span></td><td>7</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role diagnostic">diagnostic</span></td><td>The visitor has not joined 15 minutes after the start.</td></tr></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Event</th><th>Step</th><th>Fired by</th><th>Role</th><th>Fires when</th></tr></thead><tbody><tr><td><a href="#ev-meeting_cta_clicked"><code>meeting_cta_clicked</code></a><span class="tag">Added</span></td><td>0</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Click on any element with a data-cta attribute, on any site, blog or product page.</td></tr><tr><td><a href="#ev-meeting_booking_page_viewed"><code>meeting_booking_page_viewed</code></a></td><td>1</td><td><i class="dot b"></i> Browser</td><td><span class="role counting">counting</span></td><td>Booking page loads. Replaces the old page_view.</td></tr><tr><td><a href="#ev-meeting_video_played"><code>meeting_video_played</code></a><span class="tag">Added</span></td><td>1, 3</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Play pressed on the video of an A variant (booking page or confirmation page).</td></tr><tr><td><a href="#ev-meeting_form_started"><code>meeting_form_started</code></a></td><td>1</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>First field of the booking form gets focus.</td></tr><tr><td><a href="#ev-meeting_form_submitted"><code>meeting_form_submitted</code></a></td><td>1</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role diagnostic">diagnostic</span></td><td>Form accepted and the contact is created or matched. Sent together with identify().</td></tr><tr><td><a href="#ev-meeting_calendar_page_viewed"><code>meeting_calendar_page_viewed</code></a><span class="tag">Added</span></td><td>2</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Calendar loads, including direct entry from ads and emails.</td></tr><tr><td><a href="#ev-meeting_slot_selected"><code>meeting_slot_selected</code></a><span class="tag">Added</span></td><td>2</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>A time slot is picked, before the booking is confirmed.</td></tr><tr><td><a href="#ev-meeting_booking_confirmed"><code>meeting_booking_confirmed</code></a></td><td>2, R, N</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role counting">counting</span></td><td>A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</td></tr><tr><td><a href="#ev-meeting_confirmation_page_viewed"><code>meeting_confirmation_page_viewed</code></a></td><td>3</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Confirmation (thank-you) page loads.</td></tr><tr><td><a href="#ev-meeting_add_to_calendar_clicked"><code>meeting_add_to_calendar_clicked</code></a><span class="tag">Added</span></td><td>3</td><td><i class="dot b"></i> Browser</td><td><span class="role diagnostic">diagnostic</span></td><td>Click on an Add to calendar button on the confirmation page.</td></tr><tr><td><a href="#ev-meeting_email_sent"><code>meeting_email_sent</code></a></td><td>R, 4 to 8, N</td><td><i class="dot m"></i> Email platform</td><td><span class="role diagnostic">diagnostic</span></td><td>The email platform accepts a send of any flow email.</td></tr><tr><td><a href="#ev-meeting_email_clicked"><code>meeting_email_clicked</code></a></td><td>R, 4 to 8, N</td><td><i class="dot m"></i> Email platform</td><td><span class="role diagnostic">diagnostic</span></td><td>Tracked link click in a flow email.</td></tr><tr><td><a href="#ev-meeting_booking_rescheduled"><code>meeting_booking_rescheduled</code></a><span class="tag">Added</span></td><td>X</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role diagnostic">diagnostic</span></td><td>The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.</td></tr><tr><td><a href="#ev-meeting_booking_canceled"><code>meeting_booking_canceled</code></a><span class="tag">Added</span></td><td>X</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role counting">counting</span></td><td>A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.</td></tr><tr><td><a href="#ev-meeting_call_held"><code>meeting_call_held</code></a></td><td>7</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role counting">counting</span></td><td>The visitor joined the call.</td></tr><tr><td><a href="#ev-meeting_call_no_show"><code>meeting_call_no_show</code></a><span class="tag">Added</span></td><td>7</td><td><i class="dot s"></i> Server or webhook</td><td><span class="role diagnostic">diagnostic</span></td><td>The visitor has not joined 15 minutes after the start.</td></tr></tbody></table></div>
     <div class="tools"><input id="q" type="search" placeholder="Filter events by name, trigger or path (for example P3)" aria-label="Filter events"><button class="btn" type="button" id="all-b" aria-pressed="false" data-by="browser">Browser</button><button class="btn" type="button" id="all-s" aria-pressed="false" data-by="server">Server</button><button class="btn" type="button" id="all-m" aria-pressed="false" data-by="email">Email</button><button class="btn" type="button" id="expand">Expand all</button></div>
-    <div class="gh">Site</div><details class="ev" id="ev-cta_clicked" data-by="browser" data-role="diagnostic" data-text="cta_clicked click on any element with a data-cta attribute, on any site, blog or product page. p1 p2 p4 p5">
-  <summary><span class="nm"><i class="dot b"></i><code>cta_clicked</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 0</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+    <div class="gh">Site</div><details class="ev" id="ev-meeting_cta_clicked" data-by="browser" data-role="diagnostic" data-text="meeting_cta_clicked click on any element with a data-cta attribute, on any site, blog or product page. p1 p2 p4 p5">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_cta_clicked</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 0</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Click on any element with a data-cta attribute, on any site, blog or product page.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P4</span><span class="chip">P5</span></p>
@@ -85,7 +92,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;cta_clicked&quot;,
+  &quot;event&quot;: &quot;meeting_cta_clicked&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -128,17 +135,17 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-booking_page_viewed" data-by="browser" data-role="counting" data-text="booking_page_viewed booking page loads. replaces the old page_view. p1 p2 p4 p5 p6">
-  <summary><span class="nm"><i class="dot b"></i><code>booking_page_viewed</code></span><span class="meta"><span class="chip">Step 1</span><span class="chip role-counting">counting</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_booking_page_viewed" data-by="browser" data-role="counting" data-text="meeting_booking_page_viewed booking page loads. replaces the old page_view. p1 p2 p4 p5 p6">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_booking_page_viewed</code></span><span class="meta"><span class="chip">Step 1</span><span class="chip role-counting">counting</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Booking page loads. Replaces the old page_view.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span></p>
-    <ul><li>Denominator of the visit-to-booked rate (same booking_session_id as booking_confirmed).</li><li>Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.</li><li>Fires on load only, not on a variant switch or re-render.</li></ul>
+    <ul><li>Denominator of the visit-to-booked rate (same booking_session_id as meeting_booking_confirmed).</li><li>Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.</li><li>Fires on load only, not on a variant switch or re-render.</li></ul>
     <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th><th>Example</th></tr></thead><tbody><tr><td><code>variant_booking</code></td><td>A or B</td><td>Variant shown.</td><td><code>&quot;A&quot;</code></td></tr><tr><td><code>flow_entry</code></td><td>enum</td><td>Entry type.</td><td><code>&quot;cta&quot;</code></td></tr></tbody></table></div>
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;booking_page_viewed&quot;,
+  &quot;event&quot;: &quot;meeting_booking_page_viewed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -180,8 +187,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-video_played" data-by="browser" data-role="diagnostic" data-text="video_played play pressed on the video of an a variant (booking page or confirmation page). p1 p2 p4 p5 p6">
-  <summary><span class="nm"><i class="dot b"></i><code>video_played</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 1, 3</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_video_played" data-by="browser" data-role="diagnostic" data-text="meeting_video_played play pressed on the video of an a variant (booking page or confirmation page). p1 p2 p4 p5 p6">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_video_played</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 1, 3</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Play pressed on the video of an A variant (booking page or confirmation page).</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span></p>
@@ -190,7 +197,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;video_played&quot;,
+  &quot;event&quot;: &quot;meeting_video_played&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -234,8 +241,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-form_started" data-by="browser" data-role="diagnostic" data-text="form_started first field of the booking form gets focus. p1 p2 p4 p5 p6">
-  <summary><span class="nm"><i class="dot b"></i><code>form_started</code></span><span class="meta"><span class="chip">Step 1</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_form_started" data-by="browser" data-role="diagnostic" data-text="meeting_form_started first field of the booking form gets focus. p1 p2 p4 p5 p6">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_form_started</code></span><span class="meta"><span class="chip">Step 1</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> First field of the booking form gets focus.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span></p>
@@ -244,7 +251,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;form_started&quot;,
+  &quot;event&quot;: &quot;meeting_form_started&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -286,17 +293,17 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-form_submitted" data-by="server" data-role="diagnostic" data-text="form_submitted form accepted and the contact is created or matched. sent together with identify(). p1 p2 p4 p5 p6">
-  <summary><span class="nm"><i class="dot s"></i><code>form_submitted</code></span><span class="meta"><span class="chip">Step 1</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Server or webhook</span></span></summary>
+<details class="ev" id="ev-meeting_form_submitted" data-by="server" data-role="diagnostic" data-text="meeting_form_submitted form accepted and the contact is created or matched. sent together with identify(). p1 p2 p4 p5 p6">
+  <summary><span class="nm"><i class="dot s"></i><code>meeting_form_submitted</code></span><span class="meta"><span class="chip">Step 1</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Server or webhook</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Form accepted and the contact is created or matched. Sent together with identify().</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span></p>
-    <ul><li>The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.</li><li>Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with booking_confirmed instead.</li><li>Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.</li><li>Fires from our server so ad blockers and consent choices cannot drop it.</li></ul>
+    <ul><li>The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.</li><li>Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.</li><li>Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.</li><li>Fires from our server so ad blockers and consent choices cannot drop it.</li></ul>
     <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th><th>Example</th></tr></thead><tbody><tr><td><code>email_domain</code></td><td>string</td><td>Domain of the work email.</td><td><code>&quot;acme.com&quot;</code></td></tr><tr><td><code>contact_id</code></td><td>string</td><td>CRM contact id, also the Segment userId.</td><td><code>&quot;contact_8812&quot;</code></td></tr></tbody></table></div>
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;form_submitted&quot;,
+  &quot;event&quot;: &quot;meeting_form_submitted&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -336,8 +343,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-calendar_viewed" data-by="browser" data-role="diagnostic" data-text="calendar_viewed calendar loads, including direct entry from ads and emails. p1 p2 p3 p4 p5 p6 p7">
-  <summary><span class="nm"><i class="dot b"></i><code>calendar_viewed</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 2</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_calendar_page_viewed" data-by="browser" data-role="diagnostic" data-text="meeting_calendar_page_viewed calendar loads, including direct entry from ads and emails. p1 p2 p3 p4 p5 p6 p7">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_calendar_page_viewed</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 2</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Calendar loads, including direct entry from ads and emails.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span><span class="chip">P7</span></p>
@@ -346,7 +353,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;calendar_viewed&quot;,
+  &quot;event&quot;: &quot;meeting_calendar_page_viewed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: null,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -388,8 +395,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-slot_selected" data-by="browser" data-role="diagnostic" data-text="slot_selected a time slot is picked, before the booking is confirmed. p1 p2 p3 p4 p5 p6 p7">
-  <summary><span class="nm"><i class="dot b"></i><code>slot_selected</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 2</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_slot_selected" data-by="browser" data-role="diagnostic" data-text="meeting_slot_selected a time slot is picked, before the booking is confirmed. p1 p2 p3 p4 p5 p6 p7">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_slot_selected</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 2</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> A time slot is picked, before the booking is confirmed.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span><span class="chip">P7</span></p>
@@ -398,7 +405,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;slot_selected&quot;,
+  &quot;event&quot;: &quot;meeting_slot_selected&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -442,17 +449,17 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-booking_confirmed" data-by="server" data-role="counting" data-text="booking_confirmed a booking is created. fired by our server on the cal.com booking_created webhook. p1 p2 p3 p4 p5 p6 p7">
-  <summary><span class="nm"><i class="dot s"></i><code>booking_confirmed</code></span><span class="meta"><span class="chip">Step 2, R, N</span><span class="chip role-counting">counting</span><span class="by">Server or webhook</span></span></summary>
+<details class="ev" id="ev-meeting_booking_confirmed" data-by="server" data-role="counting" data-text="meeting_booking_confirmed a booking is created. fired by our server on the cal.com booking_created webhook. p1 p2 p3 p4 p5 p6 p7">
+  <summary><span class="nm"><i class="dot s"></i><code>meeting_booking_confirmed</code></span><span class="meta"><span class="chip">Step 2, R, N</span><span class="chip role-counting">counting</span><span class="by">Server or webhook</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span><span class="chip">P7</span></p>
-    <ul><li>The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.</li><li>Sent with identify() when no form ran (P3, direct P6).</li><li>Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.</li><li>This event, and booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.</li><li>Starts the HubSpot workflow: confirmation email now, reminders from call_at.</li></ul>
+    <ul><li>The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.</li><li>Sent with identify() when no form ran (P3, direct P6).</li><li>Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.</li><li>This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.</li><li>Starts the HubSpot workflow: confirmation email now, reminders from call_at.</li></ul>
     <p class="mut">Carries every booking and email variable, listed in the "Booking and email variables" section, plus the context.</p>
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;booking_confirmed&quot;,
+  &quot;event&quot;: &quot;meeting_booking_confirmed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -518,8 +525,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-confirmation_viewed" data-by="browser" data-role="diagnostic" data-text="confirmation_viewed confirmation (thank-you) page loads. p1 p2 p3 p4 p5 p6 p7">
-  <summary><span class="nm"><i class="dot b"></i><code>confirmation_viewed</code></span><span class="meta"><span class="chip">Step 3</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_confirmation_page_viewed" data-by="browser" data-role="diagnostic" data-text="meeting_confirmation_page_viewed confirmation (thank-you) page loads. p1 p2 p3 p4 p5 p6 p7">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_confirmation_page_viewed</code></span><span class="meta"><span class="chip">Step 3</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Confirmation (thank-you) page loads.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span><span class="chip">P7</span></p>
@@ -528,7 +535,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;confirmation_viewed&quot;,
+  &quot;event&quot;: &quot;meeting_confirmation_page_viewed&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -572,8 +579,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-calendar_added" data-by="browser" data-role="diagnostic" data-text="calendar_added click on an add to calendar button on the confirmation page. p1 p2 p3 p4 p5 p6">
-  <summary><span class="nm"><i class="dot b"></i><code>calendar_added</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 3</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
+<details class="ev" id="ev-meeting_add_to_calendar_clicked" data-by="browser" data-role="diagnostic" data-text="meeting_add_to_calendar_clicked click on an add to calendar button on the confirmation page. p1 p2 p3 p4 p5 p6">
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_add_to_calendar_clicked</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 3</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Click on an Add to calendar button on the confirmation page.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span></p>
@@ -582,7 +589,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;calendar_added&quot;,
+  &quot;event&quot;: &quot;meeting_add_to_calendar_clicked&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -627,8 +634,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<div class="gh">Email</div><details class="ev" id="ev-email_sent" data-by="email" data-role="diagnostic" data-text="email_sent the email platform accepts a send of any flow email. p6 p7">
-  <summary><span class="nm"><i class="dot m"></i><code>email_sent</code></span><span class="meta"><span class="chip">Step R, 4 to 8, N</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Email platform</span></span></summary>
+<div class="gh">Email</div><details class="ev" id="ev-meeting_email_sent" data-by="email" data-role="diagnostic" data-text="meeting_email_sent the email platform accepts a send of any flow email. p6 p7">
+  <summary><span class="nm"><i class="dot m"></i><code>meeting_email_sent</code></span><span class="meta"><span class="chip">Step R, 4 to 8, N</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Email platform</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> The email platform accepts a send of any flow email.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P6</span><span class="chip">P7</span></p>
@@ -637,7 +644,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;email_sent&quot;,
+  &quot;event&quot;: &quot;meeting_email_sent&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -680,8 +687,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-email_clicked" data-by="email" data-role="diagnostic" data-text="email_clicked tracked link click in a flow email. p6 p7">
-  <summary><span class="nm"><i class="dot m"></i><code>email_clicked</code></span><span class="meta"><span class="chip">Step R, 4 to 8, N</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Email platform</span></span></summary>
+<details class="ev" id="ev-meeting_email_clicked" data-by="email" data-role="diagnostic" data-text="meeting_email_clicked tracked link click in a flow email. p6 p7">
+  <summary><span class="nm"><i class="dot m"></i><code>meeting_email_clicked</code></span><span class="meta"><span class="chip">Step R, 4 to 8, N</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Email platform</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> Tracked link click in a flow email.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P6</span><span class="chip">P7</span></p>
@@ -690,7 +697,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;email_clicked&quot;,
+  &quot;event&quot;: &quot;meeting_email_clicked&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -734,8 +741,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<div class="gh">Booking lifecycle and call</div><details class="ev" id="ev-booking_rescheduled" data-by="server" data-role="diagnostic" data-text="booking_rescheduled the time of an existing booking is changed. cal.com booking_rescheduled webhook. p7">
-  <summary><span class="nm"><i class="dot s"></i><code>booking_rescheduled</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step X</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Server or webhook</span></span></summary>
+<div class="gh">Booking lifecycle and call</div><details class="ev" id="ev-meeting_booking_rescheduled" data-by="server" data-role="diagnostic" data-text="meeting_booking_rescheduled the time of an existing booking is changed. cal.com booking_rescheduled webhook. p7">
+  <summary><span class="nm"><i class="dot s"></i><code>meeting_booking_rescheduled</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step X</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Server or webhook</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P7</span></p>
@@ -744,7 +751,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;booking_rescheduled&quot;,
+  &quot;event&quot;: &quot;meeting_booking_rescheduled&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -813,17 +820,17 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-booking_canceled" data-by="server" data-role="counting" data-text="booking_canceled a booking is cancelled by the visitor or the host. cal.com booking_cancelled webhook. p7">
-  <summary><span class="nm"><i class="dot s"></i><code>booking_canceled</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step X</span><span class="chip role-counting">counting</span><span class="by">Server or webhook</span></span></summary>
+<details class="ev" id="ev-meeting_booking_canceled" data-by="server" data-role="counting" data-text="meeting_booking_canceled a booking is cancelled by the visitor or the host. cal.com booking_cancelled webhook. p7">
+  <summary><span class="nm"><i class="dot s"></i><code>meeting_booking_canceled</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step X</span><span class="chip role-counting">counting</span><span class="by">Server or webhook</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P7</span></p>
-    <ul><li>Subtracted from show rate: call_held / (booking_confirmed minus booking_canceled).</li><li>Stops the HubSpot reminders for this booking id.</li></ul>
+    <ul><li>Subtracted from show rate: meeting_call_held / (meeting_booking_confirmed minus meeting_booking_canceled).</li><li>Stops the HubSpot reminders for this booking id.</li></ul>
     <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th><th>Example</th></tr></thead><tbody><tr><td><code>canceled_by</code></td><td>enum</td><td>visitor or host.</td><td><code>&quot;visitor&quot;</code></td></tr><tr><td><code>reason</code></td><td>string or null</td><td>Cancellation reason, if given.</td><td><code>&quot;Need a different time&quot;</code></td></tr></tbody></table></div>
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;booking_canceled&quot;,
+  &quot;event&quot;: &quot;meeting_booking_canceled&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -868,8 +875,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-call_held" data-by="server" data-role="counting" data-text="call_held the visitor joined the call. p1 p2 p3 p4 p5 p6 p7">
-  <summary><span class="nm"><i class="dot s"></i><code>call_held</code></span><span class="meta"><span class="chip">Step 7</span><span class="chip role-counting">counting</span><span class="by">Server or webhook</span></span></summary>
+<details class="ev" id="ev-meeting_call_held" data-by="server" data-role="counting" data-text="meeting_call_held the visitor joined the call. p1 p2 p3 p4 p5 p6 p7">
+  <summary><span class="nm"><i class="dot s"></i><code>meeting_call_held</code></span><span class="meta"><span class="chip">Step 7</span><span class="chip role-counting">counting</span><span class="by">Server or webhook</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> The visitor joined the call.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span><span class="chip">P7</span></p>
@@ -878,7 +885,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;call_held&quot;,
+  &quot;event&quot;: &quot;meeting_call_held&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -922,8 +929,8 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 }</code></pre>
   </div>
 </details>
-<details class="ev" id="ev-call_no_show" data-by="server" data-role="diagnostic" data-text="call_no_show the visitor has not joined 15 minutes after the start. p1 p2 p3 p4 p5 p6 p7">
-  <summary><span class="nm"><i class="dot s"></i><code>call_no_show</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 7</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Server or webhook</span></span></summary>
+<details class="ev" id="ev-meeting_call_no_show" data-by="server" data-role="diagnostic" data-text="meeting_call_no_show the visitor has not joined 15 minutes after the start. p1 p2 p3 p4 p5 p6 p7">
+  <summary><span class="nm"><i class="dot s"></i><code>meeting_call_no_show</code><span class="tag">Added</span></span><span class="meta"><span class="chip">Step 7</span><span class="chip role-diagnostic">diagnostic</span><span class="by">Server or webhook</span></span></summary>
   <div class="body">
     <p class="when"><b>Fires when</b> The visitor has not joined 15 minutes after the start.</p>
     <p class="paths"><b>Entry paths</b> <span class="chip">P1</span><span class="chip">P2</span><span class="chip">P3</span><span class="chip">P4</span><span class="chip">P5</span><span class="chip">P6</span><span class="chip">P7</span></p>
@@ -932,7 +939,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>{
   &quot;type&quot;: &quot;track&quot;,
-  &quot;event&quot;: &quot;call_no_show&quot;,
+  &quot;event&quot;: &quot;meeting_call_no_show&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;timestamp&quot;: &quot;2026-10-22T09:15:02.771Z&quot;,
@@ -1006,7 +1013,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     }
   }
 }</code></pre></div></details>
-    <details class="ev"><summary><span class="nm"><i class="dot s"></i><code>identify()</code></span><span class="meta"><span class="by">Server</span></span></summary><div class="body"><p class="when"><b>Fires when</b> At form_submitted (server).</p><div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>{
+    <details class="ev"><summary><span class="nm"><i class="dot s"></i><code>identify()</code></span><span class="meta"><span class="by">Server</span></span></summary><div class="body"><p class="when"><b>Fires when</b> At meeting_form_submitted (server).</p><div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>{
   &quot;type&quot;: &quot;identify&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
@@ -1019,7 +1026,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     &quot;phone&quot;: &quot;+38640123456&quot;,
     &quot;email_domain&quot;: &quot;acme.com&quot;
   }
-}</code></pre></div></details><details class="ev"><summary><span class="nm"><i class="dot s"></i><code>identify()</code></span><span class="meta"><span class="by">Server</span></span></summary><div class="body"><p class="when"><b>Fires when</b> At booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.</p><div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>{
+}</code></pre></div></details><details class="ev"><summary><span class="nm"><i class="dot s"></i><code>identify()</code></span><span class="meta"><span class="by">Server</span></span></summary><div class="body"><p class="when"><b>Fires when</b> At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.</p><div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>{
   &quot;type&quot;: &quot;identify&quot;,
   &quot;userId&quot;: &quot;contact_8812&quot;,
   &quot;anonymousId&quot;: &quot;4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34&quot;,
@@ -1043,19 +1050,19 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section id="variables" aria-labelledby="h-vars">
     <h2 id="h-vars">Booking and email variables</h2>
-    <p class="lede">Carried by <code>booking_confirmed</code> and again by <code>booking_rescheduled</code>. The three emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read them as custom tokens in the HubSpot workflow.</p>
+    <p class="lede">Carried by <code>meeting_booking_confirmed</code> and again by <code>meeting_booking_rescheduled</code>. The three emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read them as custom tokens in the HubSpot workflow.</p>
     <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th><th>Example</th><th>Where it comes from</th><th>Email</th></tr></thead><tbody><tr><td><code>booking_id</code></td><td>string</td><td>Cal.com booking id (uid). Builds the reschedule and cancel links.</td><td><code>k9Zp3QmV7sLw2TnXb8Rc4D</code></td><td>Cal.com webhook: payload.uid</td><td>1, 2, 3 (reschedule and cancel links)</td></tr><tr><td><code>call_at</code></td><td>ISO datetime</td><td>Call start, UTC. Drives the 24 h and 1 h reminder timing.</td><td><code>2026-10-29T14:30:00Z</code></td><td>Cal.com webhook: payload.startTime</td><td>workflow timing</td></tr><tr><td><code>call_end_at</code></td><td>ISO datetime</td><td>Call end, UTC. Added.</td><td><code>2026-10-29T15:30:00Z</code></td><td>Cal.com webhook: payload.endTime</td><td></td></tr><tr><td><code>duration_min</code></td><td>number</td><td>Call length in minutes. The designs say 60. Added.</td><td><code>60</code></td><td>Cal.com webhook: end minus start</td><td>1</td></tr><tr><td><code>lead_time_h</code></td><td>number</td><td>Hours between booking and call. Reminder 2 is skipped under 24.</td><td><code>173</code></td><td>Computed</td><td></td></tr><tr><td><code>time_zone</code></td><td>string</td><td>Visitor's time zone (IANA).</td><td><code>Europe/Ljubljana</code></td><td>Cal.com webhook: attendees[0].timeZone</td><td></td></tr><tr><td><code>call_weekday</code></td><td>string</td><td>Weekday of the call in the visitor's time zone. Email: &quot;See you on ...&quot;. Added.</td><td><code>Thursday</code></td><td>Computed in the visitor's time zone</td><td>1</td></tr><tr><td><code>call_date_text</code></td><td>string</td><td>Date as shown in emails, visitor's time zone. Added.</td><td><code>Thursday, 29 October</code></td><td>Computed</td><td>1, 2</td></tr><tr><td><code>call_time_text</code></td><td>string</td><td>Time with zone as shown in emails. Added.</td><td><code>15:30 (CET)</code></td><td>Computed</td><td>1, 2, 3</td></tr><tr><td><code>join_url</code></td><td>string</td><td>Meeting link for the Join the Call buttons. Added.</td><td><code>https://meet.google.com/abc-defg-hij</code></td><td>Cal.com webhook: payload.videoCallData.url or location</td><td>2, 3</td></tr><tr><td><code>meeting_location</code></td><td>string</td><td>Where the call happens, for the &quot;Where&quot; field. Added.</td><td><code>Video call</code></td><td>Cal.com webhook: payload.location</td><td></td></tr><tr><td><code>host_id</code></td><td>number</td><td>Cal.com id of the assigned host (round robin pick).</td><td><code>1001</code></td><td>Cal.com webhook: organizer.id</td><td></td></tr><tr><td><code>host_name</code></td><td>string</td><td>Host full name. Email: &quot;Host&quot; field and sign-off. Added.</td><td><code>Alex Rivera</code></td><td>Cal.com webhook: organizer.name</td><td>1, 2, 3</td></tr><tr><td><code>host_first_name</code></td><td>string</td><td>Host first name for the sign-off. Added.</td><td><code>Alex</code></td><td>Our host list, or split from host_name</td><td>2, 3</td></tr><tr><td><code>host_email</code></td><td>string</td><td>Host work email. Used to find the HubSpot owner. Added.</td><td><code>alex.rivera@databox.com</code></td><td>Cal.com webhook: organizer.email</td><td></td></tr><tr><td><code>host_username</code></td><td>string</td><td>Cal.com username. The key into our host list. Added.</td><td><code>alex-rivera</code></td><td>Cal.com webhook: organizer.username</td><td></td></tr><tr><td><code>host_role</code></td><td>string</td><td>Host job title for the email (&quot;Name, Role&quot;). Not available from Cal.com. Added.</td><td><code>Head of Sales</code></td><td>Our host list, keyed by host_username</td><td>1, 2, 3</td></tr><tr><td><code>host_photo_url</code></td><td>string</td><td>Public URL of the host photo for the emails. Cal.com's photo is only 96 px, so use our own. Added.</td><td><code>https://cdn.example.com/hosts/alex-rivera-288.jpg</code></td><td>Our host list, keyed by host_username</td><td>1, 2, 3</td></tr><tr><td><code>calendar_google_url</code></td><td>string</td><td>Add to Google Calendar link. Added.</td><td><code>https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=St...</code></td><td>Computed from call_at, call_end_at, join_url</td><td>1</td></tr><tr><td><code>calendar_outlook_url</code></td><td>string</td><td>Add to Outlook Calendar link. Added.</td><td><code>https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalend...</code></td><td>Computed</td><td>1</td></tr><tr><td><code>calendar_ics_url</code></td><td>string</td><td>Add to Apple Calendar: link to an .ics file. Not available yet, see open points. Added.</td><td><code>https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics</code></td><td>Needs a place to host the file</td><td>1</td></tr><tr><td><code>reschedule_url</code></td><td>string</td><td>Reschedule page. Lets the email use one value instead of building it. Added.</td><td><code>https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D</code></td><td>Computed from booking_id</td><td>1, 2, 3</td></tr><tr><td><code>cancel_url</code></td><td>string</td><td>Cancel page. Added.</td><td><code>https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true</code></td><td>Computed from booking_id</td><td>1, 2, 3</td></tr><tr><td><code>name</code></td><td>string</td><td>Name and surname exactly as typed. The form has a single field (Q4 decided). Added.</td><td><code>Ana Novak</code></td><td>Booking form, or Cal.com attendee name</td><td></td></tr><tr><td><code>first_name</code></td><td>string</td><td>First name, split from name on the first space. Used by HubSpot and the emails (&quot;Hi Ana&quot;). Added.</td><td><code>Ana</code></td><td>Derived from name</td><td>1, 2, 3</td></tr><tr><td><code>last_name</code></td><td>string or empty</td><td>Rest of name after the first space. Empty if only one word was typed. Added.</td><td><code>Novak</code></td><td>Derived from name</td><td>1</td></tr><tr><td><code>phone</code></td><td>string or null</td><td>Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added.</td><td><code>+38640123456</code></td><td>Booking form</td><td></td></tr><tr><td><code>rebook_reason</code></td><td>enum or null</td><td>recovery or no_show when the booking came from a rebook email. Null on a first booking.</td><td><code>null</code></td><td>Rebook link in the email</td><td></td></tr></tbody></table></div>
   </section>
 
   <section id="paths" aria-labelledby="h-paths">
     <h2 id="h-paths">Entry paths</h2>
     <p class="lede">Events and payloads are identical on every path. Only the values change.</p>
-    <div class="tw"><table><thead><tr><th>Path</th><th>Route</th><th>Resulting values</th></tr></thead><tbody><tr><td><b>P1</b></td><td>Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you</td><td>flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad</td></tr><tr><td><b>P2</b></td><td>Ad, then ad landing, then booking page, calendar, thank you</td><td>flow_entry = cta, source_page = /ad-landing, first and last touch = the ad</td></tr><tr><td><b>P3</b></td><td>Targeted ad straight to the calendar, thank you</td><td>flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with booking_confirmed</td></tr><tr><td><b>P4</b></td><td>Search, social or direct, any page, header CTA, booking page, calendar, thank you</td><td>flow_entry = cta, cta_id = header, source_page = the current page</td></tr><tr><td><b>P5</b></td><td>Search, social or partner, landing page, booking page, calendar, thank you</td><td>flow_entry = cta, source_page = /landing-page</td></tr><tr><td><b>P6</b></td><td>Marketing email, booking page (or straight to the calendar), thank you</td><td>flow_entry = email, last_touch = the email campaign. A new last touch</td></tr><tr><td><b>P7</b></td><td>Flow email (reschedule, rebook), calendar, thank you</td><td>No new touch. booking_rescheduled, or booking_confirmed with rebook_reason; inherits the original booking</td></tr></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Path</th><th>Route</th><th>Resulting values</th></tr></thead><tbody><tr><td><b>P1</b></td><td>Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you</td><td>flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad</td></tr><tr><td><b>P2</b></td><td>Ad, then ad landing, then booking page, calendar, thank you</td><td>flow_entry = cta, source_page = /ad-landing, first and last touch = the ad</td></tr><tr><td><b>P3</b></td><td>Targeted ad straight to the calendar, thank you</td><td>flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with meeting_booking_confirmed</td></tr><tr><td><b>P4</b></td><td>Search, social or direct, any page, header CTA, booking page, calendar, thank you</td><td>flow_entry = cta, cta_id = header, source_page = the current page</td></tr><tr><td><b>P5</b></td><td>Search, social or partner, landing page, booking page, calendar, thank you</td><td>flow_entry = cta, source_page = /landing-page</td></tr><tr><td><b>P6</b></td><td>Marketing email, booking page (or straight to the calendar), thank you</td><td>flow_entry = email, last_touch = the email campaign. A new last touch</td></tr><tr><td><b>P7</b></td><td>Flow email (reschedule, rebook), calendar, thank you</td><td>No new touch. meeting_booking_rescheduled, or meeting_booking_confirmed with rebook_reason; inherits the original booking</td></tr></tbody></table></div>
   </section>
 
   <section id="open" aria-labelledby="h-open">
     <h2 id="h-open">Open points</h2>
-    <ul class="op"><li>UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.</li><li>Event naming: the spec uses snake_case (booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).</li><li>Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.</li><li>Who marks call_held and call_no_show (Q5). Cal.com's HubSpot app does not set no-show.</li><li>Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.</li><li>Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com's own confirmation email, which carries the .ics.</li><li>Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.</li><li>Cancel and reschedule must be switched on in the Cal.com event type, or the reschedule_url and cancel_url in the emails will not work.</li><li>Cal.com webhook payload: the field names in the &quot;Where it comes from&quot; column are the expected ones. Verify them against a real BOOKING_CREATED payload before building.</li><li>Consent: whether the touch cookie counts as functional or analytics under the consent banner is still open (Q3).</li></ul>
+    <ul class="op"><li>UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.</li><li>Event naming: the spec uses snake_case (meeting_booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).</li><li>Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.</li><li>Who marks meeting_call_held and meeting_call_no_show (Q5). Cal.com's HubSpot app does not set no-show.</li><li>Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.</li><li>Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com's own confirmation email, which carries the .ics.</li><li>Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.</li><li>Cancel and reschedule must be switched on in the Cal.com event type, or the reschedule_url and cancel_url in the emails will not work.</li><li>Cal.com webhook payload: the field names in the &quot;Where it comes from&quot; column are the expected ones. Verify them against a real BOOKING_CREATED payload before building.</li><li>Consent: whether the touch cookie counts as functional or analytics under the consent banner is still open (Q3).</li></ul>
   </section>
 </div>
 <script>

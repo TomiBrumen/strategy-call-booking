@@ -90,7 +90,7 @@ export default function App() {
   // Step 1 -> 2
   const onForm = () => {
     identify(form.email);
-    fire('form_submitted', { email_domain: form.email.split('@')[1], contact_id: 'contact_' + ctx.booking_session_id.slice(3, 8) });
+    fire('meeting_form_submitted', { email_domain: form.email.split('@')[1], contact_id: 'contact_' + ctx.booking_session_id.slice(3, 8) });
     go('calendar');
   };
 
@@ -98,11 +98,11 @@ export default function App() {
   // Step 0 -> 1
   const onCta = (id) => {
     setCtx((c) => ({ ...c, source_page: '/page-xyz', cta_id: id }));
-    fire('cta_clicked', { cta_id: id, source_page: '/page-xyz', cta_text: 'Book a strategy call' });
+    fire('meeting_cta_clicked', { cta_id: id, source_page: '/page-xyz', cta_text: 'Book a strategy call' });
     go('booking');
   };
 
-  const onSlot = (start) => fire('slot_selected', { days_ahead: daysAhead(start) });
+  const onSlot = (start) => fire('meeting_slot_selected', { days_ahead: daysAhead(start) });
 
   // Everything the server-side events need travels with the booking (Cal.com keeps up to 50 string keys).
   // The webhook then carries the full attribution context, so nothing has to be stored on our side.
@@ -126,7 +126,7 @@ export default function App() {
         getHostAvatar(hostUser(d)).then((hostAvatar) => hostAvatar && setBooking((cur) => cur && { ...cur, hostAvatar }));
         // Everything the emails need travels in the event, already formatted for the visitor's time zone
         const links = calendarLinks({ title: event.title, start: d.start, end: d.end, details: d.meetingUrl || 'Strategy call with Databox' });
-        fire('booking_confirmed', {
+        fire('meeting_booking_confirmed', {
           booking_id: d.uid, host_id: d.hosts?.[0]?.id ?? null, call_at: d.start, lead_time_h: Math.round((new Date(d.start) - Date.now()) / 36e5),
           rebook_reason: null, variant_booking: vb,
           call_weekday: new Intl.DateTimeFormat(undefined, { weekday: 'long', timeZone: tz }).format(new Date(d.start)),
@@ -142,9 +142,9 @@ export default function App() {
   };
 
   useEffect(() => { fire('page', { path: entry === 'ad' ? '/strategy-call/calendar' : '/page-xyz' }); }, []);
-  useEffect(() => { if (step === 'confirm') fire('confirmation_viewed', { variant_confirmation: vc, booking_id: booking.uid }); }, [step]);
-  useEffect(() => { if (step === 'booking') fire('booking_page_viewed', { variant_booking: vb, flow_entry: ctx.flow_entry }); }, [step, vb]);
-  useEffect(() => { if (step === 'calendar') fire('calendar_viewed', { flow_start: ctx.flow_start, flow_entry: ctx.flow_entry, }); }, [step]);
+  useEffect(() => { if (step === 'confirm') fire('meeting_confirmation_page_viewed', { variant_confirmation: vc, booking_id: booking.uid }); }, [step]);
+  useEffect(() => { if (step === 'booking') fire('meeting_booking_page_viewed', { variant_booking: vb, flow_entry: ctx.flow_entry }); }, [step, vb]);
+  useEffect(() => { if (step === 'calendar') fire('meeting_calendar_page_viewed', { flow_start: ctx.flow_start, flow_entry: ctx.flow_entry, }); }, [step]);
 
   const idx = STEPS.findIndex((s) => s.id === step);
   const screenEl = {

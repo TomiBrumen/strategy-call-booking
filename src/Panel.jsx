@@ -59,7 +59,7 @@ export default function Panel({ onClose, step, log, ctx, booking, tz }) {
               </li>
             ))}
           </ul>
-          <p className="hint">Emails here are only a preview. Cal.com sends its own confirmation, and reschedule or cancel happen on its pages, where its webhooks would fire booking_rescheduled and booking_canceled.</p>
+          <p className="hint">Emails here are only a preview. Cal.com sends its own confirmation, and reschedule or cancel happen on its pages, where its webhooks would fire meeting_booking_rescheduled and meeting_booking_canceled.</p>
         </div>
       )}
     </aside>

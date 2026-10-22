@@ -6,7 +6,7 @@ import { calendarLinks, fmtDate, fmtTime, tzName } from './util.js';
 export default function Confirm({ variant, booking, event, tz, fire }) {
   const links = calendarLinks({ title: event.title, start: booking.start, end: booking.end, details: booking.meetingUrl || 'Strategy call with Databox' });
   const when = `${fmtDate(booking.start, tz)} · ${fmtTime(booking.start, tz)}`;
-  const added = (calendar) => fire('calendar_added', { calendar });
+  const added = (calendar) => fire('meeting_add_to_calendar_clicked', { calendar });
 
   const steps = [
     ['Check your email', 'Your confirmation and calendar invite are on the way.'],

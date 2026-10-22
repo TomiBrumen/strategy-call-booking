@@ -76,7 +76,7 @@ export function context(level) {
   return c;
 }
 
-// ---------- booking and email variables (carried by booking_confirmed and booking_rescheduled) ----------
+// ---------- booking and email variables (carried by meeting_booking_confirmed and meeting_booking_rescheduled) ----------
 // [name, type, description, example value, where it comes from]
 export const BOOKING_VARS = [
   ['booking_id', 'string', 'Cal.com booking id (uid). Builds the reschedule and cancel links.', S.bookingId, 'Cal.com webhook: payload.uid'],
@@ -117,7 +117,7 @@ const ALL_BOOKING = BOOKING_VARS.map((v) => v[0]);
 // by: browser | server | email   role: counting | diagnostic   level: anon | known | booked
 export const EVENTS = [
   {
-    name: 'cta_clicked', group: 'Site', step: '0', by: 'browser', role: 'diagnostic', level: 'anon', new: true,
+    name: 'meeting_cta_clicked', group: 'Site', step: '0', by: 'browser', role: 'diagnostic', level: 'anon', new: true,
     when: 'Click on any element with a data-cta attribute, on any site, blog or product page.',
     paths: ['P1', 'P2', 'P4', 'P5'],
     notes: ['Writes source_page, cta_id and a new booking_session_id (if none) to the booking link as ?src=&cta=&bsid=, and to the cookie as backup.', 'Fires once per click. Not fired for marketing emails or targeted ads: those start further down the flow.'],
@@ -125,15 +125,15 @@ export const EVENTS = [
     specific: { cta_id: 'xyz_inline', source_page: '/page-xyz', cta_text: 'Book a strategy call' },
   },
   {
-    name: 'booking_page_viewed', group: 'Site', step: '1', by: 'browser', role: 'counting', level: 'anon',
+    name: 'meeting_booking_page_viewed', group: 'Site', step: '1', by: 'browser', role: 'counting', level: 'anon',
     when: 'Booking page loads. Replaces the old page_view.',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
-    notes: ['Denominator of the visit-to-booked rate (same booking_session_id as booking_confirmed).', 'Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.', 'Fires on load only, not on a variant switch or re-render.'],
+    notes: ['Denominator of the visit-to-booked rate (same booking_session_id as meeting_booking_confirmed).', 'Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.', 'Fires on load only, not on a variant switch or re-render.'],
     props: [['variant_booking', 'A or B', 'Variant shown.', 'A'], ['flow_entry', 'enum', 'Entry type.', 'cta']],
     specific: { variant_booking: 'A', flow_entry: 'cta' },
   },
   {
-    name: 'video_played', group: 'Site', step: '1, 3', by: 'browser', role: 'diagnostic', level: 'any', new: true,
+    name: 'meeting_video_played', group: 'Site', step: '1, 3', by: 'browser', role: 'diagnostic', level: 'any', new: true,
     when: 'Play pressed on the video of an A variant (booking page or confirmation page).',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
     notes: ['Variant B has no video, so it never fires there.', 'Fire again at 25, 50, 75 and 100 percent if pct_watched is wanted; otherwise once with 0.'],
@@ -141,23 +141,23 @@ export const EVENTS = [
     specific: { page: 'booking', pct_watched: 0 },
   },
   {
-    name: 'form_started', group: 'Site', step: '1', by: 'browser', role: 'diagnostic', level: 'anon',
+    name: 'meeting_form_started', group: 'Site', step: '1', by: 'browser', role: 'diagnostic', level: 'anon',
     when: 'First field of the booking form gets focus.',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
     notes: ['Once per booking_session_id.'],
     props: [], specific: {},
   },
   {
-    name: 'form_submitted', group: 'Site', step: '1', by: 'server', role: 'diagnostic', level: 'known',
+    name: 'meeting_form_submitted', group: 'Site', step: '1', by: 'server', role: 'diagnostic', level: 'known',
     when: 'Form accepted and the contact is created or matched. Sent together with identify().',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
-    notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
+    notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
     props: [['email_domain', 'string', 'Domain of the work email.', 'acme.com'], ['contact_id', 'string', 'CRM contact id, also the Segment userId.', S.userId]],
     specific: { email_domain: 'acme.com', contact_id: S.userId },
     identify: true,
   },
   {
-    name: 'calendar_viewed', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'any', new: true,
+    name: 'meeting_calendar_page_viewed', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'any', new: true,
     when: 'Calendar loads, including direct entry from ads and emails.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['On P3 and direct P6 this is the first and only context snapshot, so it must run the same read logic as the booking page.', 'On those direct entries the same three fields (name, business email, phone optional) appear after a slot is picked, above the Confirm button.', 'On P7 (flow emails) there is no new touch; the booking keeps its original attribution.'],
@@ -165,7 +165,7 @@ export const EVENTS = [
     specific: { flow_start: 'booking_page', flow_entry: 'cta' },
   },
   {
-    name: 'slot_selected', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'known', new: true,
+    name: 'meeting_slot_selected', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'known', new: true,
     when: 'A time slot is picked, before the booking is confirmed.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Can fire several times if the visitor changes slot. On the targeted-ad path the email is only known at confirm, so this event is still anonymous there.'],
@@ -173,15 +173,15 @@ export const EVENTS = [
     specific: { days_ahead: 7 },
   },
   {
-    name: 'booking_confirmed', group: 'Site', step: '2, R, N', by: 'server', role: 'counting', level: 'booked',
+    name: 'meeting_booking_confirmed', group: 'Site', step: '2, R, N', by: 'server', role: 'counting', level: 'booked',
     when: 'A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
-    notes: ['The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.', 'Sent with identify() when no form ran (P3, direct P6).', 'Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.', 'This event, and booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.', 'Starts the HubSpot workflow: confirmation email now, reminders from call_at.'],
+    notes: ['The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.', 'Sent with identify() when no form ran (P3, direct P6).', 'Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.', 'This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.', 'Starts the HubSpot workflow: confirmation email now, reminders from call_at.'],
     props: [], specific: bookingProps(ALL_BOOKING), booking: true,
     identify: true,
   },
   {
-    name: 'confirmation_viewed', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked',
+    name: 'meeting_confirmation_page_viewed', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked',
     when: 'Confirmation (thank-you) page loads.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Never use it to count bookings.', 'Keeps the anonymous id if the scheduler ran on another domain (ajs_aid).'],
@@ -189,7 +189,7 @@ export const EVENTS = [
     specific: { variant_confirmation: 'A' },
   },
   {
-    name: 'calendar_added', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked', new: true,
+    name: 'meeting_add_to_calendar_clicked', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked', new: true,
     when: 'Click on an Add to calendar button on the confirmation page.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
     notes: ['Each click fires once.'],
@@ -197,7 +197,7 @@ export const EVENTS = [
     specific: { calendar: 'google' },
   },
   {
-    name: 'email_sent', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
+    name: 'meeting_email_sent', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
     when: 'The email platform accepts a send of any flow email.',
     paths: ['P6', 'P7'],
     notes: ['Email opens are not tracked: Apple Mail Privacy Protection inflates them.', 'Built so far: confirmation, reminder_24h, reminder_1h. Spec also lists recovery, no_show and post_call (not designed yet).'],
@@ -205,7 +205,7 @@ export const EVENTS = [
     specific: { email_id: 'confirmation' },
   },
   {
-    name: 'email_clicked', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
+    name: 'meeting_email_clicked', group: 'Email', step: 'R, 4 to 8, N', by: 'email', role: 'diagnostic', level: 'booked',
     when: 'Tracked link click in a flow email.',
     paths: ['P6', 'P7'],
     notes: ['Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they are a new last touch (open question Q10).', 'link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple.'],
@@ -213,7 +213,7 @@ export const EVENTS = [
     specific: { email_id: 'reminder_24h', link_id: 'join' },
   },
   {
-    name: 'booking_rescheduled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'diagnostic', level: 'booked', new: true,
+    name: 'meeting_booking_rescheduled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'diagnostic', level: 'booked', new: true,
     when: 'The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.',
     paths: ['P7'],
     notes: ['Not counted as a new booking. Keeps the original attribution and variant.', 'Cal.com issues a new booking id on a reschedule: send it as booking_id and keep the old one as previous_booking_id so the join to the original stays.', 'Carries all the email variables again with the new time, so reminders can be rescheduled and a "your call moved" email can use them.'],
@@ -221,15 +221,15 @@ export const EVENTS = [
     specific: { previous_booking_id: 'wUqtfgWLCft74eKnRrEYYs', old_call_at: '2026-10-28T10:00:00Z', new_call_at: S.callAt, ...bookingProps(ALL_BOOKING) },
   },
   {
-    name: 'booking_canceled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'counting', level: 'booked', new: true,
+    name: 'meeting_booking_canceled', group: 'Booking lifecycle and call', step: 'X', by: 'server', role: 'counting', level: 'booked', new: true,
     when: 'A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.',
     paths: ['P7'],
-    notes: ['Subtracted from show rate: call_held / (booking_confirmed minus booking_canceled).', 'Stops the HubSpot reminders for this booking id.'],
+    notes: ['Subtracted from show rate: meeting_call_held / (meeting_booking_confirmed minus meeting_booking_canceled).', 'Stops the HubSpot reminders for this booking id.'],
     props: [['canceled_by', 'enum', 'visitor or host.', 'visitor'], ['reason', 'string or null', 'Cancellation reason, if given.', 'Need a different time']],
     specific: { canceled_by: 'visitor', reason: 'Need a different time', call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
   },
   {
-    name: 'call_held', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'counting', level: 'booked',
+    name: 'meeting_call_held', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'counting', level: 'booked',
     when: 'The visitor joined the call.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Source system is open (Q5): the scheduler, the call recorder or the host in the CRM. Cal.com\'s HubSpot app does not mark no-shows.', 'Primary metric for the confirmation page test: show rate.'],
@@ -237,7 +237,7 @@ export const EVENTS = [
     specific: { duration_min: 52, call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
   },
   {
-    name: 'call_no_show', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'diagnostic', level: 'booked', new: true,
+    name: 'meeting_call_no_show', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'diagnostic', level: 'booked', new: true,
     when: 'The visitor has not joined 15 minutes after the start.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar (rebook_reason = no_show).'],
@@ -259,14 +259,14 @@ export const PAGE_CALL = {
 
 export const IDENTIFY_CALLS = [
   {
-    when: 'At form_submitted (server).',
+    when: 'At meeting_form_submitted (server).',
     json: {
       type: 'identify', userId: S.userId, anonymousId: S.anonymousId, timestamp: '2026-10-22T09:14:40.108Z',
       traits: { email: S.email, name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: '+38640123456', email_domain: 'acme.com' },
     },
   },
   {
-    when: 'At booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.',
+    when: 'At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.',
     json: {
       type: 'identify', userId: S.userId, anonymousId: S.anonymousId, timestamp: '2026-10-22T09:17:11.530Z',
       traits: { email: S.email, name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: null, email_domain: 'acme.com' },
@@ -278,18 +278,18 @@ export const IDENTIFY_CALLS = [
 export const PATHS = [
   ['P1', 'Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you', 'flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad'],
   ['P2', 'Ad, then ad landing, then booking page, calendar, thank you', 'flow_entry = cta, source_page = /ad-landing, first and last touch = the ad'],
-  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with booking_confirmed'],
+  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with meeting_booking_confirmed'],
   ['P4', 'Search, social or direct, any page, header CTA, booking page, calendar, thank you', 'flow_entry = cta, cta_id = header, source_page = the current page'],
   ['P5', 'Search, social or partner, landing page, booking page, calendar, thank you', 'flow_entry = cta, source_page = /landing-page'],
   ['P6', 'Marketing email, booking page (or straight to the calendar), thank you', 'flow_entry = email, last_touch = the email campaign. A new last touch'],
-  ['P7', 'Flow email (reschedule, rebook), calendar, thank you', 'No new touch. booking_rescheduled, or booking_confirmed with rebook_reason; inherits the original booking'],
+  ['P7', 'Flow email (reschedule, rebook), calendar, thank you', 'No new touch. meeting_booking_rescheduled, or meeting_booking_confirmed with rebook_reason; inherits the original booking'],
 ];
 
 export const OPEN_POINTS = [
   'UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.',
-  'Event naming: the spec uses snake_case (booking_confirmed). Segment\'s own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).',
+  'Event naming: the spec uses snake_case (meeting_booking_confirmed). Segment\'s own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).',
   'Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.',
-  'Who marks call_held and call_no_show (Q5). Cal.com\'s HubSpot app does not set no-show.',
+  'Who marks meeting_call_held and meeting_call_no_show (Q5). Cal.com\'s HubSpot app does not set no-show.',
   'Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.',
   'Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com\'s own confirmation email, which carries the .ics.',
   'Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.',
@@ -302,7 +302,7 @@ export const OPEN_POINTS = [
 export function jsonFor(e) {
   const ctx = context(e.level === 'any' ? 'anon' : e.level);
   const props = e.booking ? { ...e.specific, ...ctx } : { ...e.specific, ...ctx };
-  // booking_confirmed carries booking_id and email already inside specific/ctx; keep order stable
+  // meeting_booking_confirmed carries booking_id and email already inside specific/ctx; keep order stable
   const ordered = {};
   for (const k of Object.keys(e.specific)) ordered[k] = e.specific[k];
   for (const k of Object.keys(ctx)) if (!(k in ordered)) ordered[k] = ctx[k];
@@ -333,3 +333,11 @@ export const COVERAGE = {
     ['Added beyond the spec', 'email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter.'],
   ],
 };
+
+// ---------- naming ----------
+export const NAMING = {
+  rule: 'meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go.',
+  exception: 'meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.',
+  renames: [["cta_clicked", "meeting_cta_clicked"], ["booking_page_viewed", "meeting_booking_page_viewed"], ["video_played", "meeting_video_played"], ["form_started", "meeting_form_started"], ["form_submitted", "meeting_form_submitted"], ["calendar_viewed", "meeting_calendar_page_viewed"], ["slot_selected", "meeting_slot_selected"], ["booking_confirmed", "meeting_booking_confirmed"], ["confirmation_viewed", "meeting_confirmation_page_viewed"], ["calendar_added", "meeting_add_to_calendar_clicked"], ["email_sent", "meeting_email_sent"], ["email_clicked", "meeting_email_clicked"], ["booking_rescheduled", "meeting_booking_rescheduled"], ["booking_canceled", "meeting_booking_canceled"], ["call_held", "meeting_call_held"], ["call_no_show", "meeting_call_no_show"]],
+};
+export const SEGMENT_NOTE = 'Every event goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_.';

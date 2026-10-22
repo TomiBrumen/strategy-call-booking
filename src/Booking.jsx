@@ -19,7 +19,7 @@ export default function Booking({ variant, form, setForm, onSubmit, fire, busy }
   const [errors, setErrors] = useState({});
   const started = useRef(false);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
-  const start = () => { if (!started.current) { started.current = true; fire('form_started', {}); } };
+  const start = () => { if (!started.current) { started.current = true; fire('meeting_form_started', {}); } };
   const submit = (e) => {
     e.preventDefault();
     const er = validate(form);

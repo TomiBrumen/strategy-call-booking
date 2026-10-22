@@ -13,6 +13,31 @@ Every event below has: when it fires, who fires it, and a full example JSON (Seg
 5. Entry paths
 6. Open points
 
+## Naming and Segment
+
+**Rule:** meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.
+
+Every event goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.
+
+| Name in the spec | Name in this plan |
+|---|---|
+| `cta_clicked` | `meeting_cta_clicked` |
+| `booking_page_viewed` | `meeting_booking_page_viewed` |
+| `video_played` | `meeting_video_played` |
+| `form_started` | `meeting_form_started` |
+| `form_submitted` | `meeting_form_submitted` |
+| `calendar_viewed` | `meeting_calendar_page_viewed` |
+| `slot_selected` | `meeting_slot_selected` |
+| `booking_confirmed` | `meeting_booking_confirmed` |
+| `confirmation_viewed` | `meeting_confirmation_page_viewed` |
+| `calendar_added` | `meeting_add_to_calendar_clicked` |
+| `email_sent` | `meeting_email_sent` |
+| `email_clicked` | `meeting_email_clicked` |
+| `booking_rescheduled` | `meeting_booking_rescheduled` |
+| `booking_canceled` | `meeting_booking_canceled` |
+| `call_held` | `meeting_call_held` |
+| `call_no_show` | `meeting_call_no_show` |
+
 ## Check against the spec
 
 Strategy Call Booking Flow (2), checked 22 Oct 2026.
@@ -29,26 +54,26 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 
 | Event | Step | Fired by | Role | Fires when |
 |---|---|---|---|---|
-| `cta_clicked` *added* | 0 | Browser | diagnostic | Click on any element with a data-cta attribute, on any site, blog or product page. |
-| `booking_page_viewed` | 1 | Browser | counting | Booking page loads. Replaces the old page_view. |
-| `video_played` *added* | 1, 3 | Browser | diagnostic | Play pressed on the video of an A variant (booking page or confirmation page). |
-| `form_started` | 1 | Browser | diagnostic | First field of the booking form gets focus. |
-| `form_submitted` | 1 | Server or webhook | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
-| `calendar_viewed` *added* | 2 | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
-| `slot_selected` *added* | 2 | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
-| `booking_confirmed` | 2, R, N | Server or webhook | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
-| `confirmation_viewed` | 3 | Browser | diagnostic | Confirmation (thank-you) page loads. |
-| `calendar_added` *added* | 3 | Browser | diagnostic | Click on an Add to calendar button on the confirmation page. |
-| `email_sent` | R, 4 to 8, N | Email platform | diagnostic | The email platform accepts a send of any flow email. |
-| `email_clicked` | R, 4 to 8, N | Email platform | diagnostic | Tracked link click in a flow email. |
-| `booking_rescheduled` *added* | X | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
-| `booking_canceled` *added* | X | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
-| `call_held` | 7 | Server or webhook | counting | The visitor joined the call. |
-| `call_no_show` *added* | 7 | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
+| `meeting_cta_clicked` *added* | 0 | Browser | diagnostic | Click on any element with a data-cta attribute, on any site, blog or product page. |
+| `meeting_booking_page_viewed` | 1 | Browser | counting | Booking page loads. Replaces the old page_view. |
+| `meeting_video_played` *added* | 1, 3 | Browser | diagnostic | Play pressed on the video of an A variant (booking page or confirmation page). |
+| `meeting_form_started` | 1 | Browser | diagnostic | First field of the booking form gets focus. |
+| `meeting_form_submitted` | 1 | Server or webhook | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
+| `meeting_calendar_page_viewed` *added* | 2 | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
+| `meeting_slot_selected` *added* | 2 | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
+| `meeting_booking_confirmed` | 2, R, N | Server or webhook | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
+| `meeting_confirmation_page_viewed` | 3 | Browser | diagnostic | Confirmation (thank-you) page loads. |
+| `meeting_add_to_calendar_clicked` *added* | 3 | Browser | diagnostic | Click on an Add to calendar button on the confirmation page. |
+| `meeting_email_sent` | R, 4 to 8, N | Email platform | diagnostic | The email platform accepts a send of any flow email. |
+| `meeting_email_clicked` | R, 4 to 8, N | Email platform | diagnostic | Tracked link click in a flow email. |
+| `meeting_booking_rescheduled` *added* | X | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
+| `meeting_booking_canceled` *added* | X | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
+| `meeting_call_held` | 7 | Server or webhook | counting | The visitor joined the call. |
+| `meeting_call_no_show` *added* | 7 | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
 
 "counting" events feed the success metrics and fire server-side. "diagnostic" events explain drop-off and are logged, not reported.
 
-### `cta_clicked` *(added)*
+### `meeting_cta_clicked` *(added)*
 
 - **Step:** 0 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** Click on any element with a data-cta attribute, on any site, blog or product page.
@@ -60,7 +85,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "cta_clicked",
+  "event": "meeting_cta_clicked",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -103,20 +128,20 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `booking_page_viewed`
+### `meeting_booking_page_viewed`
 
 - **Step:** 1 · **Fired by:** Browser · **Role:** counting
 - **Fires when:** Booking page loads. Replaces the old page_view.
 - **Entry paths:** P1, P2, P4, P5, P6
 - **Properties beyond the context:** `variant_booking` (A or B): Variant shown.; `flow_entry` (enum): Entry type.
-- Denominator of the visit-to-booked rate (same booking_session_id as booking_confirmed).
+- Denominator of the visit-to-booked rate (same booking_session_id as meeting_booking_confirmed).
 - Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.
 - Fires on load only, not on a variant switch or re-render.
 
 ```json
 {
   "type": "track",
-  "event": "booking_page_viewed",
+  "event": "meeting_booking_page_viewed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -158,7 +183,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `video_played` *(added)*
+### `meeting_video_played` *(added)*
 
 - **Step:** 1, 3 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** Play pressed on the video of an A variant (booking page or confirmation page).
@@ -170,7 +195,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "video_played",
+  "event": "meeting_video_played",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -214,7 +239,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `form_started`
+### `meeting_form_started`
 
 - **Step:** 1 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** First field of the booking form gets focus.
@@ -224,7 +249,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "form_started",
+  "event": "meeting_form_started",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -266,21 +291,21 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `form_submitted`
+### `meeting_form_submitted`
 
 - **Step:** 1 · **Fired by:** Server or webhook · **Role:** diagnostic
 - **Fires when:** Form accepted and the contact is created or matched. Sent together with identify().
 - **Entry paths:** P1, P2, P4, P5, P6
 - **Properties beyond the context:** `email_domain` (string): Domain of the work email.; `contact_id` (string): CRM contact id, also the Segment userId.
 - The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.
-- Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with booking_confirmed instead.
+- Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.
 - Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.
 - Fires from our server so ad blockers and consent choices cannot drop it.
 
 ```json
 {
   "type": "track",
-  "event": "form_submitted",
+  "event": "meeting_form_submitted",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -320,7 +345,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `calendar_viewed` *(added)*
+### `meeting_calendar_page_viewed` *(added)*
 
 - **Step:** 2 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** Calendar loads, including direct entry from ads and emails.
@@ -333,7 +358,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "calendar_viewed",
+  "event": "meeting_calendar_page_viewed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": null,
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -375,7 +400,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `slot_selected` *(added)*
+### `meeting_slot_selected` *(added)*
 
 - **Step:** 2 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** A time slot is picked, before the booking is confirmed.
@@ -386,7 +411,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "slot_selected",
+  "event": "meeting_slot_selected",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -430,7 +455,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `booking_confirmed`
+### `meeting_booking_confirmed`
 
 - **Step:** 2, R, N · **Fired by:** Server or webhook · **Role:** counting
 - **Fires when:** A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.
@@ -439,13 +464,13 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 - The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.
 - Sent with identify() when no form ran (P3, direct P6).
 - Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.
-- This event, and booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.
+- This event, and meeting_booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.
 - Starts the HubSpot workflow: confirmation email now, reminders from call_at.
 
 ```json
 {
   "type": "track",
-  "event": "booking_confirmed",
+  "event": "meeting_booking_confirmed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -511,7 +536,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `confirmation_viewed`
+### `meeting_confirmation_page_viewed`
 
 - **Step:** 3 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** Confirmation (thank-you) page loads.
@@ -523,7 +548,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "confirmation_viewed",
+  "event": "meeting_confirmation_page_viewed",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -567,7 +592,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `calendar_added` *(added)*
+### `meeting_add_to_calendar_clicked` *(added)*
 
 - **Step:** 3 · **Fired by:** Browser · **Role:** diagnostic
 - **Fires when:** Click on an Add to calendar button on the confirmation page.
@@ -578,7 +603,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "calendar_added",
+  "event": "meeting_add_to_calendar_clicked",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -623,7 +648,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `email_sent`
+### `meeting_email_sent`
 
 - **Step:** R, 4 to 8, N · **Fired by:** Email platform · **Role:** diagnostic
 - **Fires when:** The email platform accepts a send of any flow email.
@@ -635,7 +660,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "email_sent",
+  "event": "meeting_email_sent",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -678,7 +703,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `email_clicked`
+### `meeting_email_clicked`
 
 - **Step:** R, 4 to 8, N · **Fired by:** Email platform · **Role:** diagnostic
 - **Fires when:** Tracked link click in a flow email.
@@ -690,7 +715,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "email_clicked",
+  "event": "meeting_email_clicked",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -734,7 +759,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `booking_rescheduled` *(added)*
+### `meeting_booking_rescheduled` *(added)*
 
 - **Step:** X · **Fired by:** Server or webhook · **Role:** diagnostic
 - **Fires when:** The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.
@@ -747,7 +772,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "booking_rescheduled",
+  "event": "meeting_booking_rescheduled",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -816,19 +841,19 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `booking_canceled` *(added)*
+### `meeting_booking_canceled` *(added)*
 
 - **Step:** X · **Fired by:** Server or webhook · **Role:** counting
 - **Fires when:** A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.
 - **Entry paths:** P7
 - **Properties beyond the context:** `canceled_by` (enum): visitor or host.; `reason` (string or null): Cancellation reason, if given.
-- Subtracted from show rate: call_held / (booking_confirmed minus booking_canceled).
+- Subtracted from show rate: meeting_call_held / (meeting_booking_confirmed minus meeting_booking_canceled).
 - Stops the HubSpot reminders for this booking id.
 
 ```json
 {
   "type": "track",
-  "event": "booking_canceled",
+  "event": "meeting_booking_canceled",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -873,7 +898,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `call_held`
+### `meeting_call_held`
 
 - **Step:** 7 · **Fired by:** Server or webhook · **Role:** counting
 - **Fires when:** The visitor joined the call.
@@ -885,7 +910,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "call_held",
+  "event": "meeting_call_held",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -929,7 +954,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 }
 ```
 
-### `call_no_show` *(added)*
+### `meeting_call_no_show` *(added)*
 
 - **Step:** 7 · **Fired by:** Server or webhook · **Role:** diagnostic
 - **Fires when:** The visitor has not joined 15 minutes after the start.
@@ -939,7 +964,7 @@ Strategy Call Booking Flow (2), checked 22 Oct 2026.
 ```json
 {
   "type": "track",
-  "event": "call_no_show",
+  "event": "meeting_call_no_show",
   "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
@@ -1022,7 +1047,7 @@ Every page load, site-wide. This is Segment's standard call and fires automatica
 
 ### `identify()`
 
-At form_submitted (server).
+At meeting_form_submitted (server).
 
 ```json
 {
@@ -1043,7 +1068,7 @@ At form_submitted (server).
 
 ### `identify()`
 
-At booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.
+At meeting_booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.
 
 ```json
 {
@@ -1103,7 +1128,7 @@ At booking_confirmed, when no form ran (targeted ads, direct emails). Same shape
 
 ## 4. Booking and email variables
 
-Carried by `booking_confirmed` and again by `booking_rescheduled`. The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.
+Carried by `meeting_booking_confirmed` and again by `meeting_booking_rescheduled`. The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.
 
 | Property | Type | What it holds | Example | Where it comes from | Used in email |
 |---|---|---|---|---|---|
@@ -1142,18 +1167,18 @@ Carried by `booking_confirmed` and again by `booking_rescheduled`. The emails (1
 |---|---|---|
 | P1 | Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you | flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad |
 | P2 | Ad, then ad landing, then booking page, calendar, thank you | flow_entry = cta, source_page = /ad-landing, first and last touch = the ad |
-| P3 | Targeted ad straight to the calendar, thank you | flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with booking_confirmed |
+| P3 | Targeted ad straight to the calendar, thank you | flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with meeting_booking_confirmed |
 | P4 | Search, social or direct, any page, header CTA, booking page, calendar, thank you | flow_entry = cta, cta_id = header, source_page = the current page |
 | P5 | Search, social or partner, landing page, booking page, calendar, thank you | flow_entry = cta, source_page = /landing-page |
 | P6 | Marketing email, booking page (or straight to the calendar), thank you | flow_entry = email, last_touch = the email campaign. A new last touch |
-| P7 | Flow email (reschedule, rebook), calendar, thank you | No new touch. booking_rescheduled, or booking_confirmed with rebook_reason; inherits the original booking |
+| P7 | Flow email (reschedule, rebook), calendar, thank you | No new touch. meeting_booking_rescheduled, or meeting_booking_confirmed with rebook_reason; inherits the original booking |
 
 ## 6. Open points
 
 - UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.
-- Event naming: the spec uses snake_case (booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).
+- Event naming: the spec uses snake_case (meeting_booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).
 - Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.
-- Who marks call_held and call_no_show (Q5). Cal.com's HubSpot app does not set no-show.
+- Who marks meeting_call_held and meeting_call_no_show (Q5). Cal.com's HubSpot app does not set no-show.
 - Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.
 - Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com's own confirmation email, which carries the .ics.
 - Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.

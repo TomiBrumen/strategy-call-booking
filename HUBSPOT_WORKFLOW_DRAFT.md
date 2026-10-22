@@ -19,11 +19,11 @@ Edit links: https://app.hubspot.com/email/518207/edit/{content id}
 ## Values the emails read: custom tokens, filled from the booking event
 
 No contact properties are needed. The emails use HubSpot **custom tokens** (`{{custom.name}}`). In the workflow's
-"Send email" action, each token is mapped to a value from the `booking_confirmed` event. HubSpot documents this
+"Send email" action, each token is mapped to a value from the `meeting_booking_confirmed` event. HubSpot documents this
 mechanism for automated emails (Marketing Hub Enterprise). I could not confirm in HubSpot's docs that a custom
 behavioural event property can be the source, so test one send before relying on it.
 
-| Token in the emails | Event property (`booking_confirmed`) | Example | Where it is already sent |
+| Token in the emails | Event property (`meeting_booking_confirmed`) | Example | Where it is already sent |
 |---|---|---|---|
 | `{{custom.booking_id}}` | `booking_id` | `wUqtfgWLCft74eKnRrEYYs` | demo, yes |
 | `{{custom.call_date_text}}` | `call_date_text` | `Wednesday, 21 October` | demo, yes |
@@ -47,14 +47,14 @@ The reschedule link is `https://cal.com/reschedule/{booking id}`, the cancel lin
 
 ## Workflow (event-triggered, re-enrolment on)
 
-1. **Enrol** when the custom event `booking_confirmed` occurs (enrolment trigger: event completed).
+1. **Enrol** when the custom event `meeting_booking_confirmed` occurs (enrolment trigger: event completed).
    A reschedule gives a new booking id, so it should re-enrol. Re-enrolment must be switched on.
 2. **Send email 1** (Confirmation).
 3. **If/then: call is more than 24 h away?** (`strategy_call_start` minus now)
    - **Yes:** delay until the call time minus 24 h (from `call_at`), check the booking is still active, then **send email 2**.
    - **No:** skip email 2.
 4. **Delay until the call time minus 1 h**, check the booking is still active, then **send email 3**.
-5. **Unenrol / exit** on a `booking_canceled` event, or when the booking id changes (the new enrolment takes over),
+5. **Unenrol / exit** on a `meeting_booking_canceled` event, or when the booking id changes (the new enrolment takes over),
    so a cancelled or moved call never gets a reminder.
 
 Open technical point: HubSpot's "delay until a date" step normally reads a date on the contact. If it cannot read
