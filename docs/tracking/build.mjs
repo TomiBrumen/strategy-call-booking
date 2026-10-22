@@ -11,7 +11,7 @@ import {
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const J = (o) => JSON.stringify(o, null, 2);
-const BY = { browser: 'Browser', server: 'Server or webhook', email: 'Email platform' };
+const BY = { browser: 'Browser', server: 'Server', email: 'Email platform' };
 const DOT = { browser: 'b', server: 's', email: 'm' };
 const UTM_LINE = 'Plus all UTMs, each as a separate property (see the UTM rule).';
 const DRAFT = 'Draft 3, 22 Oct 2026';

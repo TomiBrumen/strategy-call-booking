@@ -21,7 +21,7 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 | `meeting_form_submitted` | track | Server | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
 | `meeting_calendar_page_viewed` | page | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
 | `meeting_slot_selected` | track | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
-| `meeting_booking_confirmed` | track | Server or webhook | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
+| `meeting_booking_confirmed` | track | Server | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
 | `meeting_confirmation_page_viewed` | page | Browser | diagnostic | Confirmation (thank-you) page loads. |
 | `meeting_add_to_calendar_clicked` | track | Browser | diagnostic | Click on an Add to calendar button on the confirmation page. |
 
@@ -280,7 +280,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 
 ### `meeting_booking_confirmed`
 
-- **Segment call:** track · **Fired by:** Server or webhook · **Role:** counting · **Step:** 2, R, N
+- **Segment call:** track · **Fired by:** Server · **Role:** counting · **Step:** 2, R, N
 - **Fires when:** A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.
 - **Entry paths:** P1, P2, P3, P4, P5, P6, P7
 - **Properties:** all booking and email variables, see section 5.
@@ -425,10 +425,10 @@ The booking lifecycle and call events (reschedule, cancel, call held, no-show) a
 |---|---|---|---|---|
 | `meeting_email_sent` | track | Email platform | diagnostic | The email platform accepts a send of any flow email. |
 | `meeting_email_clicked` | track | Email platform | diagnostic | Tracked link click in a flow email. |
-| `meeting_booking_rescheduled` | track | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
-| `meeting_booking_canceled` | track | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
-| `meeting_call_held` | track | Server or webhook | counting | The visitor joined the call. |
-| `meeting_call_no_show` | track | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
+| `meeting_booking_rescheduled` | track | Server | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
+| `meeting_booking_canceled` | track | Server | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
+| `meeting_call_held` | track | Server | counting | The visitor joined the call. |
+| `meeting_call_no_show` | track | Server | diagnostic | The visitor has not joined 15 minutes after the start. |
 
 ### `meeting_email_sent`
 
@@ -505,7 +505,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 
 ### `meeting_booking_rescheduled`
 
-- **Segment call:** track · **Fired by:** Server or webhook · **Role:** diagnostic · **Step:** X
+- **Segment call:** track · **Fired by:** Server · **Role:** diagnostic · **Step:** X
 - **Fires when:** The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.
 - **Entry paths:** P7
 - **Properties:** `previous_booking_id` (string): Booking id before the reschedule. Added.; `old_call_at` (ISO datetime): Previous start (UTC).; `new_call_at` (ISO datetime): New start (UTC).
@@ -567,7 +567,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 
 ### `meeting_booking_canceled`
 
-- **Segment call:** track · **Fired by:** Server or webhook · **Role:** counting · **Step:** X
+- **Segment call:** track · **Fired by:** Server · **Role:** counting · **Step:** X
 - **Fires when:** A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.
 - **Entry paths:** P7
 - **Properties:** `canceled_by` (enum): visitor or host.; `reason` (string or null): Cancellation reason, if given.
@@ -605,7 +605,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 
 ### `meeting_call_held`
 
-- **Segment call:** track · **Fired by:** Server or webhook · **Role:** counting · **Step:** 7
+- **Segment call:** track · **Fired by:** Server · **Role:** counting · **Step:** 7
 - **Fires when:** The visitor joined the call.
 - **Entry paths:** P1, P2, P3, P4, P5, P6, P7
 - **Properties:** `duration_min` (number): Minutes the visitor was in the call.
@@ -642,7 +642,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 
 ### `meeting_call_no_show`
 
-- **Segment call:** track · **Fired by:** Server or webhook · **Role:** diagnostic · **Step:** 7
+- **Segment call:** track · **Fired by:** Server · **Role:** diagnostic · **Step:** 7
 - **Fires when:** The visitor has not joined 15 minutes after the start.
 - **Entry paths:** P1, P2, P3, P4, P5, P6, P7
 - Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar.

@@ -917,7 +917,7 @@
       "name": "meeting_booking_confirmed",
       "segmentCall": "track",
       "step": "2, R, N",
-      "firedBy": "Server or webhook",
+      "firedBy": "Server",
       "role": "counting",
       "when": "A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.",
       "paths": [
@@ -1203,7 +1203,7 @@
       "name": "meeting_booking_rescheduled",
       "segmentCall": "track",
       "step": "X",
-      "firedBy": "Server or webhook",
+      "firedBy": "Server",
       "role": "diagnostic",
       "when": "The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.",
       "paths": [
@@ -1289,7 +1289,7 @@
       "name": "meeting_booking_canceled",
       "segmentCall": "track",
       "step": "X",
-      "firedBy": "Server or webhook",
+      "firedBy": "Server",
       "role": "counting",
       "when": "A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.",
       "paths": [
@@ -1345,7 +1345,7 @@
       "name": "meeting_call_held",
       "segmentCall": "track",
       "step": "7",
-      "firedBy": "Server or webhook",
+      "firedBy": "Server",
       "role": "counting",
       "when": "The visitor joined the call.",
       "paths": [
@@ -1400,7 +1400,7 @@
       "name": "meeting_call_no_show",
       "segmentCall": "track",
       "step": "7",
-      "firedBy": "Server or webhook",
+      "firedBy": "Server",
       "role": "diagnostic",
       "when": "The visitor has not joined 15 minutes after the start.",
       "paths": [
