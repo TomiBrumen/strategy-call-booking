@@ -17,9 +17,10 @@ const UTM_LINE = 'Plus all UTMs, each as a separate property (see the UTM rule).
 const DRAFT = 'Draft 3, 22 Oct 2026';
 
 const USED_IN = {
-  booking_id: '1, 2, 3 (reschedule and cancel links)', call_at: 'workflow timing', duration_min: '1', call_weekday: '1', call_date_text: '1, 2', call_time_text: '1, 2, 3',
-  join_url: '2, 3', host_name: '1, 2, 3', host_first_name: '2, 3', host_role: '1, 2, 3', host_photo_url: '1, 2, 3', calendar_google_url: '1', calendar_outlook_url: '1',
-  calendar_ics_url: '1', name: 'contact', first_name: '1, 2, 3', last_name: '1', reschedule_url: '1, 2, 3', cancel_url: '1, 2, 3',
+  booking_id: '1, 2, 3, 5 (reschedule and cancel links)', call_at: 'workflow timing', duration_min: '1', call_weekday: '1', call_date_text: '1, 2, 5, 6', call_time_text: '1, 2, 3, 5, 7',
+  join_url: '2, 3', host_name: '1, 2, 3, 5, 6, 7', host_first_name: '2, 3, 5, 6, 7', host_role: '1, 2, 3, 5, 6, 7', host_photo_url: '1, 2, 3, 5, 6, 7',
+  calendar_google_url: '1, 5', calendar_outlook_url: '1', calendar_ics_url: '1', rebook_url: '4, 6, 7', name: 'contact', first_name: '1 to 7', last_name: '1',
+  reschedule_url: '1, 2, 3, 5', cancel_url: '1, 2, 3, 5',
 };
 
 const events = EVENTS.map((e) => ({ ...e, call: callOf(e), json: jsonFor(e) }));
@@ -77,7 +78,7 @@ md.push('## 4. Flow properties on every event\n');
 md.push('| Property | Type | What it holds | Where it is set |\n|---|---|---|---|');
 for (const [n, t, d, s] of flowProps) md.push(`| \`${n}\` | ${t} | ${d} | ${s} |`);
 md.push('\nUTMs: see rule 1. They are also passed to the booking in the URL, hidden fields and the Cal.com booking metadata.\n');
-md.push('## 5. Booking and email variables\n\nCarried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.\n');
+md.push('## 5. Booking and email variables\n\nCarried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The seven emails read these as custom tokens.\n');
 md.push('| Property | Type | What it holds | Example | Where it comes from | Used in email |\n|---|---|---|---|---|---|');
 for (const [n, t, d, x, s] of BOOKING_VARS) md.push(`| \`${n}\` | ${t} | ${d} | \`${x === null ? 'null' : String(x).length > 60 ? String(x).slice(0, 57) + '...' : x}\` | ${s} | ${USED_IN[n] || ''} |`);
 md.push('\n## 6. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');

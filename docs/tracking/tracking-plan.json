@@ -304,7 +304,7 @@
       "description": "Cal.com booking id (uid). Builds the reschedule and cancel links.",
       "example": "k9Zp3QmV7sLw2TnXb8Rc4D",
       "source": "Cal.com webhook: payload.uid",
-      "usedInEmail": "1, 2, 3 (reschedule and cancel links)"
+      "usedInEmail": "1, 2, 3, 5 (reschedule and cancel links)"
     },
     {
       "name": "call_at",
@@ -360,7 +360,7 @@
       "description": "Date as shown in emails, visitor's time zone. Added.",
       "example": "Thursday, 29 October",
       "source": "Computed",
-      "usedInEmail": "1, 2"
+      "usedInEmail": "1, 2, 5, 6"
     },
     {
       "name": "call_time_text",
@@ -368,7 +368,7 @@
       "description": "Time with zone as shown in emails. Added.",
       "example": "15:30 (CET)",
       "source": "Computed",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1, 2, 3, 5, 7"
     },
     {
       "name": "join_url",
@@ -400,7 +400,7 @@
       "description": "Host full name. Email: \"Host\" field and sign-off. Added.",
       "example": "Alex Rivera",
       "source": "Cal.com webhook: organizer.name",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1, 2, 3, 5, 6, 7"
     },
     {
       "name": "host_first_name",
@@ -408,7 +408,7 @@
       "description": "Host first name for the sign-off. Added.",
       "example": "Alex",
       "source": "Our host list, or split from host_name",
-      "usedInEmail": "2, 3"
+      "usedInEmail": "2, 3, 5, 6, 7"
     },
     {
       "name": "host_email",
@@ -432,7 +432,7 @@
       "description": "Host job title for the email (\"Name, Role\"). Not available from Cal.com. Added.",
       "example": "Head of Sales",
       "source": "Our host list, keyed by host_username",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1, 2, 3, 5, 6, 7"
     },
     {
       "name": "host_photo_url",
@@ -440,7 +440,7 @@
       "description": "Public URL of the host photo for the emails. Cal.com's photo is only 96 px, so use our own. Added.",
       "example": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
       "source": "Our host list, keyed by host_username",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1, 2, 3, 5, 6, 7"
     },
     {
       "name": "calendar_google_url",
@@ -448,7 +448,7 @@
       "description": "Add to Google Calendar link. Added.",
       "example": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
       "source": "Computed from call_at, call_end_at, join_url",
-      "usedInEmail": "1"
+      "usedInEmail": "1, 5"
     },
     {
       "name": "calendar_outlook_url",
@@ -467,12 +467,20 @@
       "usedInEmail": "1"
     },
     {
+      "name": "rebook_url",
+      "type": "string",
+      "description": "Link back to the calendar to pick a new time, with the visitor's details prefilled and the booking_session_id. Emails 4, 6 and 7. Added.",
+      "example": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
+      "source": "Computed: calendar URL, booking_session_id and an opaque contact token (spec Q10)",
+      "usedInEmail": "4, 6, 7"
+    },
+    {
       "name": "reschedule_url",
       "type": "string",
       "description": "Reschedule page. Lets the email use one value instead of building it. Added.",
       "example": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
       "source": "Computed from booking_id",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1, 2, 3, 5"
     },
     {
       "name": "cancel_url",
@@ -480,7 +488,7 @@
       "description": "Cancel page. Added.",
       "example": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
       "source": "Computed from booking_id",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1, 2, 3, 5"
     },
     {
       "name": "name",
@@ -496,7 +504,7 @@
       "description": "First name, split from name on the first space. Used by HubSpot and the emails (\"Hi Ana\"). Added.",
       "example": "Ana",
       "source": "Derived from name",
-      "usedInEmail": "1, 2, 3"
+      "usedInEmail": "1 to 7"
     },
     {
       "name": "last_name",
@@ -773,6 +781,12 @@
           "type": "string",
           "description": "CRM contact id, also the Segment userId.",
           "example": "contact_8812"
+        },
+        {
+          "name": "rebook_url",
+          "type": "string",
+          "description": "Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.",
+          "example": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>"
         }
       ],
       "example": {
@@ -784,6 +798,7 @@
         "properties": {
           "email_domain": "acme.com",
           "contact_id": "contact_8812",
+          "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
@@ -964,6 +979,7 @@
           "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
           "calendar_outlook_url": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
           "calendar_ics_url": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+          "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
           "reschedule_url": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
           "cancel_url": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
           "name": "Ana Novak",
@@ -1265,6 +1281,7 @@
           "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
           "calendar_outlook_url": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
           "calendar_ics_url": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+          "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
           "reschedule_url": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
           "cancel_url": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
           "name": "Ana Novak",
@@ -1322,10 +1339,20 @@
         "properties": {
           "canceled_by": "visitor",
           "reason": "Need a different time",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
           "call_at": "2026-10-29T14:30:00Z",
+          "time_zone": "Europe/Ljubljana",
+          "call_date_text": "Thursday, 29 October",
+          "call_time_text": "15:30 (CET)",
           "host_id": 1001,
           "host_name": "Alex Rivera",
+          "host_first_name": "Alex",
           "host_username": "alex-rivera",
+          "host_role": "Head of Sales",
+          "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+          "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
+          "first_name": "Ana",
+          "last_name": "Novak",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
@@ -1334,8 +1361,7 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com",
-          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+          "email": "ana.novak@acme.com"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -1423,10 +1449,20 @@
         "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
         "properties": {
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
           "call_at": "2026-10-29T14:30:00Z",
+          "time_zone": "Europe/Ljubljana",
+          "call_date_text": "Thursday, 29 October",
+          "call_time_text": "15:30 (CET)",
           "host_id": 1001,
           "host_name": "Alex Rivera",
+          "host_first_name": "Alex",
           "host_username": "alex-rivera",
+          "host_role": "Head of Sales",
+          "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+          "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
+          "first_name": "Ana",
+          "last_name": "Novak",
           "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
@@ -1435,8 +1471,7 @@
           "cta_id": "xyz_inline",
           "variant_booking": "A",
           "variant_confirmation": "A",
-          "email": "ana.novak@acme.com",
-          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+          "email": "ana.novak@acme.com"
         }
       },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
@@ -1448,6 +1483,7 @@
     "effects": [
       "Show rate (call held divided by confirmed minus canceled) cannot be reported from events until meeting_call_held and meeting_booking_canceled exist.",
       "The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com's webhook through n8n, or the meeting outcome that Cal.com's HubSpot app sets (RESCHEDULED, CANCELED).",
+      "Emails 4 to 7 are triggered by these events: the recovery email by meeting_form_submitted with no meeting_booking_confirmed after 1 hour, the rescheduled email by meeting_booking_rescheduled, the cancelled email by meeting_booking_canceled, the no-show email by meeting_call_no_show. Until those events exist, those emails cannot be sent.",
       "Email sends and clicks are already visible inside HubSpot itself."
     ]
   },

@@ -180,7 +180,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 - **Segment call:** track · **Fired by:** Server · **Role:** diagnostic · **Step:** 1
 - **Fires when:** Form accepted and the contact is created or matched. Sent together with identify().
 - **Entry paths:** P1, P2, P4, P5, P6
-- **Properties:** `email_domain` (string): Domain of the work email.; `contact_id` (string): CRM contact id, also the Segment userId.
+- **Properties:** `email_domain` (string): Domain of the work email.; `contact_id` (string): CRM contact id, also the Segment userId.; `rebook_url` (string): Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.
 - The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.
 - Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.
 - Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.
@@ -196,6 +196,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "properties": {
     "email_domain": "acme.com",
     "contact_id": "contact_8812",
+    "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
@@ -323,6 +324,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
     "calendar_outlook_url": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
     "calendar_ics_url": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+    "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
     "reschedule_url": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
     "cancel_url": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
     "name": "Ana Novak",
@@ -424,6 +426,7 @@ The booking lifecycle and call events (reschedule, cancel, call held, no-show) a
 
 - Show rate (call held divided by confirmed minus canceled) cannot be reported from events until meeting_call_held and meeting_booking_canceled exist.
 - The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com's webhook through n8n, or the meeting outcome that Cal.com's HubSpot app sets (RESCHEDULED, CANCELED).
+- Emails 4 to 7 are triggered by these events: the recovery email by meeting_form_submitted with no meeting_booking_confirmed after 1 hour, the rescheduled email by meeting_booking_rescheduled, the cancelled email by meeting_booking_canceled, the no-show email by meeting_call_no_show. Until those events exist, those emails cannot be sent.
 - Email sends and clicks are already visible inside HubSpot itself.
 
 | Event | Segment call | Fired by | Role | Fires when |
@@ -550,6 +553,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
     "calendar_outlook_url": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
     "calendar_ics_url": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+    "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
     "reschedule_url": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
     "cancel_url": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
     "name": "Ana Novak",
@@ -589,10 +593,20 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "properties": {
     "canceled_by": "visitor",
     "reason": "Need a different time",
+    "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
     "call_at": "2026-10-29T14:30:00Z",
+    "time_zone": "Europe/Ljubljana",
+    "call_date_text": "Thursday, 29 October",
+    "call_time_text": "15:30 (CET)",
     "host_id": 1001,
     "host_name": "Alex Rivera",
+    "host_first_name": "Alex",
     "host_username": "alex-rivera",
+    "host_role": "Head of Sales",
+    "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+    "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
+    "first_name": "Ana",
+    "last_name": "Novak",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
@@ -601,8 +615,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com",
-    "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+    "email": "ana.novak@acme.com"
   }
 }
 ```
@@ -660,10 +673,20 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "userId": "contact_8812",
   "timestamp": "2026-10-22T09:15:02.771Z",
   "properties": {
+    "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
     "call_at": "2026-10-29T14:30:00Z",
+    "time_zone": "Europe/Ljubljana",
+    "call_date_text": "Thursday, 29 October",
+    "call_time_text": "15:30 (CET)",
     "host_id": 1001,
     "host_name": "Alex Rivera",
+    "host_first_name": "Alex",
     "host_username": "alex-rivera",
+    "host_role": "Head of Sales",
+    "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+    "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>",
+    "first_name": "Ana",
+    "last_name": "Novak",
     "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
     "booking_session_id": "bs_7f3a91c2",
     "flow_entry": "cta",
@@ -672,8 +695,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "cta_id": "xyz_inline",
     "variant_booking": "A",
     "variant_confirmation": "A",
-    "email": "ana.novak@acme.com",
-    "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+    "email": "ana.novak@acme.com"
   }
 }
 ```
@@ -738,35 +760,36 @@ UTMs: see rule 1. They are also passed to the booking in the URL, hidden fields 
 
 ## 5. Booking and email variables
 
-Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.
+Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The seven emails read these as custom tokens.
 
 | Property | Type | What it holds | Example | Where it comes from | Used in email |
 |---|---|---|---|---|---|
-| `booking_id` | string | Cal.com booking id (uid). Builds the reschedule and cancel links. | `k9Zp3QmV7sLw2TnXb8Rc4D` | Cal.com webhook: payload.uid | 1, 2, 3 (reschedule and cancel links) |
+| `booking_id` | string | Cal.com booking id (uid). Builds the reschedule and cancel links. | `k9Zp3QmV7sLw2TnXb8Rc4D` | Cal.com webhook: payload.uid | 1, 2, 3, 5 (reschedule and cancel links) |
 | `call_at` | ISO datetime | Call start, UTC. Drives the 24 h and 1 h reminder timing. | `2026-10-29T14:30:00Z` | Cal.com webhook: payload.startTime | workflow timing |
 | `call_end_at` | ISO datetime | Call end, UTC. Added. | `2026-10-29T15:30:00Z` | Cal.com webhook: payload.endTime |  |
 | `duration_min` | number | Call length in minutes. The designs say 60. Added. | `60` | Cal.com webhook: end minus start | 1 |
 | `lead_time_h` | number | Hours between booking and call. Reminder 2 is skipped under 24. | `173` | Computed |  |
 | `time_zone` | string | Visitor's time zone (IANA). | `Europe/Ljubljana` | Cal.com webhook: attendees[0].timeZone |  |
 | `call_weekday` | string | Weekday of the call in the visitor's time zone. Email: "See you on ...". Added. | `Thursday` | Computed in the visitor's time zone | 1 |
-| `call_date_text` | string | Date as shown in emails, visitor's time zone. Added. | `Thursday, 29 October` | Computed | 1, 2 |
-| `call_time_text` | string | Time with zone as shown in emails. Added. | `15:30 (CET)` | Computed | 1, 2, 3 |
+| `call_date_text` | string | Date as shown in emails, visitor's time zone. Added. | `Thursday, 29 October` | Computed | 1, 2, 5, 6 |
+| `call_time_text` | string | Time with zone as shown in emails. Added. | `15:30 (CET)` | Computed | 1, 2, 3, 5, 7 |
 | `join_url` | string | Meeting link for the Join the Call buttons. Added. | `https://meet.google.com/abc-defg-hij` | Cal.com webhook: payload.videoCallData.url or location | 2, 3 |
 | `meeting_location` | string | Where the call happens, for the "Where" field. Added. | `Video call` | Cal.com webhook: payload.location |  |
 | `host_id` | number | Cal.com id of the assigned host (round robin pick). | `1001` | Cal.com webhook: organizer.id |  |
-| `host_name` | string | Host full name. Email: "Host" field and sign-off. Added. | `Alex Rivera` | Cal.com webhook: organizer.name | 1, 2, 3 |
-| `host_first_name` | string | Host first name for the sign-off. Added. | `Alex` | Our host list, or split from host_name | 2, 3 |
+| `host_name` | string | Host full name. Email: "Host" field and sign-off. Added. | `Alex Rivera` | Cal.com webhook: organizer.name | 1, 2, 3, 5, 6, 7 |
+| `host_first_name` | string | Host first name for the sign-off. Added. | `Alex` | Our host list, or split from host_name | 2, 3, 5, 6, 7 |
 | `host_email` | string | Host work email. Used to find the HubSpot owner. Added. | `alex.rivera@databox.com` | Cal.com webhook: organizer.email |  |
 | `host_username` | string | Cal.com username. The key into our host list. Added. | `alex-rivera` | Cal.com webhook: organizer.username |  |
-| `host_role` | string | Host job title for the email ("Name, Role"). Not available from Cal.com. Added. | `Head of Sales` | Our host list, keyed by host_username | 1, 2, 3 |
-| `host_photo_url` | string | Public URL of the host photo for the emails. Cal.com's photo is only 96 px, so use our own. Added. | `https://cdn.example.com/hosts/alex-rivera-288.jpg` | Our host list, keyed by host_username | 1, 2, 3 |
-| `calendar_google_url` | string | Add to Google Calendar link. Added. | `https://calendar.google.com/calendar/render?action=TEMPLA...` | Computed from call_at, call_end_at, join_url | 1 |
+| `host_role` | string | Host job title for the email ("Name, Role"). Not available from Cal.com. Added. | `Head of Sales` | Our host list, keyed by host_username | 1, 2, 3, 5, 6, 7 |
+| `host_photo_url` | string | Public URL of the host photo for the emails. Cal.com's photo is only 96 px, so use our own. Added. | `https://cdn.example.com/hosts/alex-rivera-288.jpg` | Our host list, keyed by host_username | 1, 2, 3, 5, 6, 7 |
+| `calendar_google_url` | string | Add to Google Calendar link. Added. | `https://calendar.google.com/calendar/render?action=TEMPLA...` | Computed from call_at, call_end_at, join_url | 1, 5 |
 | `calendar_outlook_url` | string | Add to Outlook Calendar link. Added. | `https://outlook.live.com/calendar/0/deeplink/compose?path...` | Computed | 1 |
 | `calendar_ics_url` | string | Add to Apple Calendar: link to an .ics file. Not available yet, see open points. Added. | `https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics` | Needs a place to host the file | 1 |
-| `reschedule_url` | string | Reschedule page. Lets the email use one value instead of building it. Added. | `https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D` | Computed from booking_id | 1, 2, 3 |
-| `cancel_url` | string | Cancel page. Added. | `https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true` | Computed from booking_id | 1, 2, 3 |
+| `rebook_url` | string | Link back to the calendar to pick a new time, with the visitor's details prefilled and the booking_session_id. Emails 4, 6 and 7. Added. | `https://www.databox.com/strategy-call/calendar?bsid=bs_7f...` | Computed: calendar URL, booking_session_id and an opaque contact token (spec Q10) | 4, 6, 7 |
+| `reschedule_url` | string | Reschedule page. Lets the email use one value instead of building it. Added. | `https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D` | Computed from booking_id | 1, 2, 3, 5 |
+| `cancel_url` | string | Cancel page. Added. | `https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true` | Computed from booking_id | 1, 2, 3, 5 |
 | `name` | string | Name and surname exactly as typed. The form has a single field (Q4 decided). Added. | `Ana Novak` | Booking form, or Cal.com attendee name | contact |
-| `first_name` | string | First name, split from name on the first space. Used by HubSpot and the emails ("Hi Ana"). Added. | `Ana` | Derived from name | 1, 2, 3 |
+| `first_name` | string | First name, split from name on the first space. Used by HubSpot and the emails ("Hi Ana"). Added. | `Ana` | Derived from name | 1 to 7 |
 | `last_name` | string or empty | Rest of name after the first space. Empty if only one word was typed. Added. | `Novak` | Derived from name | 1 |
 | `phone` | string or null | Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added. | `+38640123456` | Booking form |  |
 

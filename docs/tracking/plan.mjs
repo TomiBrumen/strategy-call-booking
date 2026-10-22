@@ -87,6 +87,7 @@ export const BOOKING_VARS = [
   ['calendar_google_url', 'string', 'Add to Google Calendar link. Added.', 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z', 'Computed from call_at, call_end_at, join_url'],
   ['calendar_outlook_url', 'string', 'Add to Outlook Calendar link. Added.', 'https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z', 'Computed'],
   ['calendar_ics_url', 'string', 'Add to Apple Calendar: link to an .ics file. Not available yet, see open points. Added.', 'https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics', 'Needs a place to host the file'],
+  ['rebook_url', 'string', 'Link back to the calendar to pick a new time, with the visitor\'s details prefilled and the booking_session_id. Emails 4, 6 and 7. Added.', 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>', 'Computed: calendar URL, booking_session_id and an opaque contact token (spec Q10)'],
   ['reschedule_url', 'string', 'Reschedule page. Lets the email use one value instead of building it. Added.', `https://cal.com/reschedule/${S.bookingId}`, 'Computed from booking_id'],
   ['cancel_url', 'string', 'Cancel page. Added.', `https://cal.com/booking/${S.bookingId}?cancel=true`, 'Computed from booking_id'],
   ['name', 'string', 'Name and surname exactly as typed. The form has a single field (Q4 decided). Added.', 'Ana Novak', 'Booking form, or Cal.com attendee name'],
@@ -98,6 +99,10 @@ export const BOOKING_VARS = [
 // name -> value, for JSON
 export const bookingProps = (names) => Object.fromEntries(BOOKING_VARS.filter((v) => names.includes(v[0])).map((v) => [v[0], v[3]]));
 const ALL_BOOKING = BOOKING_VARS.map((v) => v[0]);
+
+
+// values the cancelled and no-show emails read (host, date, link back to the calendar)
+const EMAIL_SHORT = ['booking_id', 'call_at', 'call_date_text', 'call_time_text', 'time_zone', 'host_id', 'host_name', 'host_first_name', 'host_username', 'host_role', 'host_photo_url', 'rebook_url', 'first_name', 'last_name'];
 
 // ---------- events ----------
 // by: browser | server | email   role: counting | diagnostic   level: anon | known | booked
@@ -138,8 +143,8 @@ export const EVENTS = [
     when: 'Form accepted and the contact is created or matched. Sent together with identify().',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
     notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
-    props: [['email_domain', 'string', 'Domain of the work email.', 'acme.com'], ['contact_id', 'string', 'CRM contact id, also the Segment userId.', S.userId]],
-    specific: { email_domain: 'acme.com', contact_id: S.userId },
+    props: [['email_domain', 'string', 'Domain of the work email.', 'acme.com'], ['contact_id', 'string', 'CRM contact id, also the Segment userId.', S.userId], ['rebook_url', 'string', 'Link back to the calendar with the details prefilled. The recovery email (1 h later, if no slot was picked) uses it. Added.', 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>']],
+    specific: { email_domain: 'acme.com', contact_id: S.userId, rebook_url: 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2&token=<opaque contact token>' },
     identify: true,
   },
   {
@@ -212,7 +217,7 @@ export const EVENTS = [
     paths: ['P7'],
     notes: ['Subtracted from show rate: meeting_call_held / (meeting_booking_confirmed minus meeting_booking_canceled).', 'Stops the HubSpot reminders for this booking id.'],
     props: [['canceled_by', 'enum', 'visitor or host.', 'visitor'], ['reason', 'string or null', 'Cancellation reason, if given.', 'Need a different time']],
-    specific: { canceled_by: 'visitor', reason: 'Need a different time', call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
+    specific: { canceled_by: 'visitor', reason: 'Need a different time', ...bookingProps(EMAIL_SHORT) },
   },
   {
     later: true, name: 'meeting_call_held', group: 'Booking lifecycle and call', step: '7', by: 'server', role: 'counting', level: 'booked',
@@ -227,7 +232,7 @@ export const EVENTS = [
     when: 'The visitor has not joined 15 minutes after the start.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar.'],
-    props: [], specific: { call_at: S.callAt, host_id: 1001, host_name: 'Alex Rivera', host_username: 'alex-rivera' },
+    props: [], specific: bookingProps(EMAIL_SHORT),
   },
 ];
 
@@ -326,6 +331,7 @@ export const LATER = {
   effects: [
     'Show rate (call held divided by confirmed minus canceled) cannot be reported from events until meeting_call_held and meeting_booking_canceled exist.',
     'The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com\'s webhook through n8n, or the meeting outcome that Cal.com\'s HubSpot app sets (RESCHEDULED, CANCELED).',
+    'Emails 4 to 7 are triggered by these events: the recovery email by meeting_form_submitted with no meeting_booking_confirmed after 1 hour, the rescheduled email by meeting_booking_rescheduled, the cancelled email by meeting_booking_canceled, the no-show email by meeting_call_no_show. Until those events exist, those emails cannot be sent.',
     'Email sends and clicks are already visible inside HubSpot itself.',
   ],
 };
