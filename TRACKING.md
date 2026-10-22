@@ -8,7 +8,7 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 2. **Names** follow this rule: meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.
 3. **Call type:** The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a `track` call.
 4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_. Mixpanel gets only contacts that signed up; the other contacts from this flow stay in HubSpot.
-5. **Also on every event:** `email` and `hashed_email` (SHA-256 of the trimmed, lowercased email) as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.
+5. **Also on every event:** `email` and `hashed_email` as soon as the email is known, and `booking_id` once the booking exists. The flow properties are in section 4.
 
 ## Where to send
 
