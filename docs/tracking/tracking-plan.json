@@ -1532,7 +1532,6 @@
   ],
   "openPoints": [
     "Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.",
-    "hashed_email: confirm the hash (SHA-256 of the trimmed, lowercased email) and whether it also arrives as a URL parameter from marketing emails.",
     "Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback."
   ],
   "coverage": {
