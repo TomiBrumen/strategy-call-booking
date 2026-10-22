@@ -33,7 +33,7 @@ const plan = {
   contextProperties: CONTEXT_PROPS.map(([name, type, description, source]) => ({ name, type, description, source })),
   bookingVariables: BOOKING_VARS.map(([name, type, description, example, source]) => ({ name, type, description, example, source, usedInEmail: USED_IN[name] || null })),
   events: events.map((e) => ({
-    inThisBuild: !e.later, name: e.name, segmentCall: e.call, step: e.step, firedBy: BY[e.by], role: e.role,
+    inThisBuild: !e.later, name: e.name, segmentCall: e.call, step: e.step, firedBy: (e.byLabel || BY[e.by]), role: e.role,
     when: e.when, paths: e.paths, notes: e.notes,
     specificProperties: e.props.map(([n, t, d, x]) => ({ name: n, type: t, description: d, example: x })),
     example: e.json, plusUtms: 'All UTMs are also sent on this event, as separate properties.',
@@ -51,14 +51,14 @@ md.push(`2. **Names** follow this rule: ${NAMING.rule} ${NAMING.exception}`);
 md.push(`3. **Call type:** ${PAGE_NOTE} Everything else is a \`track\` call.`);
 md.push(`4. ${SEGMENT_NOTE}`);
 md.push('5. **Also on every event:** `email` as soon as it is known, and `booking_id` once the booking exists. The flow properties are in section 4.\n');
-const row = (e) => `| \`${e.name}\` | ${e.call} | ${BY[e.by]} | ${e.role} | ${e.when} |`;
+const row = (e) => `| \`${e.name}\` | ${e.call} | ${(e.byLabel || BY[e.by])} | ${e.role} | ${e.when} |`;
 md.push('## 1. Events in this build\n');
 md.push('| Event | Segment call | Fired by | Role | Fires when |\n|---|---|---|---|---|');
 for (const e of inBuild) md.push(row(e));
 md.push('\n"counting" events feed the success metrics. "diagnostic" events explain drop-off.\n');
 const eventMd = (e) => {
   md.push(`### \`${e.name}\`\n`);
-  md.push(`- **Segment call:** ${e.call} · **Fired by:** ${BY[e.by]} · **Role:** ${e.role} · **Step:** ${e.step}\n- **Fires when:** ${e.when}\n- **Entry paths:** ${e.paths.join(', ')}`);
+  md.push(`- **Segment call:** ${e.call} · **Fired by:** ${(e.byLabel || BY[e.by])} · **Role:** ${e.role} · **Step:** ${e.step}\n- **Fires when:** ${e.when}\n- **Entry paths:** ${e.paths.join(', ')}`);
   if (e.props.length) md.push(`- **Properties:** ${e.props.map(([n, t, d]) => `\`${n}\` (${t}): ${d}`).join('; ')}`);
   if (e.booking) md.push('- **Properties:** all booking and email variables, see section 5.');
   for (const n of e.notes) md.push(`- ${n}`);
@@ -93,7 +93,7 @@ const card = (e) => {
     : e.booking ? '<p class="pr"><b>Extra properties</b> every value in the table "What the booking event carries".</p>' : '';
   const notes = e.notes.slice(0, 2);
   return `<details class="ev" id="ev-${e.name}">
-  <summary><span class="nm"><i class="dot ${DOT[e.by]}"></i><code>${e.name}</code></span><span class="meta"><span class="chip call-${e.call}">${e.call}</span><span class="by">${BY[e.by]}</span></span></summary>
+  <summary><span class="nm"><i class="dot ${DOT[e.by]}"></i><code>${e.name}</code></span><span class="meta"><span class="chip call-${e.call}">${e.call}</span><span class="by">${(e.byLabel || BY[e.by])}</span></span></summary>
   <div class="body">
     <p><b>Fires when</b> ${esc(e.when)}</p>
     ${props}
@@ -172,7 +172,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section id="events" aria-labelledby="h-events">
     <div class="row"><h2 id="h-events">Events</h2><button class="btn" type="button" id="expand">Expand all</button></div>
-    <div class="tw"><table><thead><tr><th>Event</th><th>Call</th><th>Fired by</th><th>Fires when</th></tr></thead><tbody>${inBuild.map((e) => `<tr><td><a href="#ev-${e.name}"><code>${e.name}</code></a></td><td><span class="chip call-${e.call}">${e.call}</span></td><td><i class="dot ${DOT[e.by]}"></i> ${BY[e.by]}</td><td>${esc(e.when)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Event</th><th>Call</th><th>Fired by</th><th>Fires when</th></tr></thead><tbody>${inBuild.map((e) => `<tr><td><a href="#ev-${e.name}"><code>${e.name}</code></a></td><td><span class="chip call-${e.call}">${e.call}</span></td><td><i class="dot ${DOT[e.by]}"></i> ${(e.byLabel || BY[e.by])}</td><td>${esc(e.when)}</td></tr>`).join('')}</tbody></table></div>
     ${inBuild.map(card).join('\n')}
   </section>
 

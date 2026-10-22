@@ -745,7 +745,7 @@
       "name": "meeting_form_submitted",
       "segmentCall": "track",
       "step": "1",
-      "firedBy": "Server or webhook",
+      "firedBy": "Server",
       "role": "diagnostic",
       "when": "Form accepted and the contact is created or matched. Sent together with identify().",
       "paths": [

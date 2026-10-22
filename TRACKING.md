@@ -18,7 +18,7 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 | `meeting_booking_page_viewed` | page | Browser | counting | Booking page loads. Replaces the old page_view. |
 | `meeting_video_played` | track | Browser | diagnostic | Play pressed on the video of an A variant (booking page or confirmation page). |
 | `meeting_form_started` | track | Browser | diagnostic | First field of the booking form gets focus. |
-| `meeting_form_submitted` | track | Server or webhook | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
+| `meeting_form_submitted` | track | Server | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
 | `meeting_calendar_page_viewed` | page | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
 | `meeting_slot_selected` | track | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
 | `meeting_booking_confirmed` | track | Server or webhook | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
@@ -172,7 +172,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 
 ### `meeting_form_submitted`
 
-- **Segment call:** track · **Fired by:** Server or webhook · **Role:** diagnostic · **Step:** 1
+- **Segment call:** track · **Fired by:** Server · **Role:** diagnostic · **Step:** 1
 - **Fires when:** Form accepted and the contact is created or matched. Sent together with identify().
 - **Entry paths:** P1, P2, P4, P5, P6
 - **Properties:** `email_domain` (string): Domain of the work email.; `contact_id` (string): CRM contact id, also the Segment userId.

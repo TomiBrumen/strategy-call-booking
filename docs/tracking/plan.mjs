@@ -134,7 +134,7 @@ export const EVENTS = [
     props: [], specific: {},
   },
   {
-    name: 'meeting_form_submitted', group: 'Site', step: '1', by: 'server', role: 'diagnostic', level: 'known',
+    name: 'meeting_form_submitted', group: 'Site', step: '1', by: 'server', byLabel: 'Server', role: 'diagnostic', level: 'known',
     when: 'Form accepted and the contact is created or matched. Sent together with identify().',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
     notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with meeting_booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
