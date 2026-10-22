@@ -1,0 +1,1731 @@
+{
+  "title": "Strategy call tracking plan",
+  "draft": "Draft 1, 22 Oct 2026",
+  "source": "Strategy Call Booking Flow spec, draft 7",
+  "contextProperties": [
+    {
+      "name": "anonymous_id",
+      "type": "string",
+      "description": "Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains.",
+      "source": "Segment cookie"
+    },
+    {
+      "name": "booking_session_id",
+      "type": "string",
+      "description": "Created at the CTA click, or at the first flow page if there was no click. The one id the scheduler must return.",
+      "source": "URL param, cookie, hidden field, Cal.com metadata"
+    },
+    {
+      "name": "flow_entry",
+      "type": "enum",
+      "description": "What delivered the visitor to the flow: cta, ad, email, direct.",
+      "source": "Read at the booking page or calendar"
+    },
+    {
+      "name": "flow_start",
+      "type": "enum",
+      "description": "Which page they entered the flow on: booking_page or calendar.",
+      "source": "Read at the booking page or calendar"
+    },
+    {
+      "name": "source_page",
+      "type": "string or null",
+      "description": "Path of the page where the CTA was clicked. Null on targeted ads, marketing emails and direct visits. Never the booking page itself.",
+      "source": "Written at the CTA click"
+    },
+    {
+      "name": "cta_id",
+      "type": "string or null",
+      "description": "The data-cta id of the clicked CTA. For marketing emails: email id plus link id.",
+      "source": "Written at the CTA click"
+    },
+    {
+      "name": "first_touch_source",
+      "type": "string or null",
+      "description": "utm_source of the first marketing touch. Set once, kept 90 days.",
+      "source": "Touch script, cookie on .databox.com"
+    },
+    {
+      "name": "first_touch_medium",
+      "type": "string or null",
+      "description": "utm_medium of the first marketing touch.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_campaign",
+      "type": "string or null",
+      "description": "utm_campaign of the first marketing touch.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_content",
+      "type": "string or null",
+      "description": "utm_content of the first marketing touch.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_term",
+      "type": "string or null",
+      "description": "utm_term of the first marketing touch.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_click_id",
+      "type": "string or null",
+      "description": "Ad click id of the first touch. Ad platforms match offline conversions on it.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_click_id_type",
+      "type": "enum or null",
+      "description": "gclid, gbraid, wbraid, li_fat_id, fbclid or msclkid.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_landing_page",
+      "type": "string or null",
+      "description": "Path of the first page they landed on. One field of the touch, not the touch itself.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_referrer_domain",
+      "type": "string or null",
+      "description": "Domain of the external referrer at the first touch.",
+      "source": "Touch script"
+    },
+    {
+      "name": "first_touch_at",
+      "type": "ISO datetime",
+      "description": "When the first touch happened (UTC).",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_source",
+      "type": "string or null",
+      "description": "Same shape as first_touch_*. Overwritten by a new UTM, click id or external referrer, never by a direct visit.",
+      "source": "Touch script, cookie"
+    },
+    {
+      "name": "last_touch_medium",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_campaign",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_content",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_term",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_click_id",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_click_id_type",
+      "type": "enum or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_landing_page",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_referrer_domain",
+      "type": "string or null",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "last_touch_at",
+      "type": "ISO datetime",
+      "description": "See last_touch_source.",
+      "source": "Touch script"
+    },
+    {
+      "name": "variant_booking",
+      "type": "enum A or B",
+      "description": "Booking page A/B variant. Sticky per visitor, stored on the booking.",
+      "source": "Assigned on first view, cookie"
+    },
+    {
+      "name": "variant_confirmation",
+      "type": "enum A or B",
+      "description": "Confirmation page A/B variant. Sticky per visitor.",
+      "source": "Assigned on first view, cookie"
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "description": "The visitor's email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.",
+      "source": "Form or calendar details"
+    },
+    {
+      "name": "booking_id",
+      "type": "string",
+      "description": "The Cal.com booking id, on every event once the booking exists. Added.",
+      "source": "Cal.com booking response or webhook"
+    }
+  ],
+  "bookingVariables": [
+    {
+      "name": "booking_id",
+      "type": "string",
+      "description": "Cal.com booking id (uid). Builds the reschedule and cancel links.",
+      "example": "k9Zp3QmV7sLw2TnXb8Rc4D",
+      "source": "Cal.com webhook: payload.uid",
+      "usedInEmail": "1, 2, 3 (reschedule and cancel links)"
+    },
+    {
+      "name": "call_at",
+      "type": "ISO datetime",
+      "description": "Call start, UTC. Drives the 24 h and 1 h reminder timing.",
+      "example": "2026-10-29T14:30:00Z",
+      "source": "Cal.com webhook: payload.startTime",
+      "usedInEmail": "workflow timing"
+    },
+    {
+      "name": "call_end_at",
+      "type": "ISO datetime",
+      "description": "Call end, UTC. Added.",
+      "example": "2026-10-29T15:30:00Z",
+      "source": "Cal.com webhook: payload.endTime",
+      "usedInEmail": null
+    },
+    {
+      "name": "duration_min",
+      "type": "number",
+      "description": "Call length in minutes. The designs say 60. Added.",
+      "example": 60,
+      "source": "Cal.com webhook: end minus start",
+      "usedInEmail": "1"
+    },
+    {
+      "name": "lead_time_h",
+      "type": "number",
+      "description": "Hours between booking and call. Reminder 2 is skipped under 24.",
+      "example": 173,
+      "source": "Computed",
+      "usedInEmail": null
+    },
+    {
+      "name": "time_zone",
+      "type": "string",
+      "description": "Visitor's time zone (IANA).",
+      "example": "Europe/Ljubljana",
+      "source": "Cal.com webhook: attendees[0].timeZone",
+      "usedInEmail": null
+    },
+    {
+      "name": "call_weekday",
+      "type": "string",
+      "description": "Weekday of the call in the visitor's time zone. Email: \"See you on ...\". Added.",
+      "example": "Thursday",
+      "source": "Computed in the visitor's time zone",
+      "usedInEmail": "1"
+    },
+    {
+      "name": "call_date_text",
+      "type": "string",
+      "description": "Date as shown in emails, visitor's time zone. Added.",
+      "example": "Thursday, 29 October",
+      "source": "Computed",
+      "usedInEmail": "1, 2"
+    },
+    {
+      "name": "call_time_text",
+      "type": "string",
+      "description": "Time with zone as shown in emails. Added.",
+      "example": "15:30 (CET)",
+      "source": "Computed",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "join_url",
+      "type": "string",
+      "description": "Meeting link for the Join the Call buttons. Added.",
+      "example": "https://meet.google.com/abc-defg-hij",
+      "source": "Cal.com webhook: payload.videoCallData.url or location",
+      "usedInEmail": "2, 3"
+    },
+    {
+      "name": "meeting_location",
+      "type": "string",
+      "description": "Where the call happens, for the \"Where\" field. Added.",
+      "example": "Video call",
+      "source": "Cal.com webhook: payload.location",
+      "usedInEmail": null
+    },
+    {
+      "name": "host_id",
+      "type": "number",
+      "description": "Cal.com id of the assigned host (round robin pick).",
+      "example": 1001,
+      "source": "Cal.com webhook: organizer.id",
+      "usedInEmail": null
+    },
+    {
+      "name": "host_name",
+      "type": "string",
+      "description": "Host full name. Email: \"Host\" field and sign-off. Added.",
+      "example": "Alex Rivera",
+      "source": "Cal.com webhook: organizer.name",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "host_first_name",
+      "type": "string",
+      "description": "Host first name for the sign-off. Added.",
+      "example": "Alex",
+      "source": "Our host list, or split from host_name",
+      "usedInEmail": "2, 3"
+    },
+    {
+      "name": "host_email",
+      "type": "string",
+      "description": "Host work email. Used to find the HubSpot owner. Added.",
+      "example": "alex.rivera@databox.com",
+      "source": "Cal.com webhook: organizer.email",
+      "usedInEmail": null
+    },
+    {
+      "name": "host_username",
+      "type": "string",
+      "description": "Cal.com username. The key into our host list. Added.",
+      "example": "alex-rivera",
+      "source": "Cal.com webhook: organizer.username",
+      "usedInEmail": null
+    },
+    {
+      "name": "host_role",
+      "type": "string",
+      "description": "Host job title for the email (\"Name, Role\"). Not available from Cal.com. Added.",
+      "example": "Head of Sales",
+      "source": "Our host list, keyed by host_username",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "host_photo_url",
+      "type": "string",
+      "description": "Public URL of the host photo for the emails. Cal.com's photo is only 96 px, so use our own. Added.",
+      "example": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+      "source": "Our host list, keyed by host_username",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "calendar_google_url",
+      "type": "string",
+      "description": "Add to Google Calendar link. Added.",
+      "example": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
+      "source": "Computed from call_at, call_end_at, join_url",
+      "usedInEmail": "1"
+    },
+    {
+      "name": "calendar_outlook_url",
+      "type": "string",
+      "description": "Add to Outlook Calendar link. Added.",
+      "example": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
+      "source": "Computed",
+      "usedInEmail": "1"
+    },
+    {
+      "name": "calendar_ics_url",
+      "type": "string",
+      "description": "Add to Apple Calendar: link to an .ics file. Not available yet, see open points. Added.",
+      "example": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+      "source": "Needs a place to host the file",
+      "usedInEmail": "1"
+    },
+    {
+      "name": "reschedule_url",
+      "type": "string",
+      "description": "Reschedule page. Lets the email use one value instead of building it. Added.",
+      "example": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
+      "source": "Computed from booking_id",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "cancel_url",
+      "type": "string",
+      "description": "Cancel page. Added.",
+      "example": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
+      "source": "Computed from booking_id",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "first_name",
+      "type": "string",
+      "description": "Visitor first name (HubSpot contact is created or matched by email). Added.",
+      "example": "Ana",
+      "source": "Booking form, or Cal.com attendee name",
+      "usedInEmail": "1, 2, 3"
+    },
+    {
+      "name": "last_name",
+      "type": "string",
+      "description": "Visitor last name. Added.",
+      "example": "Novak",
+      "source": "Booking form, or Cal.com attendee name",
+      "usedInEmail": "1"
+    },
+    {
+      "name": "phone",
+      "type": "string or null",
+      "description": "Visitor phone. Optional, and the field is hidden on the test event in Cal.com. Added.",
+      "example": "+38640123456",
+      "source": "Booking form",
+      "usedInEmail": null
+    },
+    {
+      "name": "rebook_reason",
+      "type": "enum or null",
+      "description": "recovery or no_show when the booking came from a rebook email. Null on a first booking.",
+      "example": null,
+      "source": "Rebook link in the email",
+      "usedInEmail": null
+    }
+  ],
+  "events": [
+    {
+      "name": "cta_clicked",
+      "step": "0",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "Click on any element with a data-cta attribute, on any site, blog or product page.",
+      "paths": [
+        "P1",
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "notes": [
+        "Writes source_page, cta_id and a new booking_session_id (if none) to the booking link as ?src=&cta=&bsid=, and to the cookie as backup.",
+        "Fires once per click. Not fired for marketing emails or targeted ads: those start further down the flow."
+      ],
+      "specificProperties": [
+        {
+          "name": "cta_id",
+          "type": "string",
+          "description": "Value of data-cta.",
+          "example": "xyz_inline"
+        },
+        {
+          "name": "source_page",
+          "type": "string",
+          "description": "Current page path.",
+          "example": "/page-xyz"
+        },
+        {
+          "name": "cta_text",
+          "type": "string",
+          "description": "Visible button text.",
+          "example": "Book a strategy call"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "cta_clicked",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": null,
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "cta_id": "xyz_inline",
+          "source_page": "/page-xyz",
+          "cta_text": "Book a strategy call",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "booking_page_viewed",
+      "step": "1",
+      "firedBy": "Browser",
+      "role": "counting",
+      "addedToSpec": false,
+      "when": "Booking page loads. Replaces the old page_view.",
+      "paths": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "notes": [
+        "Denominator of the visit-to-booked rate (same booking_session_id as booking_confirmed).",
+        "Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.",
+        "Fires on load only, not on a variant switch or re-render."
+      ],
+      "specificProperties": [
+        {
+          "name": "variant_booking",
+          "type": "A or B",
+          "description": "Variant shown.",
+          "example": "A"
+        },
+        {
+          "name": "flow_entry",
+          "type": "enum",
+          "description": "Entry type.",
+          "example": "cta"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "booking_page_viewed",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": null,
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "variant_booking": "A",
+          "flow_entry": "cta",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_confirmation": "A"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "video_played",
+      "step": "1, 3",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "Play pressed on the video of an A variant (booking page or confirmation page).",
+      "paths": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "notes": [
+        "Variant B has no video, so it never fires there.",
+        "Fire again at 25, 50, 75 and 100 percent if pct_watched is wanted; otherwise once with 0."
+      ],
+      "specificProperties": [
+        {
+          "name": "page",
+          "type": "enum",
+          "description": "booking or confirmation.",
+          "example": "booking"
+        },
+        {
+          "name": "pct_watched",
+          "type": "number",
+          "description": "Percent watched when the event fires.",
+          "example": 0
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "video_played",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": null,
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "page": "booking",
+          "pct_watched": 0,
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "form_started",
+      "step": "1",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": false,
+      "when": "First field of the booking form gets focus.",
+      "paths": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "notes": [
+        "Once per booking_session_id."
+      ],
+      "specificProperties": [],
+      "example": {
+        "type": "track",
+        "event": "form_started",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": null,
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "form_submitted",
+      "step": "1",
+      "firedBy": "Server or webhook",
+      "role": "diagnostic",
+      "addedToSpec": false,
+      "when": "Form accepted and the contact is created or matched. Sent together with identify().",
+      "paths": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "notes": [
+        "Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with booking_confirmed instead.",
+        "Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.",
+        "Fires from our server so ad blockers and consent choices cannot drop it."
+      ],
+      "specificProperties": [
+        {
+          "name": "email_domain",
+          "type": "string",
+          "description": "Domain of the work email.",
+          "example": "acme.com"
+        },
+        {
+          "name": "contact_id",
+          "type": "string",
+          "description": "CRM contact id, also the Segment userId.",
+          "example": "contact_8812"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "form_submitted",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "email_domain": "acme.com",
+          "contact_id": "contact_8812",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com"
+        }
+      }
+    },
+    {
+      "name": "calendar_viewed",
+      "step": "2",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "Calendar loads, including direct entry from ads and emails.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "On P3 and direct P6 this is the first and only context snapshot, so it must run the same read logic as the booking page.",
+        "On P7 (flow emails) there is no new touch; the booking keeps its original attribution."
+      ],
+      "specificProperties": [
+        {
+          "name": "flow_start",
+          "type": "enum",
+          "description": "booking_page or calendar.",
+          "example": "booking_page"
+        },
+        {
+          "name": "flow_entry",
+          "type": "enum",
+          "description": "Entry type.",
+          "example": "cta"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "calendar_viewed",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": null,
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "flow_start": "booking_page",
+          "flow_entry": "cta",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "slot_selected",
+      "step": "2",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "A time slot is picked, before the booking is confirmed.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "Can fire several times if the visitor changes slot. On the targeted-ad path the email is only known at confirm, so this event is still anonymous there."
+      ],
+      "specificProperties": [
+        {
+          "name": "days_ahead",
+          "type": "number",
+          "description": "Days between today and the slot.",
+          "example": 7
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "slot_selected",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "days_ahead": 7,
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "booking_confirmed",
+      "step": "2, R, N",
+      "firedBy": "Server or webhook",
+      "role": "counting",
+      "addedToSpec": false,
+      "when": "A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "The event that counts calls. Never count bookings on the thank-you page: reloads double count and ad blockers drop it.",
+        "Sent with identify() when no form ran (P3, direct P6).",
+        "Rebooks from the recovery or no-show email use this same event with rebook_reason, so one event counts bookings.",
+        "This event, and booking_rescheduled, carry every variable the emails need (table below). The attribution context comes back in the webhook as the booking metadata.",
+        "Starts the HubSpot workflow: confirmation email now, reminders from call_at."
+      ],
+      "specificProperties": [],
+      "example": {
+        "type": "track",
+        "event": "booking_confirmed",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
+          "call_at": "2026-10-29T14:30:00Z",
+          "call_end_at": "2026-10-29T15:30:00Z",
+          "duration_min": 60,
+          "lead_time_h": 173,
+          "time_zone": "Europe/Ljubljana",
+          "call_weekday": "Thursday",
+          "call_date_text": "Thursday, 29 October",
+          "call_time_text": "15:30 (CET)",
+          "join_url": "https://meet.google.com/abc-defg-hij",
+          "meeting_location": "Video call",
+          "host_id": 1001,
+          "host_name": "Alex Rivera",
+          "host_first_name": "Alex",
+          "host_email": "alex.rivera@databox.com",
+          "host_username": "alex-rivera",
+          "host_role": "Head of Sales",
+          "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+          "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
+          "calendar_outlook_url": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
+          "calendar_ics_url": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+          "reschedule_url": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
+          "cancel_url": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
+          "first_name": "Ana",
+          "last_name": "Novak",
+          "phone": "+38640123456",
+          "rebook_reason": null,
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com"
+        }
+      }
+    },
+    {
+      "name": "confirmation_viewed",
+      "step": "3",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": false,
+      "when": "Confirmation (thank-you) page loads.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "Never use it to count bookings.",
+        "Keeps the anonymous id if the scheduler ran on another domain (ajs_aid)."
+      ],
+      "specificProperties": [
+        {
+          "name": "variant_confirmation",
+          "type": "A or B",
+          "description": "Variant shown.",
+          "example": "A"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "confirmation_viewed",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "variant_confirmation": "A",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "calendar_added",
+      "step": "3",
+      "firedBy": "Browser",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "Click on an Add to calendar button on the confirmation page.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "notes": [
+        "Each click fires once."
+      ],
+      "specificProperties": [
+        {
+          "name": "calendar",
+          "type": "enum",
+          "description": "google, apple or outlook.",
+          "example": "google"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "calendar_added",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "calendar": "google",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        },
+        "context": {
+          "page": {
+            "path": "/strategy-call"
+          }
+        }
+      }
+    },
+    {
+      "name": "email_sent",
+      "step": "R, 4 to 8, N",
+      "firedBy": "Email platform",
+      "role": "diagnostic",
+      "addedToSpec": false,
+      "when": "The email platform accepts a send of any flow email.",
+      "paths": [
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "Email opens are not tracked: Apple Mail Privacy Protection inflates them.",
+        "Built so far: confirmation, reminder_24h, reminder_1h. Spec also lists recovery, no_show and post_call (not designed yet)."
+      ],
+      "specificProperties": [
+        {
+          "name": "email_id",
+          "type": "enum",
+          "description": "confirmation, reminder_24h, reminder_1h, recovery, no_show, post_call.",
+          "example": "confirmation"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "email_sent",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "email_id": "confirmation",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        },
+        "context": {
+          "source": "email platform"
+        }
+      }
+    },
+    {
+      "name": "email_clicked",
+      "step": "R, 4 to 8, N",
+      "firedBy": "Email platform",
+      "role": "diagnostic",
+      "addedToSpec": false,
+      "when": "Tracked link click in a flow email.",
+      "paths": [
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "Flow-email links carry the booking id and never write a new touch; the booking keeps its attribution. Marketing-email links are a different case: they are a new last touch (open question Q10).",
+        "link_id values: join, reschedule, cancel, rebook, report, add_google, add_outlook, add_apple."
+      ],
+      "specificProperties": [
+        {
+          "name": "email_id",
+          "type": "enum",
+          "description": "Which email.",
+          "example": "reminder_24h"
+        },
+        {
+          "name": "link_id",
+          "type": "enum",
+          "description": "Which link.",
+          "example": "join"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "email_clicked",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "email_id": "reminder_24h",
+          "link_id": "join",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        },
+        "context": {
+          "source": "email platform"
+        }
+      }
+    },
+    {
+      "name": "booking_rescheduled",
+      "step": "X",
+      "firedBy": "Server or webhook",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.",
+      "paths": [
+        "P7"
+      ],
+      "notes": [
+        "Not counted as a new booking. Keeps the original attribution and variant.",
+        "Cal.com issues a new booking id on a reschedule: send it as booking_id and keep the old one as previous_booking_id so the join to the original stays.",
+        "Carries all the email variables again with the new time, so reminders can be rescheduled and a \"your call moved\" email can use them."
+      ],
+      "specificProperties": [
+        {
+          "name": "previous_booking_id",
+          "type": "string",
+          "description": "Booking id before the reschedule. Added.",
+          "example": "wUqtfgWLCft74eKnRrEYYs"
+        },
+        {
+          "name": "old_call_at",
+          "type": "ISO datetime",
+          "description": "Previous start (UTC).",
+          "example": "2026-10-28T10:00:00Z"
+        },
+        {
+          "name": "new_call_at",
+          "type": "ISO datetime",
+          "description": "New start (UTC).",
+          "example": "2026-10-29T14:30:00Z"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "booking_rescheduled",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "previous_booking_id": "wUqtfgWLCft74eKnRrEYYs",
+          "old_call_at": "2026-10-28T10:00:00Z",
+          "new_call_at": "2026-10-29T14:30:00Z",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
+          "call_at": "2026-10-29T14:30:00Z",
+          "call_end_at": "2026-10-29T15:30:00Z",
+          "duration_min": 60,
+          "lead_time_h": 173,
+          "time_zone": "Europe/Ljubljana",
+          "call_weekday": "Thursday",
+          "call_date_text": "Thursday, 29 October",
+          "call_time_text": "15:30 (CET)",
+          "join_url": "https://meet.google.com/abc-defg-hij",
+          "meeting_location": "Video call",
+          "host_id": 1001,
+          "host_name": "Alex Rivera",
+          "host_first_name": "Alex",
+          "host_email": "alex.rivera@databox.com",
+          "host_username": "alex-rivera",
+          "host_role": "Head of Sales",
+          "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+          "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy+call&dates=20261029T143000Z/20261029T153000Z",
+          "calendar_outlook_url": "https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy+call&startdt=2026-10-29T14%3A30%3A00.000Z&enddt=2026-10-29T15%3A30%3A00.000Z",
+          "calendar_ics_url": "https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics",
+          "reschedule_url": "https://cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
+          "cancel_url": "https://cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
+          "first_name": "Ana",
+          "last_name": "Novak",
+          "phone": "+38640123456",
+          "rebook_reason": null,
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com"
+        }
+      }
+    },
+    {
+      "name": "booking_canceled",
+      "step": "X",
+      "firedBy": "Server or webhook",
+      "role": "counting",
+      "addedToSpec": true,
+      "when": "A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.",
+      "paths": [
+        "P7"
+      ],
+      "notes": [
+        "Subtracted from show rate: call_held / (booking_confirmed minus booking_canceled).",
+        "Stops the HubSpot reminders for this booking id."
+      ],
+      "specificProperties": [
+        {
+          "name": "canceled_by",
+          "type": "enum",
+          "description": "visitor or host.",
+          "example": "visitor"
+        },
+        {
+          "name": "reason",
+          "type": "string or null",
+          "description": "Cancellation reason, if given.",
+          "example": "Need a different time"
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "booking_canceled",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "canceled_by": "visitor",
+          "reason": "Need a different time",
+          "call_at": "2026-10-29T14:30:00Z",
+          "host_id": 1001,
+          "host_name": "Alex Rivera",
+          "host_username": "alex-rivera",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        }
+      }
+    },
+    {
+      "name": "call_held",
+      "step": "7",
+      "firedBy": "Server or webhook",
+      "role": "counting",
+      "addedToSpec": false,
+      "when": "The visitor joined the call.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "Source system is open (Q5): the scheduler, the call recorder or the host in the CRM. Cal.com's HubSpot app does not mark no-shows.",
+        "Primary metric for the confirmation page test: show rate."
+      ],
+      "specificProperties": [
+        {
+          "name": "duration_min",
+          "type": "number",
+          "description": "Minutes the visitor was in the call.",
+          "example": 52
+        }
+      ],
+      "example": {
+        "type": "track",
+        "event": "call_held",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "duration_min": 52,
+          "call_at": "2026-10-29T14:30:00Z",
+          "host_id": 1001,
+          "host_name": "Alex Rivera",
+          "host_username": "alex-rivera",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        }
+      }
+    },
+    {
+      "name": "call_no_show",
+      "step": "7",
+      "firedBy": "Server or webhook",
+      "role": "diagnostic",
+      "addedToSpec": true,
+      "when": "The visitor has not joined 15 minutes after the start.",
+      "paths": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "notes": [
+        "Source system is open (Q5). Triggers the no-show email, which carries one rebook link to the calendar (rebook_reason = no_show)."
+      ],
+      "specificProperties": [],
+      "example": {
+        "type": "track",
+        "event": "call_no_show",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "userId": "contact_8812",
+        "timestamp": "2026-10-22T09:15:02.771Z",
+        "properties": {
+          "call_at": "2026-10-29T14:30:00Z",
+          "host_id": 1001,
+          "host_name": "Alex Rivera",
+          "host_username": "alex-rivera",
+          "anonymous_id": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "cta",
+          "flow_start": "booking_page",
+          "source_page": "/page-xyz",
+          "cta_id": "xyz_inline",
+          "first_touch_source": "linkedin",
+          "first_touch_medium": "paid_social",
+          "first_touch_campaign": "q4_strategy_call",
+          "first_touch_content": "carousel_1",
+          "first_touch_term": null,
+          "first_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "first_touch_click_id_type": "li_fat_id",
+          "first_touch_landing_page": "/ad-landing",
+          "first_touch_referrer_domain": "linkedin.com",
+          "first_touch_at": "2026-10-19T09:12:00Z",
+          "last_touch_source": "linkedin",
+          "last_touch_medium": "paid_social",
+          "last_touch_campaign": "q4_strategy_call",
+          "last_touch_content": "carousel_1",
+          "last_touch_term": null,
+          "last_touch_click_id": "d1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70",
+          "last_touch_click_id_type": "li_fat_id",
+          "last_touch_landing_page": "/ad-landing",
+          "last_touch_referrer_domain": "linkedin.com",
+          "last_touch_at": "2026-10-19T09:12:00Z",
+          "variant_booking": "A",
+          "variant_confirmation": "A",
+          "email": "ana.novak@acme.com",
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
+        }
+      }
+    }
+  ],
+  "pageCall": {
+    "name": "page()",
+    "by": "browser",
+    "when": "Every page load, site-wide. This is Segment's standard call and fires automatically from the Segment snippet.",
+    "notes": [
+      "It is the only call where Segment attaches UTMs, as context.campaign.",
+      "Inside the booking flow every step already has its own event, so page() adds nothing to the step counts. Keeping it is a site-wide decision for Engineering; the flow does not depend on it."
+    ],
+    "json": {
+      "type": "page",
+      "name": "Booking page",
+      "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+      "userId": null,
+      "timestamp": "2026-10-22T09:12:03.412Z",
+      "properties": {
+        "path": "/strategy-call",
+        "url": "https://www.databox.com/strategy-call?utm_source=linkedin&utm_medium=paid_social&utm_campaign=q4_strategy_call&utm_content=carousel_1",
+        "referrer": "https://www.linkedin.com/",
+        "title": "Book your strategy call"
+      },
+      "context": {
+        "campaign": {
+          "name": "q4_strategy_call",
+          "source": "linkedin",
+          "medium": "paid_social",
+          "content": "carousel_1",
+          "term": null
+        },
+        "page": {
+          "path": "/strategy-call"
+        }
+      }
+    }
+  },
+  "identifyCalls": [
+    {
+      "when": "At form_submitted (server).",
+      "json": {
+        "type": "identify",
+        "userId": "contact_8812",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "timestamp": "2026-10-22T09:14:40.108Z",
+        "traits": {
+          "email": "ana.novak@acme.com",
+          "first_name": "Ana",
+          "last_name": "Novak",
+          "phone": "+38640123456",
+          "email_domain": "acme.com"
+        }
+      }
+    },
+    {
+      "when": "At booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.",
+      "json": {
+        "type": "identify",
+        "userId": "contact_8812",
+        "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
+        "timestamp": "2026-10-22T09:17:11.530Z",
+        "traits": {
+          "email": "ana.novak@acme.com",
+          "first_name": "Ana",
+          "last_name": "Novak",
+          "email_domain": "acme.com"
+        }
+      }
+    }
+  ],
+  "entryPaths": [
+    {
+      "id": "P1",
+      "route": "Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you",
+      "values": "flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad"
+    },
+    {
+      "id": "P2",
+      "route": "Ad, then ad landing, then booking page, calendar, thank you",
+      "values": "flow_entry = cta, source_page = /ad-landing, first and last touch = the ad"
+    },
+    {
+      "id": "P3",
+      "route": "Targeted ad straight to the calendar, thank you",
+      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with booking_confirmed"
+    },
+    {
+      "id": "P4",
+      "route": "Search, social or direct, any page, header CTA, booking page, calendar, thank you",
+      "values": "flow_entry = cta, cta_id = header, source_page = the current page"
+    },
+    {
+      "id": "P5",
+      "route": "Search, social or partner, landing page, booking page, calendar, thank you",
+      "values": "flow_entry = cta, source_page = /landing-page"
+    },
+    {
+      "id": "P6",
+      "route": "Marketing email, booking page (or straight to the calendar), thank you",
+      "values": "flow_entry = email, last_touch = the email campaign. A new last touch"
+    },
+    {
+      "id": "P7",
+      "route": "Flow email (reschedule, rebook), calendar, thank you",
+      "values": "No new touch. booking_rescheduled, or booking_confirmed with rebook_reason; inherits the original booking"
+    }
+  ],
+  "openPoints": [
+    "Event naming: the spec uses snake_case (booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).",
+    "Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.",
+    "Who marks call_held and call_no_show (Q5). Cal.com's HubSpot app does not set no-show.",
+    "Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.",
+    "Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com's own confirmation email, which carries the .ics.",
+    "Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.",
+    "Cancel and reschedule must be switched on in the Cal.com event type, or the reschedule_url and cancel_url in the emails will not work.",
+    "Cal.com webhook payload: the field names in the \"Where it comes from\" column are the expected ones. Verify them against a real BOOKING_CREATED payload before building.",
+    "Consent: whether the touch cookie counts as functional or analytics under the consent banner is still open (Q3)."
+  ]
+}

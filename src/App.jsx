@@ -12,18 +12,23 @@ const load = (k) => { try { return localStorage.getItem(k); } catch { return nul
 const save = (k, v) => { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } };
 
 const emptyForm = { first: '', last: '', email: '', cc: '+1', phone: '', consent: false, q: '' };
+// Simulated marketing touch. Same shape as the spec: source, medium, campaign, content, term, click id, landing page, referrer.
 const touch = (entry) => entry === 'ad'
-  ? { source: 'linkedin', medium: 'paid_social', campaign: 'q4_strategy_call' }
-  : { source: 'google', medium: 'organic', campaign: null };
+  ? { source: 'linkedin', medium: 'paid_social', campaign: 'q4_strategy_call', content: 'carousel_1', term: null,
+      click_id: 'd1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70', click_id_type: 'li_fat_id', landing_page: '/ad-landing', referrer_domain: 'linkedin.com', at: new Date().toISOString() }
+  : { source: 'google', medium: 'organic', campaign: null, content: null, term: null,
+      click_id: null, click_id_type: null, landing_page: '/page-xyz', referrer_domain: 'google.com', at: new Date().toISOString() };
+
+const TOUCH_KEYS = ['source', 'medium', 'campaign', 'content', 'term', 'click_id', 'click_id_type', 'landing_page', 'referrer_domain', 'at'];
 
 function freshCtx(entry) {
   const t = touch(entry);
+  const flat = (prefix) => Object.fromEntries(TOUCH_KEYS.map((k) => [`${prefix}_${k}`, t[k]]));
   return {
     anonymous_id: rand('anon_'), booking_session_id: rand('bs_'),
     flow_entry: entry === 'ad' ? 'ad' : 'cta', flow_start: entry === 'ad' ? 'calendar' : 'booking_page',
     source_page: null, cta_id: null,
-    first_touch_source: t.source, first_touch_medium: t.medium, first_touch_campaign: t.campaign,
-    last_touch_source: t.source, last_touch_medium: t.medium, last_touch_campaign: t.campaign,
+    ...flat('first_touch'), ...flat('last_touch'),
   };
 }
 
@@ -99,12 +104,12 @@ export default function App() {
 
   const onSlot = (start) => fire('slot_selected', { days_ahead: daysAhead(start) });
 
-  const metadata = () => ({
-    booking_session_id: ctx.booking_session_id, flow_entry: ctx.flow_entry, flow_start: ctx.flow_start,
-    source_page: ctx.source_page || '', cta_id: ctx.cta_id || '', variant_booking: vb, variant_confirmation: vc,
-    first_touch_source: ctx.first_touch_source, last_touch_source: ctx.last_touch_source,
-    ...(form.q ? { qualifying_answer: form.q.slice(0, 450) } : {}),
-  });
+  // Everything the server-side events need travels with the booking (Cal.com keeps up to 50 string keys).
+  // The webhook then carries the full attribution context, so nothing has to be stored on our side.
+  const metadata = () => {
+    const keep = { ...ctx, variant_booking: vb, variant_confirmation: vc, ...(form.q ? { qualifying_answer: form.q } : {}) };
+    return Object.fromEntries(Object.entries(keep).filter(([, v]) => v !== null && v !== undefined && v !== '').map(([k, v]) => [k, String(v).slice(0, 450)]));
+  };
 
   const hostOf = (d) => d.hosts?.[0]?.name || d.organizer?.name || '';
   const hostUser = (d) => d.hosts?.[0]?.username || d.organizer?.username || '';
