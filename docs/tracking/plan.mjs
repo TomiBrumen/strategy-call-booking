@@ -288,7 +288,7 @@ export function jsonFor(e) {
 
 export const UTM_RULE = {
   headline: 'Every event includes all UTMs, as separate properties.',
-  body: 'Especially for ads: this is how sources are tracked. UTMs are dynamic. Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.',
+  body: 'Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.',
   firstTouch: 'first_touch_* is the first marketing touch ever.',
   lastTouch: 'last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA.',
   firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'click_id', 'click_id_type', 'landing_page', 'referrer_domain', 'at'],
