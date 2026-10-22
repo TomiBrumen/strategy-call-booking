@@ -13,19 +13,6 @@ export const S = {
   callAt: '2026-10-29T14:30:00Z',
 };
 
-const touch = (p, v) => ({
-  [`${p}_source`]: v.source, [`${p}_medium`]: v.medium, [`${p}_campaign`]: v.campaign, [`${p}_content`]: v.content,
-  [`${p}_term`]: v.term, [`${p}_click_id`]: v.click_id, [`${p}_click_id_type`]: v.click_id_type,
-  [`${p}_landing_page`]: v.landing_page, [`${p}_referrer_domain`]: v.referrer_domain, [`${p}_at`]: v.at,
-});
-// UTM and click id values are dynamic: whatever is on the visitor's URL. These are placeholders, not real values.
-const ad = {
-  source: '<utm_source from the URL>', medium: '<utm_medium from the URL>', campaign: '<utm_campaign from the URL>',
-  content: '<utm_content from the URL>', term: '<utm_term from the URL>',
-  click_id: '<ad click id from the URL>', click_id_type: '<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>',
-  landing_page: '<path of the first landing page>', referrer_domain: '<external referrer domain>', at: S.firstTouchAt,
-};
-
 // ---------- properties every event carries ("the full context") ----------
 export const CONTEXT_PROPS = [
   ['anonymous_id', 'string', 'Segment anonymous id. Joins every event before the person is known. Passed as ajs_aid across domains.', 'Segment cookie'],
@@ -44,18 +31,18 @@ export const CONTEXT_PROPS = [
   ['first_touch_landing_page', 'string or null', 'Path of the first page they landed on. One field of the touch, not the touch itself.', 'Touch script'],
   ['first_touch_referrer_domain', 'string or null', 'Domain of the external referrer at the first touch.', 'Touch script'],
   ['first_touch_at', 'ISO datetime', 'When the first touch happened (UTC).', 'Touch script'],
-  ['last_touch_source', 'string or null', 'Same shape as first_touch_*. Overwritten by a new UTM, click id or external referrer, never by a direct visit.', 'Touch script, cookie'],
-  ['last_touch_medium', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_campaign', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_content', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_term', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_click_id', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_click_id_type', 'enum or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_landing_page', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_referrer_domain', 'string or null', 'See last_touch_source.', 'Touch script'],
-  ['last_touch_at', 'ISO datetime', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_source', 'string or null', 'utm_source of the page where the visitor started the flow (the page where they clicked the CTA). Same shape as first_touch_*.', 'Read from that page at the CTA click'],
+  ['last_touch_medium', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_campaign', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_content', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_term', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_click_id', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_click_id_type', 'enum or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_landing_page', 'string or null', 'Path of the page where the CTA was clicked (the same page as source_page).', 'Read from that page at the CTA click'],
+  ['last_touch_referrer_domain', 'string or null', 'See last_touch_source.', 'Read from the page where the flow started'],
+  ['last_touch_at', 'ISO datetime', 'When the CTA was clicked (UTC).', 'Read at the CTA click'],
   ['first_touch_<other utm_* parameter>', 'string or null', 'Every other utm_* parameter found on the URL (for example utm_id) is captured the same way. Names follow the same pattern; confirm the exact naming with Engineering.', 'Touch script'],
-  ['last_touch_<other utm_* parameter>', 'string or null', 'Same, for the last touch.', 'Touch script'],
+  ['last_touch_<other utm_* parameter>', 'string or null', 'Same, read from the page where the flow started.', 'Read from the page where the flow started'],
   ['variant_booking', 'enum A or B', 'Booking page A/B variant. Sticky per visitor, stored on the booking.', 'Assigned on first view, cookie'],
   ['variant_confirmation', 'enum A or B', 'Confirmation page A/B variant. Sticky per visitor.', 'Assigned on first view, cookie'],
   ['email', 'string', 'The visitor\'s email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.', 'Form or calendar details'],
@@ -65,10 +52,10 @@ export const CONTEXT_PROPS = [
 // level: how much of the context exists when the event fires
 //   anon = no email yet, known = email known, booked = email and booking id known
 export function context(level) {
+  // UTM and touch properties are NOT repeated here: every event must also include them, as separate properties.
   const c = {
     anonymous_id: S.anonymousId, booking_session_id: S.bookingSessionId,
     flow_entry: 'cta', flow_start: 'booking_page', source_page: '/page-xyz', cta_id: 'xyz_inline',
-    ...touch('first_touch', ad), ...touch('last_touch', ad),
     variant_booking: 'A', variant_confirmation: 'A',
   };
   if (level === 'known' || level === 'booked') c.email = S.email;
@@ -125,7 +112,7 @@ export const EVENTS = [
     specific: { cta_id: 'xyz_inline', source_page: '/page-xyz', cta_text: 'Book a strategy call' },
   },
   {
-    name: 'meeting_booking_page_viewed', group: 'Site', step: '1', by: 'browser', role: 'counting', level: 'anon',
+    call: 'page', name: 'meeting_booking_page_viewed', group: 'Site', step: '1', by: 'browser', role: 'counting', level: 'anon',
     when: 'Booking page loads. Replaces the old page_view.',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
     notes: ['Denominator of the visit-to-booked rate (same booking_session_id as meeting_booking_confirmed).', 'Reads source_page and cta_id from the URL params, then the cookie, then the internal referrer. An ad UTM with no CTA data means flow_entry = ad; an email UTM means email; nothing means direct.', 'Fires on load only, not on a variant switch or re-render.'],
@@ -157,7 +144,7 @@ export const EVENTS = [
     identify: true,
   },
   {
-    name: 'meeting_calendar_page_viewed', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'any', new: true,
+    call: 'page', name: 'meeting_calendar_page_viewed', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'any', new: true,
     when: 'Calendar loads, including direct entry from ads and emails.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['On P3 and direct P6 this is the first and only context snapshot, so it must run the same read logic as the booking page.', 'On those direct entries the same three fields (name, business email, phone optional) appear after a slot is picked, above the Confirm button.', 'On P7 (flow emails) there is no new touch; the booking keeps its original attribution.'],
@@ -181,7 +168,7 @@ export const EVENTS = [
     identify: true,
   },
   {
-    name: 'meeting_confirmation_page_viewed', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked',
+    call: 'page', name: 'meeting_confirmation_page_viewed', group: 'Site', step: '3', by: 'browser', role: 'diagnostic', level: 'booked',
     when: 'Confirmation (thank-you) page loads.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
     notes: ['Never use it to count bookings.', 'Keeps the anonymous id if the scheduler ran on another domain (ajs_aid).'],
@@ -245,17 +232,8 @@ export const EVENTS = [
   },
 ];
 
-// ---------- the two Segment calls that are not track events ----------
-export const PAGE_CALL = {
-  name: 'page()', by: 'browser',
-  when: 'Every page load, site-wide. This is Segment\'s standard call and fires automatically from the Segment snippet.',
-  notes: ['It is the only call where Segment attaches UTMs, as context.campaign.', 'Inside the booking flow every step already has its own event, so page() adds nothing to the step counts. Keeping it is a site-wide decision for Engineering; the flow does not depend on it.'],
-  json: {
-    type: 'page', name: 'Booking page', anonymousId: S.anonymousId, userId: null, timestamp: '2026-10-22T09:12:03.412Z',
-    properties: { path: '/strategy-call', url: 'https://www.databox.com/strategy-call?utm_source=<utm_source>&utm_medium=<utm_medium>&utm_campaign=<utm_campaign>&utm_content=<utm_content>&utm_term=<utm_term>&<any other utm_*>', referrer: '<external referrer URL>', title: 'Book your strategy call' },
-    context: { campaign: { name: '<utm_campaign>', source: '<utm_source>', medium: '<utm_medium>', content: '<utm_content>', term: '<utm_term>', '<other utm_*>': '<value from the URL>' }, page: { path: '/strategy-call' } },
-  },
-};
+// ---------- Segment calls ----------
+export const PAGE_NOTE = 'The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages.';
 
 export const IDENTIFY_CALLS = [
   {
@@ -276,57 +254,60 @@ export const IDENTIFY_CALLS = [
 
 // ---------- entry paths from the spec ----------
 export const PATHS = [
-  ['P1', 'Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you', 'flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad'],
-  ['P2', 'Ad, then ad landing, then booking page, calendar, thank you', 'flow_entry = cta, source_page = /ad-landing, first and last touch = the ad'],
-  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with meeting_booking_confirmed'],
-  ['P4', 'Search, social or direct, any page, header CTA, booking page, calendar, thank you', 'flow_entry = cta, cta_id = header, source_page = the current page'],
-  ['P5', 'Search, social or partner, landing page, booking page, calendar, thank you', 'flow_entry = cta, source_page = /landing-page'],
-  ['P6', 'Marketing email, booking page (or straight to the calendar), thank you', 'flow_entry = email, last_touch = the email campaign. A new last touch'],
-  ['P7', 'Flow email (reschedule, rebook), calendar, thank you', 'No new touch. meeting_booking_rescheduled, or meeting_booking_confirmed with rebook_reason; inherits the original booking'],
+  ['P1', 'Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you', 'flow_entry = cta, source_page = the page with the CTA. last_touch = that page, first_touch = the first marketing touch (the ad)'],
+  ['P2', 'Ad, then ad landing, then booking page, calendar, thank you', 'flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing page'],
+  ['P3', 'Targeted ad straight to the calendar, thank you', 'flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the calendar page the ad opened. No form: identify() goes with meeting_booking_confirmed'],
+  ['P4', 'Search, social or direct, any page, header CTA, booking page, calendar, thank you', 'flow_entry = cta, cta_id = header, source_page = the current page. last_touch = that page'],
+  ['P5', 'Search, social or partner, landing page, booking page, calendar, thank you', 'flow_entry = cta, source_page = /landing-page. last_touch = that landing page'],
+  ['P6', 'Marketing email, booking page (or straight to the calendar), thank you', 'flow_entry = email. No CTA click: last_touch = the booking page or calendar the email link opened, with the email\'s UTMs'],
+  ['P7', 'Flow email (reschedule, rebook), calendar, thank you', 'No new touch. The booking keeps its original first_touch and last_touch'],
 ];
 
 export const OPEN_POINTS = [
-  'UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.',
-  'Event naming: the spec uses snake_case (meeting_booking_confirmed). Segment\'s own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).',
-  'Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.',
-  'Who marks meeting_call_held and meeting_call_no_show (Q5). Cal.com\'s HubSpot app does not set no-show.',
-  'Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.',
-  'Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com\'s own confirmation email, which carries the .ics.',
-  'Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.',
-  'Cancel and reschedule must be switched on in the Cal.com event type, or the reschedule_url and cancel_url in the emails will not work.',
-  'Cal.com webhook payload: the field names in the "Where it comes from" column are the expected ones. Verify them against a real BOOKING_CREATED payload before building.',
-  'Consent: whether the touch cookie counts as functional or analytics under the consent banner is still open (Q3).',
-];
-
-// ---------- JSON builder ----------
+  'last_touch is read from the page where the CTA was clicked. If that page\'s URL has no UTMs, should last_touch_* be empty, or fall back to the UTMs kept for the visit? Decide with Marketing.',
+  'UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.',
+  'Naming: Segment\'s own convention is title case; this plan uses snake_case with a meeting_ prefix. Match the Databox Segment workspace before building (Q11).',
+  'email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.',
+  'host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small host list on our side, keyed by host_username.',
+  'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.',
+  'The real Cal.com event must be 60 minutes, and cancelling and rescheduling must be switched on, or the reschedule and cancel links will not work.',
+  'Field names in the "where it comes from" column are the expected Cal.com webhook fields. Verify them against a real payload before building.',
+];// ---------- JSON builder ----------
+export const callOf = (e) => e.call || 'track';
 export function jsonFor(e) {
   const ctx = context(e.level === 'any' ? 'anon' : e.level);
-  const props = e.booking ? { ...e.specific, ...ctx } : { ...e.specific, ...ctx };
-  // meeting_booking_confirmed carries booking_id and email already inside specific/ctx; keep order stable
   const ordered = {};
   for (const k of Object.keys(e.specific)) ordered[k] = e.specific[k];
   for (const k of Object.keys(ctx)) if (!(k in ordered)) ordered[k] = ctx[k];
-  void props;
   const identified = e.level === 'known' || e.level === 'booked';
-  const envelope = {
-    type: 'track', event: e.name,
-    anonymousId: S.anonymousId, userId: identified ? S.userId : null,
-    timestamp: '2026-10-22T09:15:02.771Z',
-    properties: ordered,
-    context: { page: { path: e.by === 'server' ? undefined : '/strategy-call' } },
-  };
-  if (e.by === 'server') delete envelope.context;
+  const base = { anonymousId: S.anonymousId, userId: identified ? S.userId : null, timestamp: '2026-10-22T09:15:02.771Z' };
+  if (callOf(e) === 'page') {
+    return { type: 'page', category: 'meeting', name: e.name, ...base, properties: ordered, context: { page: { path: '/strategy-call' } } };
+  }
+  const envelope = { type: 'track', event: e.name, ...base, properties: ordered };
+  if (e.by === 'browser') envelope.context = { page: { path: '/strategy-call' } };
   if (e.by === 'email') envelope.context = { source: 'email platform' };
   return envelope;
 }
+
+export const UTM_RULE = {
+  headline: 'Every event includes all UTMs, as separate properties.',
+  body: 'Especially for ads: this is how sources are tracked. UTMs are dynamic. Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.',
+  firstTouch: 'first_touch_* is the first marketing touch ever. Set once, kept in a cookie for 90 days.',
+  lastTouch: 'last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA: its UTMs, click id and referrer, with that page\'s path as last_touch_landing_page (same as source_page) and the click time as last_touch_at.',
+  firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'click_id', 'click_id_type', 'landing_page', 'referrer_domain', 'at'],
+  more: 'Any other utm_* parameter is sent the same way (for example utm_id). Confirm the property naming for these with Engineering.',
+  clickIds: ['gclid', 'gbraid', 'wbraid', 'li_fat_id', 'fbclid', 'msclkid'],
+};
 
 // ---------- check against the spec file ----------
 export const COVERAGE = {
   spec: 'Strategy Call Booking Flow (2), checked 22 Oct 2026',
   checks: [
     ['Event dictionary', '16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.'],
+    ['Last touch (changed on purpose)', 'The spec defines last_touch_* as the last marketing touch. This plan defines it as the page where the visitor started the flow (the CTA page), as requested.'],
     ['Context properties', 'anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.'],
-    ['Segment calls', 'page(), track() for the events, and identify() at form submit and at booking, as the spec says.'],
+    ['Segment calls', 'page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says.'],
     ['Entry paths', 'P1 to P7 are all covered, with the events each one fires.'],
     ['Q4 (decided in this version)', 'Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it.'],
     ['New page copy', 'The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.'],
@@ -340,6 +321,7 @@ export const NAMING = {
   exception: 'meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.',
   renames: [["cta_clicked", "meeting_cta_clicked"], ["booking_page_viewed", "meeting_booking_page_viewed"], ["video_played", "meeting_video_played"], ["form_started", "meeting_form_started"], ["form_submitted", "meeting_form_submitted"], ["calendar_viewed", "meeting_calendar_page_viewed"], ["slot_selected", "meeting_slot_selected"], ["booking_confirmed", "meeting_booking_confirmed"], ["confirmation_viewed", "meeting_confirmation_page_viewed"], ["calendar_added", "meeting_add_to_calendar_clicked"], ["email_sent", "meeting_email_sent"], ["email_clicked", "meeting_email_clicked"], ["booking_rescheduled", "meeting_booking_rescheduled"], ["booking_canceled", "meeting_booking_canceled"], ["call_held", "meeting_call_held"], ["call_no_show", "meeting_call_no_show"]],
 };
+
 export const SEGMENT_NOTE = 'Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform\'s Segment connection. Same workspace, same naming, one place to filter on meeting_.';
 
 export const LATER = {

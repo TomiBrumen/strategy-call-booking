@@ -1,7 +1,108 @@
 {
   "title": "Strategy call tracking plan",
-  "draft": "Draft 2, 22 Oct 2026",
-  "source": "Strategy Call Booking Flow spec, draft 7",
+  "draft": "Draft 3, 22 Oct 2026",
+  "source": "Strategy Call Booking Flow spec (version 2)",
+  "rules": {
+    "utm": {
+      "headline": "Every event includes all UTMs, as separate properties.",
+      "body": "Especially for ads: this is how sources are tracked. UTMs are dynamic. Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.",
+      "firstTouch": "first_touch_* is the first marketing touch ever. Set once, kept in a cookie for 90 days.",
+      "lastTouch": "last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA: its UTMs, click id and referrer, with that page's path as last_touch_landing_page (same as source_page) and the click time as last_touch_at.",
+      "firstLast": [
+        "source",
+        "medium",
+        "campaign",
+        "content",
+        "term",
+        "click_id",
+        "click_id_type",
+        "landing_page",
+        "referrer_domain",
+        "at"
+      ],
+      "more": "Any other utm_* parameter is sent the same way (for example utm_id). Confirm the property naming for these with Engineering.",
+      "clickIds": [
+        "gclid",
+        "gbraid",
+        "wbraid",
+        "li_fat_id",
+        "fbclid",
+        "msclkid"
+      ]
+    },
+    "naming": {
+      "rule": "meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go.",
+      "exception": "meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.",
+      "renames": [
+        [
+          "cta_clicked",
+          "meeting_cta_clicked"
+        ],
+        [
+          "booking_page_viewed",
+          "meeting_booking_page_viewed"
+        ],
+        [
+          "video_played",
+          "meeting_video_played"
+        ],
+        [
+          "form_started",
+          "meeting_form_started"
+        ],
+        [
+          "form_submitted",
+          "meeting_form_submitted"
+        ],
+        [
+          "calendar_viewed",
+          "meeting_calendar_page_viewed"
+        ],
+        [
+          "slot_selected",
+          "meeting_slot_selected"
+        ],
+        [
+          "booking_confirmed",
+          "meeting_booking_confirmed"
+        ],
+        [
+          "confirmation_viewed",
+          "meeting_confirmation_page_viewed"
+        ],
+        [
+          "calendar_added",
+          "meeting_add_to_calendar_clicked"
+        ],
+        [
+          "email_sent",
+          "meeting_email_sent"
+        ],
+        [
+          "email_clicked",
+          "meeting_email_clicked"
+        ],
+        [
+          "booking_rescheduled",
+          "meeting_booking_rescheduled"
+        ],
+        [
+          "booking_canceled",
+          "meeting_booking_canceled"
+        ],
+        [
+          "call_held",
+          "meeting_call_held"
+        ],
+        [
+          "call_no_show",
+          "meeting_call_no_show"
+        ]
+      ]
+    },
+    "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.",
+    "pageCalls": "The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages."
+  },
   "contextProperties": [
     {
       "name": "anonymous_id",
@@ -102,62 +203,62 @@
     {
       "name": "last_touch_source",
       "type": "string or null",
-      "description": "Same shape as first_touch_*. Overwritten by a new UTM, click id or external referrer, never by a direct visit.",
-      "source": "Touch script, cookie"
+      "description": "utm_source of the page where the visitor started the flow (the page where they clicked the CTA). Same shape as first_touch_*.",
+      "source": "Read from that page at the CTA click"
     },
     {
       "name": "last_touch_medium",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_campaign",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_content",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_term",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_click_id",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_click_id_type",
       "type": "enum or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_landing_page",
       "type": "string or null",
-      "description": "See last_touch_source.",
-      "source": "Touch script"
+      "description": "Path of the page where the CTA was clicked (the same page as source_page).",
+      "source": "Read from that page at the CTA click"
     },
     {
       "name": "last_touch_referrer_domain",
       "type": "string or null",
       "description": "See last_touch_source.",
-      "source": "Touch script"
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "last_touch_at",
       "type": "ISO datetime",
-      "description": "See last_touch_source.",
-      "source": "Touch script"
+      "description": "When the CTA was clicked (UTC).",
+      "source": "Read at the CTA click"
     },
     {
       "name": "first_touch_<other utm_* parameter>",
@@ -168,8 +269,8 @@
     {
       "name": "last_touch_<other utm_* parameter>",
       "type": "string or null",
-      "description": "Same, for the last touch.",
-      "source": "Touch script"
+      "description": "Same, read from the page where the flow started.",
+      "source": "Read from the page where the flow started"
     },
     {
       "name": "variant_booking",
@@ -387,7 +488,7 @@
       "description": "Name and surname exactly as typed. The form has a single field (Q4 decided). Added.",
       "example": "Ana Novak",
       "source": "Booking form, or Cal.com attendee name",
-      "usedInEmail": null
+      "usedInEmail": "contact"
     },
     {
       "name": "first_name",
@@ -426,6 +527,7 @@
     {
       "inThisBuild": true,
       "name": "meeting_cta_clicked",
+      "segmentCall": "track",
       "step": "0",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -475,26 +577,6 @@
           "booking_session_id": "bs_7f3a91c2",
           "flow_entry": "cta",
           "flow_start": "booking_page",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A"
         },
@@ -503,11 +585,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_booking_page_viewed",
+      "segmentCall": "page",
       "step": "1",
       "firedBy": "Browser",
       "role": "counting",
@@ -540,8 +624,9 @@
         }
       ],
       "example": {
-        "type": "track",
-        "event": "meeting_booking_page_viewed",
+        "type": "page",
+        "category": "meeting",
+        "name": "meeting_booking_page_viewed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
         "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
@@ -553,26 +638,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_confirmation": "A"
         },
         "context": {
@@ -580,11 +645,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_video_played",
+      "segmentCall": "track",
       "step": "1, 3",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -630,26 +697,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A"
         },
@@ -658,11 +705,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_form_started",
+      "segmentCall": "track",
       "step": "1",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -692,26 +741,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A"
         },
@@ -720,11 +749,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_form_submitted",
+      "segmentCall": "track",
       "step": "1",
       "firedBy": "Server or webhook",
       "role": "diagnostic",
@@ -772,35 +803,17 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_calendar_page_viewed",
+      "segmentCall": "page",
       "step": "2",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -835,8 +848,9 @@
         }
       ],
       "example": {
-        "type": "track",
-        "event": "meeting_calendar_page_viewed",
+        "type": "page",
+        "category": "meeting",
+        "name": "meeting_calendar_page_viewed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
         "userId": null,
         "timestamp": "2026-10-22T09:15:02.771Z",
@@ -847,26 +861,6 @@
           "booking_session_id": "bs_7f3a91c2",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A"
         },
@@ -875,11 +869,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_slot_selected",
+      "segmentCall": "track",
       "step": "2",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -919,26 +915,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com"
@@ -948,11 +924,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_booking_confirmed",
+      "segmentCall": "track",
       "step": "2, R, N",
       "firedBy": "Server or webhook",
       "role": "counting",
@@ -1016,35 +994,17 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_confirmation_page_viewed",
+      "segmentCall": "page",
       "step": "3",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -1072,8 +1032,9 @@
         }
       ],
       "example": {
-        "type": "track",
-        "event": "meeting_confirmation_page_viewed",
+        "type": "page",
+        "category": "meeting",
+        "name": "meeting_confirmation_page_viewed",
         "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
         "userId": "contact_8812",
         "timestamp": "2026-10-22T09:15:02.771Z",
@@ -1085,26 +1046,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "email": "ana.novak@acme.com",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
@@ -1114,11 +1055,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": true,
       "name": "meeting_add_to_calendar_clicked",
+      "segmentCall": "track",
       "step": "3",
       "firedBy": "Browser",
       "role": "diagnostic",
@@ -1157,26 +1100,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
@@ -1187,11 +1110,13 @@
             "path": "/strategy-call"
           }
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": false,
       "name": "meeting_email_sent",
+      "segmentCall": "track",
       "step": "R, 4 to 8, N",
       "firedBy": "Email platform",
       "role": "diagnostic",
@@ -1227,26 +1152,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
@@ -1255,11 +1160,13 @@
         "context": {
           "source": "email platform"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": false,
       "name": "meeting_email_clicked",
+      "segmentCall": "track",
       "step": "R, 4 to 8, N",
       "firedBy": "Email platform",
       "role": "diagnostic",
@@ -1302,26 +1209,6 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
@@ -1330,11 +1217,13 @@
         "context": {
           "source": "email platform"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": false,
       "name": "meeting_booking_rescheduled",
+      "segmentCall": "track",
       "step": "X",
       "firedBy": "Server or webhook",
       "role": "diagnostic",
@@ -1412,35 +1301,17 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": false,
       "name": "meeting_booking_canceled",
+      "segmentCall": "track",
       "step": "X",
       "firedBy": "Server or webhook",
       "role": "counting",
@@ -1486,36 +1357,18 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": false,
       "name": "meeting_call_held",
+      "segmentCall": "track",
       "step": "7",
       "firedBy": "Server or webhook",
       "role": "counting",
@@ -1560,36 +1413,18 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {
       "inThisBuild": false,
       "name": "meeting_call_no_show",
+      "segmentCall": "track",
       "step": "7",
       "firedBy": "Server or webhook",
       "role": "diagnostic",
@@ -1625,105 +1460,15 @@
           "flow_start": "booking_page",
           "source_page": "/page-xyz",
           "cta_id": "xyz_inline",
-          "first_touch_source": "<utm_source from the URL>",
-          "first_touch_medium": "<utm_medium from the URL>",
-          "first_touch_campaign": "<utm_campaign from the URL>",
-          "first_touch_content": "<utm_content from the URL>",
-          "first_touch_term": "<utm_term from the URL>",
-          "first_touch_click_id": "<ad click id from the URL>",
-          "first_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "first_touch_landing_page": "<path of the first landing page>",
-          "first_touch_referrer_domain": "<external referrer domain>",
-          "first_touch_at": "2026-10-19T09:12:00Z",
-          "last_touch_source": "<utm_source from the URL>",
-          "last_touch_medium": "<utm_medium from the URL>",
-          "last_touch_campaign": "<utm_campaign from the URL>",
-          "last_touch_content": "<utm_content from the URL>",
-          "last_touch_term": "<utm_term from the URL>",
-          "last_touch_click_id": "<ad click id from the URL>",
-          "last_touch_click_id_type": "<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>",
-          "last_touch_landing_page": "<path of the first landing page>",
-          "last_touch_referrer_domain": "<external referrer domain>",
-          "last_touch_at": "2026-10-19T09:12:00Z",
           "variant_booking": "A",
           "variant_confirmation": "A",
           "email": "ana.novak@acme.com",
           "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D"
         }
-      }
+      },
+      "plusUtms": "All UTMs are also sent on this event, as separate properties."
     }
   ],
-  "naming": {
-    "rule": "meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go.",
-    "exception": "meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.",
-    "renames": [
-      [
-        "cta_clicked",
-        "meeting_cta_clicked"
-      ],
-      [
-        "booking_page_viewed",
-        "meeting_booking_page_viewed"
-      ],
-      [
-        "video_played",
-        "meeting_video_played"
-      ],
-      [
-        "form_started",
-        "meeting_form_started"
-      ],
-      [
-        "form_submitted",
-        "meeting_form_submitted"
-      ],
-      [
-        "calendar_viewed",
-        "meeting_calendar_page_viewed"
-      ],
-      [
-        "slot_selected",
-        "meeting_slot_selected"
-      ],
-      [
-        "booking_confirmed",
-        "meeting_booking_confirmed"
-      ],
-      [
-        "confirmation_viewed",
-        "meeting_confirmation_page_viewed"
-      ],
-      [
-        "calendar_added",
-        "meeting_add_to_calendar_clicked"
-      ],
-      [
-        "email_sent",
-        "meeting_email_sent"
-      ],
-      [
-        "email_clicked",
-        "meeting_email_clicked"
-      ],
-      [
-        "booking_rescheduled",
-        "meeting_booking_rescheduled"
-      ],
-      [
-        "booking_canceled",
-        "meeting_booking_canceled"
-      ],
-      [
-        "call_held",
-        "meeting_call_held"
-      ],
-      [
-        "call_no_show",
-        "meeting_call_no_show"
-      ]
-    ]
-  },
-  "segment": "Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.",
   "implementedSeparately": {
     "title": "Implemented separately",
     "intro": "The booking lifecycle and call events (reschedule, cancel, call held, no-show) and the email events (sent, clicked) are not part of this build. They are implemented separately, and only if tracking in Mixpanel is needed. Their definitions stay here so the names and data are agreed up front.",
@@ -1732,74 +1477,6 @@
       "The HubSpot reminders must stop on a cancel and move on a reschedule. Without these events, use Cal.com's webhook through n8n, or the meeting outcome that Cal.com's HubSpot app sets (RESCHEDULED, CANCELED).",
       "Email sends and clicks are already visible inside HubSpot itself."
     ]
-  },
-  "coverage": {
-    "spec": "Strategy Call Booking Flow (2), checked 22 Oct 2026",
-    "checks": [
-      [
-        "Event dictionary",
-        "16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately."
-      ],
-      [
-        "Context properties",
-        "anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event."
-      ],
-      [
-        "Segment calls",
-        "page(), track() for the events, and identify() at form submit and at booking, as the spec says."
-      ],
-      [
-        "Entry paths",
-        "P1 to P7 are all covered, with the events each one fires."
-      ],
-      [
-        "Q4 (decided in this version)",
-        "Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it."
-      ],
-      [
-        "New page copy",
-        "The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com."
-      ],
-      [
-        "Added beyond the spec",
-        "email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter."
-      ]
-    ]
-  },
-  "pageCall": {
-    "name": "page()",
-    "by": "browser",
-    "when": "Every page load, site-wide. This is Segment's standard call and fires automatically from the Segment snippet.",
-    "notes": [
-      "It is the only call where Segment attaches UTMs, as context.campaign.",
-      "Inside the booking flow every step already has its own event, so page() adds nothing to the step counts. Keeping it is a site-wide decision for Engineering; the flow does not depend on it."
-    ],
-    "json": {
-      "type": "page",
-      "name": "Booking page",
-      "anonymousId": "4f1c7e2a-9b3d-4c6e-8a10-5d2f7b9c1e34",
-      "userId": null,
-      "timestamp": "2026-10-22T09:12:03.412Z",
-      "properties": {
-        "path": "/strategy-call",
-        "url": "https://www.databox.com/strategy-call?utm_source=<utm_source>&utm_medium=<utm_medium>&utm_campaign=<utm_campaign>&utm_content=<utm_content>&utm_term=<utm_term>&<any other utm_*>",
-        "referrer": "<external referrer URL>",
-        "title": "Book your strategy call"
-      },
-      "context": {
-        "campaign": {
-          "name": "<utm_campaign>",
-          "source": "<utm_source>",
-          "medium": "<utm_medium>",
-          "content": "<utm_content>",
-          "term": "<utm_term>",
-          "<other utm_*>": "<value from the URL>"
-        },
-        "page": {
-          "path": "/strategy-call"
-        }
-      }
-    }
   },
   "identifyCalls": [
     {
@@ -1841,49 +1518,84 @@
     {
       "id": "P1",
       "route": "Ad, then ad landing, then a page with a CTA, then booking page, calendar, thank you",
-      "values": "flow_entry = cta, source_page = the page with the CTA, first and last touch = the ad"
+      "values": "flow_entry = cta, source_page = the page with the CTA. last_touch = that page, first_touch = the first marketing touch (the ad)"
     },
     {
       "id": "P2",
       "route": "Ad, then ad landing, then booking page, calendar, thank you",
-      "values": "flow_entry = cta, source_page = /ad-landing, first and last touch = the ad"
+      "values": "flow_entry = cta, source_page = /ad-landing. last_touch = the ad landing page"
     },
     {
       "id": "P3",
       "route": "Targeted ad straight to the calendar, thank you",
-      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No form: identify() goes with meeting_booking_confirmed"
+      "values": "flow_entry = ad, flow_start = calendar, source_page = null. No CTA click: last_touch = the calendar page the ad opened. No form: identify() goes with meeting_booking_confirmed"
     },
     {
       "id": "P4",
       "route": "Search, social or direct, any page, header CTA, booking page, calendar, thank you",
-      "values": "flow_entry = cta, cta_id = header, source_page = the current page"
+      "values": "flow_entry = cta, cta_id = header, source_page = the current page. last_touch = that page"
     },
     {
       "id": "P5",
       "route": "Search, social or partner, landing page, booking page, calendar, thank you",
-      "values": "flow_entry = cta, source_page = /landing-page"
+      "values": "flow_entry = cta, source_page = /landing-page. last_touch = that landing page"
     },
     {
       "id": "P6",
       "route": "Marketing email, booking page (or straight to the calendar), thank you",
-      "values": "flow_entry = email, last_touch = the email campaign. A new last touch"
+      "values": "flow_entry = email. No CTA click: last_touch = the booking page or calendar the email link opened, with the email's UTMs"
     },
     {
       "id": "P7",
       "route": "Flow email (reschedule, rebook), calendar, thank you",
-      "values": "No new touch. meeting_booking_rescheduled, or meeting_booking_confirmed with rebook_reason; inherits the original booking"
+      "values": "No new touch. The booking keeps its original first_touch and last_touch"
     }
   ],
   "openPoints": [
-    "UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.",
-    "Event naming: the spec uses snake_case (meeting_booking_confirmed). Segment's own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).",
-    "Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.",
-    "Who marks meeting_call_held and meeting_call_no_show (Q5). Cal.com's HubSpot app does not set no-show.",
-    "Host list: host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small list on our side, keyed by host_username.",
-    "Add to Apple Calendar needs a link to an .ics file, and HubSpot marketing emails cannot attach files. Decide who hosts the file, or keep Cal.com's own confirmation email, which carries the .ics.",
-    "Call length: the emails say 60 minutes, the Cal.com test event is 30. Set the real event to 60 so duration_min and call_end_at are right.",
-    "Cancel and reschedule must be switched on in the Cal.com event type, or the reschedule_url and cancel_url in the emails will not work.",
-    "Cal.com webhook payload: the field names in the \"Where it comes from\" column are the expected ones. Verify them against a real BOOKING_CREATED payload before building.",
-    "Consent: whether the touch cookie counts as functional or analytics under the consent banner is still open (Q3)."
-  ]
+    "last_touch is read from the page where the CTA was clicked. If that page's URL has no UTMs, should last_touch_* be empty, or fall back to the UTMs kept for the visit? Decide with Marketing.",
+    "UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.",
+    "Naming: Segment's own convention is title case; this plan uses snake_case with a meeting_ prefix. Match the Databox Segment workspace before building (Q11).",
+    "email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.",
+    "host_role, host_first_name and host_photo_url are not in Cal.com. They come from a small host list on our side, keyed by host_username.",
+    "Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.",
+    "The real Cal.com event must be 60 minutes, and cancelling and rescheduling must be switched on, or the reschedule and cancel links will not work.",
+    "Field names in the \"where it comes from\" column are the expected Cal.com webhook fields. Verify them against a real payload before building."
+  ],
+  "coverage": {
+    "spec": "Strategy Call Booking Flow (2), checked 22 Oct 2026",
+    "checks": [
+      [
+        "Event dictionary",
+        "16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately."
+      ],
+      [
+        "Last touch (changed on purpose)",
+        "The spec defines last_touch_* as the last marketing touch. This plan defines it as the page where the visitor started the flow (the CTA page), as requested."
+      ],
+      [
+        "Context properties",
+        "anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event."
+      ],
+      [
+        "Segment calls",
+        "page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says."
+      ],
+      [
+        "Entry paths",
+        "P1 to P7 are all covered, with the events each one fires."
+      ],
+      [
+        "Q4 (decided in this version)",
+        "Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it."
+      ],
+      [
+        "New page copy",
+        "The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com."
+      ],
+      [
+        "Added beyond the spec",
+        "email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter."
+      ]
+    ]
+  }
 }
