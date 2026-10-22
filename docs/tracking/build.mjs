@@ -176,6 +176,12 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="rules"><ul class="op"><li>Segment workspace <code>${SEGMENT_SOURCE.workspace}</code>, source <code>${SEGMENT_SOURCE.source}</code>, source ID <code>${SEGMENT_SOURCE.sourceId}</code>. <a href="${SEGMENT_SOURCE.keysPage}" target="_blank" rel="noreferrer">Keys page</a></li>${SEGMENT_SOURCE.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>
   </section>
 
+  <section aria-labelledby="h-props">
+    <h2 id="h-props">Properties on every event</h2>
+    <p class="lede">Besides the UTMs (rule 1), every event carries these.</p>
+    <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th></tr></thead><tbody>${flowProps.map(([n, t, d]) => `<tr><td><code>${n}</code></td><td>${esc(t)}</td><td>${esc(d)}</td></tr>`).join('')}</tbody></table></div>
+  </section>
+
   <section id="events" aria-labelledby="h-events">
     <div class="row"><h2 id="h-events">Events</h2><button class="btn" type="button" id="expand">Expand all</button></div>
     <div class="tw"><table><thead><tr><th>Event</th><th>Call</th><th>Fired by</th><th>Fires when</th></tr></thead><tbody>${inBuild.map((e) => `<tr><td><a href="#ev-${e.name}"><code>${e.name}</code></a></td><td><span class="chip call-${e.call}">${e.call}</span></td><td><i class="dot ${DOT[e.by]}"></i> ${(e.byLabel || BY[e.by])}</td><td>${esc(e.when)}</td></tr>`).join('')}</tbody></table></div>
