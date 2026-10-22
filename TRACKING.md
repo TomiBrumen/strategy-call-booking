@@ -1,6 +1,6 @@
 # Strategy call tracking plan
 
-Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2)". Anything marked *added* is not in the spec yet.
+Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2)". Every event below is in the spec. Property descriptions ending in "Added." are the only things this plan adds to it.
 
 ## Rules for every event
 
@@ -14,20 +14,20 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 
 | Event | Segment call | Fired by | Role | Fires when |
 |---|---|---|---|---|
-| `meeting_cta_clicked` *added* | track | Browser | diagnostic | Click on any element with a data-cta attribute, on any site, blog or product page. |
+| `meeting_cta_clicked` | track | Browser | diagnostic | Click on any element with a data-cta attribute, on any site, blog or product page. |
 | `meeting_booking_page_viewed` | page | Browser | counting | Booking page loads. Replaces the old page_view. |
-| `meeting_video_played` *added* | track | Browser | diagnostic | Play pressed on the video of an A variant (booking page or confirmation page). |
+| `meeting_video_played` | track | Browser | diagnostic | Play pressed on the video of an A variant (booking page or confirmation page). |
 | `meeting_form_started` | track | Browser | diagnostic | First field of the booking form gets focus. |
 | `meeting_form_submitted` | track | Server or webhook | diagnostic | Form accepted and the contact is created or matched. Sent together with identify(). |
-| `meeting_calendar_page_viewed` *added* | page | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
-| `meeting_slot_selected` *added* | track | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
+| `meeting_calendar_page_viewed` | page | Browser | diagnostic | Calendar loads, including direct entry from ads and emails. |
+| `meeting_slot_selected` | track | Browser | diagnostic | A time slot is picked, before the booking is confirmed. |
 | `meeting_booking_confirmed` | track | Server or webhook | counting | A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook. |
 | `meeting_confirmation_page_viewed` | page | Browser | diagnostic | Confirmation (thank-you) page loads. |
-| `meeting_add_to_calendar_clicked` *added* | track | Browser | diagnostic | Click on an Add to calendar button on the confirmation page. |
+| `meeting_add_to_calendar_clicked` | track | Browser | diagnostic | Click on an Add to calendar button on the confirmation page. |
 
 "counting" events feed the success metrics. "diagnostic" events explain drop-off.
 
-### `meeting_cta_clicked` *(added)*
+### `meeting_cta_clicked`
 
 - **Segment call:** track · **Fired by:** Browser · **Role:** diagnostic · **Step:** 0
 - **Fires when:** Click on any element with a data-cta attribute, on any site, blog or product page.
@@ -100,7 +100,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_video_played` *(added)*
+### `meeting_video_played`
 
 - **Segment call:** track · **Fired by:** Browser · **Role:** diagnostic · **Step:** 1, 3
 - **Fires when:** Play pressed on the video of an A variant (booking page or confirmation page).
@@ -205,7 +205,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_calendar_page_viewed` *(added)*
+### `meeting_calendar_page_viewed`
 
 - **Segment call:** page · **Fired by:** Browser · **Role:** diagnostic · **Step:** 2
 - **Fires when:** Calendar loads, including direct entry from ads and emails.
@@ -242,7 +242,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_slot_selected` *(added)*
+### `meeting_slot_selected`
 
 - **Segment call:** track · **Fired by:** Browser · **Role:** diagnostic · **Step:** 2
 - **Fires when:** A time slot is picked, before the booking is confirmed.
@@ -378,7 +378,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_add_to_calendar_clicked` *(added)*
+### `meeting_add_to_calendar_clicked`
 
 - **Segment call:** track · **Fired by:** Browser · **Role:** diagnostic · **Step:** 3
 - **Fires when:** Click on an Add to calendar button on the confirmation page.
@@ -427,10 +427,10 @@ The booking lifecycle and call events (reschedule, cancel, call held, no-show) a
 |---|---|---|---|---|
 | `meeting_email_sent` | track | Email platform | diagnostic | The email platform accepts a send of any flow email. |
 | `meeting_email_clicked` | track | Email platform | diagnostic | Tracked link click in a flow email. |
-| `meeting_booking_rescheduled` *added* | track | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
-| `meeting_booking_canceled` *added* | track | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
+| `meeting_booking_rescheduled` | track | Server or webhook | diagnostic | The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook. |
+| `meeting_booking_canceled` | track | Server or webhook | counting | A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook. |
 | `meeting_call_held` | track | Server or webhook | counting | The visitor joined the call. |
-| `meeting_call_no_show` *added* | track | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
+| `meeting_call_no_show` | track | Server or webhook | diagnostic | The visitor has not joined 15 minutes after the start. |
 
 ### `meeting_email_sent`
 
@@ -505,7 +505,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_booking_rescheduled` *(added)*
+### `meeting_booking_rescheduled`
 
 - **Segment call:** track · **Fired by:** Server or webhook · **Role:** diagnostic · **Step:** X
 - **Fires when:** The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.
@@ -568,7 +568,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_booking_canceled` *(added)*
+### `meeting_booking_canceled`
 
 - **Segment call:** track · **Fired by:** Server or webhook · **Role:** counting · **Step:** X
 - **Fires when:** A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.
@@ -643,7 +643,7 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
 ```
 _Plus all UTMs, each as a separate property (see the UTM rule)._
 
-### `meeting_call_no_show` *(added)*
+### `meeting_call_no_show`
 
 - **Segment call:** track · **Fired by:** Server or webhook · **Role:** diagnostic · **Step:** 7
 - **Fires when:** The visitor has not joined 15 minutes after the start.

@@ -531,7 +531,6 @@
       "step": "0",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "Click on any element with a data-cta attribute, on any site, blog or product page.",
       "paths": [
         "P1",
@@ -595,7 +594,6 @@
       "step": "1",
       "firedBy": "Browser",
       "role": "counting",
-      "addedToSpec": false,
       "when": "Booking page loads. Replaces the old page_view.",
       "paths": [
         "P1",
@@ -655,7 +653,6 @@
       "step": "1, 3",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "Play pressed on the video of an A variant (booking page or confirmation page).",
       "paths": [
         "P1",
@@ -715,7 +712,6 @@
       "step": "1",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": false,
       "when": "First field of the booking form gets focus.",
       "paths": [
         "P1",
@@ -759,7 +755,6 @@
       "step": "1",
       "firedBy": "Server or webhook",
       "role": "diagnostic",
-      "addedToSpec": false,
       "when": "Form accepted and the contact is created or matched. Sent together with identify().",
       "paths": [
         "P1",
@@ -817,7 +812,6 @@
       "step": "2",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "Calendar loads, including direct entry from ads and emails.",
       "paths": [
         "P1",
@@ -879,7 +873,6 @@
       "step": "2",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "A time slot is picked, before the booking is confirmed.",
       "paths": [
         "P1",
@@ -934,7 +927,6 @@
       "step": "2, R, N",
       "firedBy": "Server or webhook",
       "role": "counting",
-      "addedToSpec": false,
       "when": "A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.",
       "paths": [
         "P1",
@@ -1008,7 +1000,6 @@
       "step": "3",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": false,
       "when": "Confirmation (thank-you) page loads.",
       "paths": [
         "P1",
@@ -1065,7 +1056,6 @@
       "step": "3",
       "firedBy": "Browser",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "Click on an Add to calendar button on the confirmation page.",
       "paths": [
         "P1",
@@ -1120,7 +1110,6 @@
       "step": "R, 4 to 8, N",
       "firedBy": "Email platform",
       "role": "diagnostic",
-      "addedToSpec": false,
       "when": "The email platform accepts a send of any flow email.",
       "paths": [
         "P6",
@@ -1170,7 +1159,6 @@
       "step": "R, 4 to 8, N",
       "firedBy": "Email platform",
       "role": "diagnostic",
-      "addedToSpec": false,
       "when": "Tracked link click in a flow email.",
       "paths": [
         "P6",
@@ -1227,7 +1215,6 @@
       "step": "X",
       "firedBy": "Server or webhook",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "The time of an existing booking is changed. Cal.com BOOKING_RESCHEDULED webhook.",
       "paths": [
         "P7"
@@ -1315,7 +1302,6 @@
       "step": "X",
       "firedBy": "Server or webhook",
       "role": "counting",
-      "addedToSpec": true,
       "when": "A booking is cancelled by the visitor or the host. Cal.com BOOKING_CANCELLED webhook.",
       "paths": [
         "P7"
@@ -1372,7 +1358,6 @@
       "step": "7",
       "firedBy": "Server or webhook",
       "role": "counting",
-      "addedToSpec": false,
       "when": "The visitor joined the call.",
       "paths": [
         "P1",
@@ -1428,7 +1413,6 @@
       "step": "7",
       "firedBy": "Server or webhook",
       "role": "diagnostic",
-      "addedToSpec": true,
       "when": "The visitor has not joined 15 minutes after the start.",
       "paths": [
         "P1",

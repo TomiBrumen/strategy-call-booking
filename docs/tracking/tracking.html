@@ -68,7 +68,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <div class="row"><h2 id="h-events">Events</h2><button class="btn" type="button" id="expand">Expand all</button></div>
     <div class="tw"><table><thead><tr><th>Event</th><th>Call</th><th>Fired by</th><th>Fires when</th></tr></thead><tbody><tr><td><a href="#ev-meeting_cta_clicked"><code>meeting_cta_clicked</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Click on any element with a data-cta attribute, on any site, blog or product page.</td></tr><tr><td><a href="#ev-meeting_booking_page_viewed"><code>meeting_booking_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Booking page loads. Replaces the old page_view.</td></tr><tr><td><a href="#ev-meeting_video_played"><code>meeting_video_played</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Play pressed on the video of an A variant (booking page or confirmation page).</td></tr><tr><td><a href="#ev-meeting_form_started"><code>meeting_form_started</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>First field of the booking form gets focus.</td></tr><tr><td><a href="#ev-meeting_form_submitted"><code>meeting_form_submitted</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot s"></i> Server or webhook</td><td>Form accepted and the contact is created or matched. Sent together with identify().</td></tr><tr><td><a href="#ev-meeting_calendar_page_viewed"><code>meeting_calendar_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Calendar loads, including direct entry from ads and emails.</td></tr><tr><td><a href="#ev-meeting_slot_selected"><code>meeting_slot_selected</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>A time slot is picked, before the booking is confirmed.</td></tr><tr><td><a href="#ev-meeting_booking_confirmed"><code>meeting_booking_confirmed</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot s"></i> Server or webhook</td><td>A booking is created. Fired by our server on the Cal.com BOOKING_CREATED webhook.</td></tr><tr><td><a href="#ev-meeting_confirmation_page_viewed"><code>meeting_confirmation_page_viewed</code></a></td><td><span class="chip call-page">page</span></td><td><i class="dot b"></i> Browser</td><td>Confirmation (thank-you) page loads.</td></tr><tr><td><a href="#ev-meeting_add_to_calendar_clicked"><code>meeting_add_to_calendar_clicked</code></a></td><td><span class="chip call-track">track</span></td><td><i class="dot b"></i> Browser</td><td>Click on an Add to calendar button on the confirmation page.</td></tr></tbody></table></div>
     <details class="ev" id="ev-meeting_cta_clicked">
-  <summary><span class="nm"><i class="dot b"></i><code>meeting_cta_clicked</code><span class="tag">Added</span></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_cta_clicked</code></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p><b>Fires when</b> Click on any element with a data-cta attribute, on any site, blog or product page.</p>
     <p class="pr"><b>Extra properties</b> <code>cta_id</code> <span class="mut">string, e.g. &quot;xyz_inline&quot;</span> · <code>source_page</code> <span class="mut">string, e.g. &quot;/page-xyz&quot;</span> · <code>cta_text</code> <span class="mut">string, e.g. &quot;Book a strategy call&quot;</span></p>
@@ -134,7 +134,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   </div>
 </details>
 <details class="ev" id="ev-meeting_video_played">
-  <summary><span class="nm"><i class="dot b"></i><code>meeting_video_played</code><span class="tag">Added</span></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_video_played</code></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p><b>Fires when</b> Play pressed on the video of an A variant (booking page or confirmation page).</p>
     <p class="pr"><b>Extra properties</b> <code>page</code> <span class="mut">enum, e.g. &quot;booking&quot;</span> · <code>pct_watched</code> <span class="mut">number, e.g. 0</span></p>
@@ -230,7 +230,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   </div>
 </details>
 <details class="ev" id="ev-meeting_calendar_page_viewed">
-  <summary><span class="nm"><i class="dot b"></i><code>meeting_calendar_page_viewed</code><span class="tag">Added</span></span><span class="meta"><span class="chip call-page">page</span><span class="by">Browser</span></span></summary>
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_calendar_page_viewed</code></span><span class="meta"><span class="chip call-page">page</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p><b>Fires when</b> Calendar loads, including direct entry from ads and emails.</p>
     <p class="pr"><b>Extra properties</b> <code>flow_start</code> <span class="mut">enum, e.g. &quot;booking_page&quot;</span> · <code>flow_entry</code> <span class="mut">enum, e.g. &quot;cta&quot;</span></p>
@@ -263,7 +263,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   </div>
 </details>
 <details class="ev" id="ev-meeting_slot_selected">
-  <summary><span class="nm"><i class="dot b"></i><code>meeting_slot_selected</code><span class="tag">Added</span></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_slot_selected</code></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p><b>Fires when</b> A time slot is picked, before the booking is confirmed.</p>
     <p class="pr"><b>Extra properties</b> <code>days_ahead</code> <span class="mut">number, e.g. 7</span></p>
@@ -388,7 +388,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   </div>
 </details>
 <details class="ev" id="ev-meeting_add_to_calendar_clicked">
-  <summary><span class="nm"><i class="dot b"></i><code>meeting_add_to_calendar_clicked</code><span class="tag">Added</span></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
+  <summary><span class="nm"><i class="dot b"></i><code>meeting_add_to_calendar_clicked</code></span><span class="meta"><span class="chip call-track">track</span><span class="by">Browser</span></span></summary>
   <div class="body">
     <p><b>Fires when</b> Click on an Add to calendar button on the confirmation page.</p>
     <p class="pr"><b>Extra properties</b> <code>calendar</code> <span class="mut">enum, e.g. &quot;google&quot;</span></p>
