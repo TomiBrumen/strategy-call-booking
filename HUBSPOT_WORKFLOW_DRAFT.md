@@ -69,7 +69,6 @@ This is the pattern, with what is documented and what to test.
 - Reschedule and cancel links point to Cal.com's pages and work only when cancelling and rescheduling are on for the Cal.com event.
 - Email 1 says "Your join link is in this email", but the design has no join button, so `join_url` is not used there.
 - The single "Add to Calendar" link in email 5 uses the Google link. Apple Calendar needs a hosted `.ics` file, which does not exist yet.
-- Images: the designs use the Databox logo and a host photo. The drafts use a text wordmark, and the host photo comes from `host_photo_url`.
-  Upload the logo in HubSpot's file manager and add it to the emails.
+- Logo: all seven emails carry the full Databox logo (icon and wordmark): the white version on the dark header of email 1, the dark version on the other six. It is embedded in the email, which Apple Mail and HubSpot's preview show, but Gmail and Outlook do not. Before sending, upload the two PNGs from `docs/email-assets/` (`databox-logo-on-dark.png`, `databox-logo-on-light.png`) to HubSpot's file manager and point the logo `<img>` at those URLs. The host photo comes from `host_photo_url`.
 - Fonts: the designs use Geist and IBM Plex Serif, which email clients do not load. The drafts use Arial and Georgia.
 - Emails say "60 minutes". The Cal.com test event is 30 minutes.
