@@ -268,8 +268,6 @@ export const OPEN_POINTS = [
   'UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.',
   'email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.',
-  'The real Cal.com event must be 60 minutes, and cancelling and rescheduling must be switched on, or the reschedule and cancel links will not work.',
-  'Field names in the "where it comes from" column are the expected Cal.com webhook fields. Verify them against a real payload before building.',
 ];// ---------- JSON builder ----------
 export const callOf = (e) => e.call || 'track';
 export function jsonFor(e) {
