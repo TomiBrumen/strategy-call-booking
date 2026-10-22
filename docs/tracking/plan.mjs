@@ -18,10 +18,12 @@ const touch = (p, v) => ({
   [`${p}_term`]: v.term, [`${p}_click_id`]: v.click_id, [`${p}_click_id_type`]: v.click_id_type,
   [`${p}_landing_page`]: v.landing_page, [`${p}_referrer_domain`]: v.referrer_domain, [`${p}_at`]: v.at,
 });
+// UTM and click id values are dynamic: whatever is on the visitor's URL. These are placeholders, not real values.
 const ad = {
-  source: 'linkedin', medium: 'paid_social', campaign: 'q4_strategy_call', content: 'carousel_1', term: null,
-  click_id: 'd1f4c0a2-7e55-4b0a-9c21-3a8f6e1b9d70', click_id_type: 'li_fat_id', landing_page: '/ad-landing',
-  referrer_domain: 'linkedin.com', at: S.firstTouchAt,
+  source: '<utm_source from the URL>', medium: '<utm_medium from the URL>', campaign: '<utm_campaign from the URL>',
+  content: '<utm_content from the URL>', term: '<utm_term from the URL>',
+  click_id: '<ad click id from the URL>', click_id_type: '<gclid | gbraid | wbraid | li_fat_id | fbclid | msclkid>',
+  landing_page: '<path of the first landing page>', referrer_domain: '<external referrer domain>', at: S.firstTouchAt,
 };
 
 // ---------- properties every event carries ("the full context") ----------
@@ -32,7 +34,7 @@ export const CONTEXT_PROPS = [
   ['flow_start', 'enum', 'Which page they entered the flow on: booking_page or calendar.', 'Read at the booking page or calendar'],
   ['source_page', 'string or null', 'Path of the page where the CTA was clicked. Null on targeted ads, marketing emails and direct visits. Never the booking page itself.', 'Written at the CTA click'],
   ['cta_id', 'string or null', 'The data-cta id of the clicked CTA. For marketing emails: email id plus link id.', 'Written at the CTA click'],
-  ['first_touch_source', 'string or null', 'utm_source of the first marketing touch. Set once, kept 90 days.', 'Touch script, cookie on .databox.com'],
+  ['first_touch_source', 'string or null', 'utm_source of the first marketing touch, whatever value is on the URL. Set once, kept 90 days.', 'Touch script, cookie on .databox.com'],
   ['first_touch_medium', 'string or null', 'utm_medium of the first marketing touch.', 'Touch script'],
   ['first_touch_campaign', 'string or null', 'utm_campaign of the first marketing touch.', 'Touch script'],
   ['first_touch_content', 'string or null', 'utm_content of the first marketing touch.', 'Touch script'],
@@ -52,6 +54,8 @@ export const CONTEXT_PROPS = [
   ['last_touch_landing_page', 'string or null', 'See last_touch_source.', 'Touch script'],
   ['last_touch_referrer_domain', 'string or null', 'See last_touch_source.', 'Touch script'],
   ['last_touch_at', 'ISO datetime', 'See last_touch_source.', 'Touch script'],
+  ['first_touch_<other utm_* parameter>', 'string or null', 'Every other utm_* parameter found on the URL (for example utm_id) is captured the same way. Names follow the same pattern; confirm the exact naming with Engineering.', 'Touch script'],
+  ['last_touch_<other utm_* parameter>', 'string or null', 'Same, for the last touch.', 'Touch script'],
   ['variant_booking', 'enum A or B', 'Booking page A/B variant. Sticky per visitor, stored on the booking.', 'Assigned on first view, cookie'],
   ['variant_confirmation', 'enum A or B', 'Confirmation page A/B variant. Sticky per visitor.', 'Assigned on first view, cookie'],
   ['email', 'string', 'The visitor\'s email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.', 'Form or calendar details'],
@@ -98,9 +102,10 @@ export const BOOKING_VARS = [
   ['calendar_ics_url', 'string', 'Add to Apple Calendar: link to an .ics file. Not available yet, see open points. Added.', 'https://cdn.example.com/ics/k9Zp3QmV7sLw2TnXb8Rc4D.ics', 'Needs a place to host the file'],
   ['reschedule_url', 'string', 'Reschedule page. Lets the email use one value instead of building it. Added.', `https://cal.com/reschedule/${S.bookingId}`, 'Computed from booking_id'],
   ['cancel_url', 'string', 'Cancel page. Added.', `https://cal.com/booking/${S.bookingId}?cancel=true`, 'Computed from booking_id'],
-  ['first_name', 'string', 'Visitor first name (HubSpot contact is created or matched by email). Added.', 'Ana', 'Booking form, or Cal.com attendee name'],
-  ['last_name', 'string', 'Visitor last name. Added.', 'Novak', 'Booking form, or Cal.com attendee name'],
-  ['phone', 'string or null', 'Visitor phone. Optional, and the field is hidden on the test event in Cal.com. Added.', '+38640123456', 'Booking form'],
+  ['name', 'string', 'Name and surname exactly as typed. The form has a single field (Q4 decided). Added.', 'Ana Novak', 'Booking form, or Cal.com attendee name'],
+  ['first_name', 'string', 'First name, split from name on the first space. Used by HubSpot and the emails ("Hi Ana"). Added.', 'Ana', 'Derived from name'],
+  ['last_name', 'string or empty', 'Rest of name after the first space. Empty if only one word was typed. Added.', 'Novak', 'Derived from name'],
+  ['phone', 'string or null', 'Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added.', '+38640123456', 'Booking form'],
   ['rebook_reason', 'enum or null', 'recovery or no_show when the booking came from a rebook email. Null on a first booking.', null, 'Rebook link in the email'],
 ];
 
@@ -146,7 +151,7 @@ export const EVENTS = [
     name: 'form_submitted', group: 'Site', step: '1', by: 'server', role: 'diagnostic', level: 'known',
     when: 'Form accepted and the contact is created or matched. Sent together with identify().',
     paths: ['P1', 'P2', 'P4', 'P5', 'P6'],
-    notes: ['Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
+    notes: ['The form has three fields: name and surname (one field), business email, phone (optional). No consent checkbox; the legal line sits under the button.', 'Not fired when the visitor goes straight to the calendar (targeted ads, some emails): no form ran, so identify() goes out with booking_confirmed instead.', 'Stores the context snapshot under booking_session_id; the visitor is then redirected to the calendar with the prefill (name, email), bsid and ajs_aid.', 'Fires from our server so ad blockers and consent choices cannot drop it.'],
     props: [['email_domain', 'string', 'Domain of the work email.', 'acme.com'], ['contact_id', 'string', 'CRM contact id, also the Segment userId.', S.userId]],
     specific: { email_domain: 'acme.com', contact_id: S.userId },
     identify: true,
@@ -155,7 +160,7 @@ export const EVENTS = [
     name: 'calendar_viewed', group: 'Site', step: '2', by: 'browser', role: 'diagnostic', level: 'any', new: true,
     when: 'Calendar loads, including direct entry from ads and emails.',
     paths: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'],
-    notes: ['On P3 and direct P6 this is the first and only context snapshot, so it must run the same read logic as the booking page.', 'On P7 (flow emails) there is no new touch; the booking keeps its original attribution.'],
+    notes: ['On P3 and direct P6 this is the first and only context snapshot, so it must run the same read logic as the booking page.', 'On those direct entries the same three fields (name, business email, phone optional) appear after a slot is picked, above the Confirm button.', 'On P7 (flow emails) there is no new touch; the booking keeps its original attribution.'],
     props: [['flow_start', 'enum', 'booking_page or calendar.', 'booking_page'], ['flow_entry', 'enum', 'Entry type.', 'cta']],
     specific: { flow_start: 'booking_page', flow_entry: 'cta' },
   },
@@ -247,8 +252,8 @@ export const PAGE_CALL = {
   notes: ['It is the only call where Segment attaches UTMs, as context.campaign.', 'Inside the booking flow every step already has its own event, so page() adds nothing to the step counts. Keeping it is a site-wide decision for Engineering; the flow does not depend on it.'],
   json: {
     type: 'page', name: 'Booking page', anonymousId: S.anonymousId, userId: null, timestamp: '2026-10-22T09:12:03.412Z',
-    properties: { path: '/strategy-call', url: 'https://www.databox.com/strategy-call?utm_source=linkedin&utm_medium=paid_social&utm_campaign=q4_strategy_call&utm_content=carousel_1', referrer: 'https://www.linkedin.com/', title: 'Book your strategy call' },
-    context: { campaign: { name: 'q4_strategy_call', source: 'linkedin', medium: 'paid_social', content: 'carousel_1', term: null }, page: { path: '/strategy-call' } },
+    properties: { path: '/strategy-call', url: 'https://www.databox.com/strategy-call?utm_source=<utm_source>&utm_medium=<utm_medium>&utm_campaign=<utm_campaign>&utm_content=<utm_content>&utm_term=<utm_term>&<any other utm_*>', referrer: '<external referrer URL>', title: 'Book your strategy call' },
+    context: { campaign: { name: '<utm_campaign>', source: '<utm_source>', medium: '<utm_medium>', content: '<utm_content>', term: '<utm_term>', '<other utm_*>': '<value from the URL>' }, page: { path: '/strategy-call' } },
   },
 };
 
@@ -257,14 +262,14 @@ export const IDENTIFY_CALLS = [
     when: 'At form_submitted (server).',
     json: {
       type: 'identify', userId: S.userId, anonymousId: S.anonymousId, timestamp: '2026-10-22T09:14:40.108Z',
-      traits: { email: S.email, first_name: 'Ana', last_name: 'Novak', phone: '+38640123456', email_domain: 'acme.com' },
+      traits: { email: S.email, name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: '+38640123456', email_domain: 'acme.com' },
     },
   },
   {
     when: 'At booking_confirmed, when no form ran (targeted ads, direct emails). Same shape, name and email from the calendar step.',
     json: {
       type: 'identify', userId: S.userId, anonymousId: S.anonymousId, timestamp: '2026-10-22T09:17:11.530Z',
-      traits: { email: S.email, first_name: 'Ana', last_name: 'Novak', email_domain: 'acme.com' },
+      traits: { email: S.email, name: 'Ana Novak', first_name: 'Ana', last_name: 'Novak', phone: null, email_domain: 'acme.com' },
     },
   },
 ];
@@ -281,6 +286,7 @@ export const PATHS = [
 ];
 
 export const OPEN_POINTS = [
+  'UTMs are dynamic: capture every utm_* parameter that is on the URL, not a fixed list. The five standard ones have the property names above. Cal.com metadata allows 50 keys; each extra utm_* adds two (first and last touch), and 29 are used today, so a long tail of extra parameters could hit the limit.',
   'Event naming: the spec uses snake_case (booking_confirmed). Segment\'s own convention is Object Action in title case. Match the existing Databox Segment workspace before building (Q11).',
   'Raw email on every event: the spec sends email_domain on events and the email on identify() only. This plan adds the email to every event once known, because you need to see who to assign it to. It sends personal data to every Segment destination, including ad platforms. The alternative is to rely on identify() and userId.',
   'Who marks call_held and call_no_show (Q5). Cal.com\'s HubSpot app does not set no-show.',
@@ -313,3 +319,17 @@ export function jsonFor(e) {
   if (e.by === 'email') envelope.context = { source: 'email platform' };
   return envelope;
 }
+
+// ---------- check against the spec file ----------
+export const COVERAGE = {
+  spec: 'Strategy Call Booking Flow (2), checked 22 Oct 2026',
+  checks: [
+    ['Event dictionary', '16 of 16 spec events are in the plan, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them.'],
+    ['Context properties', 'anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.'],
+    ['Segment calls', 'page(), track() for the events, and identify() at form submit and at booking, as the spec says.'],
+    ['Entry paths', 'P1 to P7 are all covered, with the events each one fires.'],
+    ['Q4 (decided in this version)', 'Form is three fields: name and surname (one field), business email, phone (optional); no consent checkbox. Plan now sends name, with first_name and last_name derived from it.'],
+    ['New page copy', 'The confirmation page needs the host name, role and first name, the date line, 60 minutes and the join link. All are in the booking variables. Role and first name come from our host list, not Cal.com.'],
+    ['Added beyond the spec', 'email and booking_id on every event once known; the booking and email variables (join_url, host_*, call_*_text, calendar links, reschedule_url, cancel_url and others); call_end_at, duration_min, previous_booking_id; first and last touch for any extra utm_* parameter.'],
+  ],
+};

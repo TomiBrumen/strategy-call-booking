@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EVENTS, CONTEXT_PROPS, BOOKING_VARS, PAGE_CALL, IDENTIFY_CALLS, PATHS, OPEN_POINTS, jsonFor } from './plan.mjs';
+import { EVENTS, CONTEXT_PROPS, BOOKING_VARS, PAGE_CALL, IDENTIFY_CALLS, PATHS, OPEN_POINTS, COVERAGE, jsonFor } from './plan.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -20,11 +20,11 @@ const USED_IN = {
 
 const events = EVENTS.map((e) => ({ ...e, json: jsonFor(e) }));
 const plan = {
-  title: 'Strategy call tracking plan', draft: 'Draft 1, 22 Oct 2026', source: 'Strategy Call Booking Flow spec, draft 7',
+  title: 'Strategy call tracking plan', draft: 'Draft 2, 22 Oct 2026', source: 'Strategy Call Booking Flow spec, draft 7',
   contextProperties: CONTEXT_PROPS.map(([name, type, description, source]) => ({ name, type, description, source })),
   bookingVariables: BOOKING_VARS.map(([name, type, description, example, source]) => ({ name, type, description, example, source, usedInEmail: USED_IN[name] || null })),
   events: events.map((e) => ({ name: e.name, step: e.step, firedBy: BY[e.by], role: e.role, addedToSpec: !!e.new, when: e.when, paths: e.paths, notes: e.notes, specificProperties: e.props.map(([n, t, d, x]) => ({ name: n, type: t, description: d, example: x })), example: e.json })),
-  pageCall: PAGE_CALL, identifyCalls: IDENTIFY_CALLS, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS,
+  coverage: COVERAGE, pageCall: PAGE_CALL, identifyCalls: IDENTIFY_CALLS, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS,
 };
 fs.writeFileSync(path.join(dir, 'tracking-plan.json'), J(plan) + '\n');
 
@@ -33,6 +33,7 @@ const md = [];
 md.push(`# Strategy call tracking plan\n\n${plan.draft}. Built from the "${plan.source}". Anything marked *added* is not in the spec yet.\n`);
 md.push(`Every event below has: when it fires, who fires it, and a full example JSON (Segment \`track\` call). All events carry the same context block, including the first and last touch UTMs and click ids, so reports can split on them. From the moment the visitor's email is known, every event carries \`email\`, and from the moment the booking exists, every event carries \`booking_id\`.\n`);
 md.push('## Contents\n\n1. Events\n2. Page and identify calls\n3. Context on every event (UTMs)\n4. Booking and email variables\n5. Entry paths\n6. Open points\n');
+md.push('## Check against the spec\n\n' + COVERAGE.spec + '.\n\n' + COVERAGE.checks.map(([a, b]) => `- **${a}:** ${b}`).join('\n') + '\n');
 md.push('## 1. Events\n\n| Event | Step | Fired by | Role | Fires when |\n|---|---|---|---|---|');
 for (const e of events) md.push(`| \`${e.name}\`${e.new ? ' *added*' : ''} | ${e.step} | ${BY[e.by]} | ${e.role} | ${e.when} |`);
 md.push('\n"counting" events feed the success metrics and fire server-side. "diagnostic" events explain drop-off and are logged, not reported.\n');
@@ -48,7 +49,7 @@ md.push('## 2. Page and identify calls\n');
 md.push(`### \`page()\`\n\n${PAGE_CALL.when}\n\n${PAGE_CALL.notes.map((n) => `- ${n}`).join('\n')}\n\n\`\`\`json\n${J(PAGE_CALL.json)}\n\`\`\`\n`);
 for (const c of IDENTIFY_CALLS) md.push(`### \`identify()\`\n\n${c.when}\n\n\`\`\`json\n${J(c.json)}\n\`\`\`\n`);
 md.push('## 3. Context on every event (UTMs)\n');
-md.push('A touch script runs on every page load. It reads the UTM parameters (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`), the ad click ids (`gclid`, `gbraid`, `wbraid`, `li_fat_id`, `fbclid`, `msclkid`) and the external referrer. It sets `first_touch_*` once and overwrites `last_touch_*` on every new marketing touch (a direct visit never overwrites it). Both live in a first-party cookie on `.databox.com` for 90 days. The values travel to the booking in the URL, the cookie, hidden form fields and the Cal.com booking metadata (29 keys at most, Cal.com allows 50).\n');
+md.push('**All UTMs are added, dynamically.** A touch script runs on every page load and reads every `utm_*` parameter on the URL, not a fixed list (the five standard ones are `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`), plus the ad click ids (`gclid`, `gbraid`, `wbraid`, `li_fat_id`, `fbclid`, `msclkid`) and the external referrer. Nothing in the examples below is a real UTM value: they are placeholders for whatever is on the URL. It sets `first_touch_*` once and overwrites `last_touch_*` on every new marketing touch (a direct visit never overwrites it). Both live in a first-party cookie on `.databox.com` for 90 days, and travel to the booking in the URL, the cookie, hidden form fields and the Cal.com booking metadata. Cal.com allows 50 metadata keys; 29 are used, and each extra `utm_*` parameter adds two.\n');
 md.push('| Property | Type | What it holds | Where it is set |\n|---|---|---|---|');
 for (const [n, t, d, s] of CONTEXT_PROPS) md.push(`| \`${n}\` | ${t} | ${d} | ${s} |`);
 md.push('\n## 4. Booking and email variables\n\nCarried by `booking_confirmed` and again by `booking_rescheduled`. The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.\n');
@@ -140,9 +141,15 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <header>
     <div class="eyebrow">Databox · Strategy call booking · Tracking plan · ${plan.draft}</div>
     <h1>Strategy call tracking plan</h1>
-    <p class="lede">Every event in the flow, when it fires, who fires it, and an example JSON for each. All events carry the full UTM context (first and last touch), the email once it is known, and the booking id once the booking exists. The booking events also carry every value the emails need. Built from the strategy call spec, draft 7. Event and property names marked Added are not in the spec yet.</p>
+    <p class="lede">Every event in the flow, when it fires, who fires it, and an example JSON for each. All events carry the full UTM context (first and last touch), the email once it is known, and the booking id once the booking exists. The booking events also carry every value the emails need. Checked against the strategy call spec (version 2). Event and property names marked Added are not in the spec yet.</p>
   </header>
-  <nav class="sec" aria-label="Sections"><a href="#events">Events</a><a href="#calls">Page and identify</a><a href="#context">Context and UTMs</a><a href="#variables">Booking and email variables</a><a href="#paths">Entry paths</a><a href="#open">Open points</a></nav>
+  <nav class="sec" aria-label="Sections"><a href="#coverage">Spec check</a><a href="#events">Events</a><a href="#calls">Page and identify</a><a href="#context">Context and UTMs</a><a href="#variables">Booking and email variables</a><a href="#paths">Entry paths</a><a href="#open">Open points</a></nav>
+
+  <section id="coverage" aria-labelledby="h-cov">
+    <h2 id="h-cov">Check against the spec</h2>
+    <p class="lede">${esc(COVERAGE.spec)}.</p>
+    <div class="tw"><table><thead><tr><th>Area</th><th>Result</th></tr></thead><tbody>${COVERAGE.checks.map(([a, b]) => `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td></tr>`).join('')}</tbody></table></div>
+  </section>
 
   <section id="events" aria-labelledby="h-events">
     <h2 id="h-events">Events</h2>
@@ -161,7 +168,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section id="context" aria-labelledby="h-context">
     <h2 id="h-context">Context on every event, including UTMs</h2>
-    <p class="lede">A touch script runs on every page load. It reads <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>utm_content</code> and <code>utm_term</code>, the ad click ids (<code>gclid</code>, <code>gbraid</code>, <code>wbraid</code>, <code>li_fat_id</code>, <code>fbclid</code>, <code>msclkid</code>) and the external referrer. It sets <code>first_touch_*</code> once and overwrites <code>last_touch_*</code> on each new marketing touch; a direct visit never overwrites it. Both live in a first-party cookie on <code>.databox.com</code> for 90 days, and travel to the booking in the URL, the cookie, hidden fields and the Cal.com booking metadata (at most 29 keys, Cal.com allows 50).</p>
+    <p class="lede"><b>All UTMs are added, dynamically.</b> A touch script runs on every page load and reads every <code>utm_*</code> parameter on the URL, not a fixed list (the five standard ones are <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>utm_content</code>, <code>utm_term</code>), plus the ad click ids (<code>gclid</code>, <code>gbraid</code>, <code>wbraid</code>, <code>li_fat_id</code>, <code>fbclid</code>, <code>msclkid</code>) and the external referrer. Nothing in the examples is a real UTM value: they are placeholders for whatever is on the URL. It sets <code>first_touch_*</code> once and overwrites <code>last_touch_*</code> on each new marketing touch; a direct visit never overwrites it. Both live in a first-party cookie on <code>.databox.com</code> for 90 days, and travel to the booking in the URL, the cookie, hidden fields and the Cal.com booking metadata. Cal.com allows 50 metadata keys; 29 are used, and each extra <code>utm_*</code> parameter adds two.</p>
     <div class="tw"><table><thead><tr><th>Property</th><th>Type</th><th>What it holds</th><th>Where it is set</th></tr></thead><tbody>${CONTEXT_PROPS.map(([n, t, d, s]) => `<tr><td><code>${n}</code></td><td>${esc(t)}</td><td>${esc(d)}</td><td>${esc(s)}</td></tr>`).join('')}</tbody></table></div>
   </section>
 
