@@ -298,7 +298,7 @@ export const COVERAGE = {
   spec: 'Strategy Call Booking Flow (2), checked 22 Oct 2026',
   checks: [
     ['Event dictionary', '16 of 16 spec events are defined, with the same step, fired-by and counting or diagnostic role, and every property the spec lists for them. 10 are in this build; 6 (booking lifecycle and call, email) are defined but implemented separately.'],
-    ['Last touch', 'Defined as the spec does: the latest visit with tracking parameters (confirmed by Engineering). The CTA page is source_page, on every event.'],
+    ['Last touch', 'Defined as the spec does: the latest visit with tracking parameters (Gregor, in Slack). The CTA page is source_page, on every event.'],
     ['Context properties', 'anonymous_id, first_touch_*, last_touch_*, booking_session_id, source_page, cta_id, flow_entry, flow_start, variant_booking, variant_confirmation and booking_id are all on every event.'],
     ['Segment calls', 'page() for the three page-view events, track() for the rest, and identify() at form submit and at booking, as the spec says.'],
     ['Entry paths', 'P1 to P7 are all covered, with the events each one fires.'],

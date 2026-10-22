@@ -1544,7 +1544,7 @@
       ],
       [
         "Last touch",
-        "Defined as the spec does: the latest visit with tracking parameters (confirmed by Engineering). The CTA page is source_page, on every event."
+        "Defined as the spec does: the latest visit with tracking parameters (Gregor, in Slack). The CTA page is source_page, on every event."
       ],
       [
         "Context properties",
