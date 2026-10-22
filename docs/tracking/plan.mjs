@@ -27,6 +27,8 @@ export const CONTEXT_PROPS = [
   ['first_touch_campaign', 'string or null', 'utm_campaign of the first marketing touch.', 'Touch script'],
   ['first_touch_content', 'string or null', 'utm_content of the first marketing touch.', 'Touch script'],
   ['first_touch_term', 'string or null', 'utm_term of the first marketing touch.', 'Touch script'],
+  ['first_touch_location', 'string or null', 'utm_location of the first marketing touch.', 'Touch script'],
+  ['first_touch_team', 'string or null', 'utm_team of the first marketing touch.', 'Touch script'],
   ['first_touch_landing_page', 'string or null', 'Path of the first page they landed on. One field of the touch, not the touch itself.', 'Touch script'],
   ['first_touch_referrer_domain', 'string or null', 'Domain of the external referrer at the first touch.', 'Touch script'],
   ['first_touch_at', 'ISO datetime', 'When the first touch happened (UTC).', 'Touch script'],
@@ -35,6 +37,8 @@ export const CONTEXT_PROPS = [
   ['last_touch_campaign', 'string or null', 'See last_touch_source.', 'Touch script'],
   ['last_touch_content', 'string or null', 'See last_touch_source.', 'Touch script'],
   ['last_touch_term', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_location', 'string or null', 'See last_touch_source.', 'Touch script'],
+  ['last_touch_team', 'string or null', 'See last_touch_source.', 'Touch script'],
   ['last_touch_landing_page', 'string or null', 'Path of the landing page of that latest visit with tracking parameters.', 'Touch script'],
   ['last_touch_referrer_domain', 'string or null', 'See last_touch_source.', 'Touch script'],
   ['last_touch_at', 'ISO datetime', 'When that visit happened (UTC).', 'Touch script'],
@@ -264,7 +268,7 @@ export const PATHS = [
 ];
 
 export const OPEN_POINTS = [
-  'Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.',
+  'Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.',
 ];// ---------- JSON builder ----------
 export const callOf = (e) => e.call || 'track';
@@ -286,10 +290,10 @@ export function jsonFor(e) {
 
 export const UTM_RULE = {
   headline: 'Every event includes the UTMs, as separate properties.',
-  body: 'Send each UTM as its own property, never nested, never hardcoded values. The list is source, medium, campaign, content and term until Marketing defines the final one (open point). No ad click ids.',
+  body: 'Send each UTM as its own property, never nested, never hardcoded values. We need all the UTM parameters we use now for tracking ads, plus two new ones: utm_location and utm_team. No ad click ids.',
   firstTouch: 'first_touch_* is the first marketing touch ever.',
   lastTouch: 'last_touch_* is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.',
-  firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'landing_page', 'referrer_domain', 'at'],
+  firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'location', 'team', 'landing_page', 'referrer_domain', 'at'],
 };
 
 // ---------- check against the spec file ----------

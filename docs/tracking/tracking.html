@@ -56,7 +56,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
   <section class="rules" aria-labelledby="h-rules">
     <h2 id="h-rules">Include on every event</h2>
     <ol>
-      <li><b>Every event includes the UTMs, as separate properties.</b> Send each UTM as its own property, never nested, never hardcoded values. The list is source, medium, campaign, content and term until Marketing defines the final one (open point). No ad click ids.
+      <li><b>Every event includes the UTMs, as separate properties.</b> Send each UTM as its own property, never nested, never hardcoded values. We need all the UTM parameters we use now for tracking ads, plus two new ones: utm_location and utm_team. No ad click ids.
         <div class="utmbox"><b>first_touch_*</b> is the first marketing touch ever.<br><b>last_touch_*</b> is read from the latest visit that carried tracking parameters. Any visit with a parameter replaces it; a visit without leaves it as it was. The page where the CTA was clicked is source_page.</div></li>
       <li><b>Segment call type.</b> The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a <code>track</code> call.</li>
       <li><b>Who and what:</b> <code>email</code> and <code>hashed_email</code> as soon as the email is known, <code>booking_id</code> once the booking exists, and the flow properties: <code>booking_session_id</code>, <code>anonymous_id</code>, <code>flow_entry</code>, <code>flow_start</code>, <code>source_page</code>, <code>cta_id</code>, <code>variant_booking</code>, <code>variant_confirmation</code>.</li>
@@ -473,7 +473,7 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
 
   <section aria-labelledby="h-open">
     <h2 id="h-open">Open points</h2>
-    <ul class="op"><li>Define the UTMs to track, and the UTMs that identify our source (what the meeting types in HubSpot were used for). Marketing to define; the plan uses source, medium, campaign, content and term until then.</li><li>Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.</li></ul>
+    <ul class="op"><li>Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).</li><li>Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.</li></ul>
   </section>
 </div>
 <script>
