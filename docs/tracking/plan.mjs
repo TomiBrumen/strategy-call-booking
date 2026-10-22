@@ -41,7 +41,7 @@ export const CONTEXT_PROPS = [
     ['variant_booking', 'enum A or B', 'Booking page A/B variant. Sticky per visitor, stored on the booking.', 'Assigned on first view, cookie'],
   ['variant_confirmation', 'enum A or B', 'Confirmation page A/B variant. Sticky per visitor.', 'Assigned on first view, cookie'],
   ['email', 'string', 'The visitor\'s email, on every event from the moment it is known (form submit, or the calendar details). Anonymous before that. Added.', 'Form or calendar details'],
-  ['hashed_email', 'string', 'SHA-256 of the trimmed, lowercased email, as hex. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.', 'Computed from the email'],
+  ['hashed_email', 'string', 'The hashed email. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.', 'Computed from the email'],
   ['booking_id', 'string', 'The Cal.com booking id, on every event once the booking exists. Added.', 'Cal.com booking response or webhook'],
 ];
 

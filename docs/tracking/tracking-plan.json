@@ -246,7 +246,7 @@
     {
       "name": "hashed_email",
       "type": "string",
-      "description": "SHA-256 of the trimmed, lowercased email, as hex. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.",
+      "description": "The hashed email. On every event from the moment the email is known. Replaces the ad click ids for matching conversions to ads. Added.",
       "source": "Computed from the email"
     },
     {
