@@ -54,10 +54,14 @@ export const CONTEXT_PROPS = [
 // level: how much of the context exists when the event fires
 //   anon = no email yet, known = email known, booked = email and booking id known
 export function context(level) {
-  // UTM and touch properties are NOT repeated here: every event must also include them, as separate properties.
+  // Sample values are fictional. Touch properties follow the UTM rule: every event carries them as separate properties.
   const c = {
     anonymous_id: S.anonymousId, hutk: S.hutk, booking_session_id: S.bookingSessionId,
     flow_entry: 'cta', flow_start: 'booking_page', source_page: '/page-xyz', cta_id: 'xyz_inline',
+    first_touch_source: 'google', first_touch_medium: 'cpc', first_touch_campaign: 'strategy-call-q4', first_touch_content: 'headline-a', first_touch_term: 'ai reporting',
+    first_touch_location: 'us', first_touch_team: 'growth', first_touch_landing_page: '/ad-landing', first_touch_referrer_domain: 'google.com', first_touch_at: S.firstTouchAt,
+    last_touch_source: 'linkedin', last_touch_medium: 'paid-social', last_touch_campaign: 'strategy-call-q4', last_touch_content: 'video-b', last_touch_term: null,
+    last_touch_location: 'us', last_touch_team: 'growth', last_touch_landing_page: '/ad-landing', last_touch_referrer_domain: 'linkedin.com', last_touch_at: '2026-10-21T16:40:00Z',
     variant_booking: 'A', variant_confirmation: 'A',
   };
   if (level === 'known' || level === 'booked') { c.email = S.email; c.hashed_email = S.hashedEmail; }
@@ -252,7 +256,6 @@ export const PATHS = [
 ];
 
 export const OPEN_POINTS = [
-  'Marketing to share the full list of UTM parameters we use now for tracking ads. Together with utm_location and utm_team, that is what every event carries. Also needed: the UTMs that identify our source (what the meeting types in HubSpot were used for).',
   'Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.',
 ];// ---------- JSON builder ----------
