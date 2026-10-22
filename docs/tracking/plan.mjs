@@ -21,7 +21,7 @@ export const CONTEXT_PROPS = [
   ['flow_start', 'enum', 'Which page they entered the flow on: booking_page or calendar.', 'Read at the booking page or calendar'],
   ['source_page', 'string or null', 'Path of the page where the CTA was clicked. Null on targeted ads, marketing emails and direct visits. Never the booking page itself.', 'Written at the CTA click'],
   ['cta_id', 'string or null', 'The data-cta id of the clicked CTA. For marketing emails: email id plus link id.', 'Written at the CTA click'],
-  ['first_touch_source', 'string or null', 'utm_source of the first marketing touch, whatever value is on the URL. Set once, kept 90 days.', 'Touch script, cookie on .databox.com'],
+  ['first_touch_source', 'string or null', 'utm_source of the first marketing touch, whatever value is on the URL.', 'Touch script, cookie on .databox.com'],
   ['first_touch_medium', 'string or null', 'utm_medium of the first marketing touch.', 'Touch script'],
   ['first_touch_campaign', 'string or null', 'utm_campaign of the first marketing touch.', 'Touch script'],
   ['first_touch_content', 'string or null', 'utm_content of the first marketing touch.', 'Touch script'],
@@ -289,7 +289,7 @@ export function jsonFor(e) {
 export const UTM_RULE = {
   headline: 'Every event includes all UTMs, as separate properties.',
   body: 'Especially for ads: this is how sources are tracked. UTMs are dynamic. Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.',
-  firstTouch: 'first_touch_* is the first marketing touch ever. Set once, kept in a cookie for 90 days.',
+  firstTouch: 'first_touch_* is the first marketing touch ever.',
   lastTouch: 'last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA: its UTMs, click id and referrer, with that page\'s path as last_touch_landing_page (same as source_page) and the click time as last_touch_at.',
   firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'click_id', 'click_id_type', 'landing_page', 'referrer_domain', 'at'],
   more: 'Any other utm_* parameter is sent the same way (for example utm_id). Confirm the property naming for these with Engineering.',

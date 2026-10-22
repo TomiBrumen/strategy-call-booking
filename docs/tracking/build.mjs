@@ -75,7 +75,7 @@ for (const c of IDENTIFY_CALLS) md.push(`${c.when}\n\n\`\`\`json\n${J(c.json)}\n
 md.push('## 4. Flow properties on every event\n');
 md.push('| Property | Type | What it holds | Where it is set |\n|---|---|---|---|');
 for (const [n, t, d, s] of flowProps) md.push(`| \`${n}\` | ${t} | ${d} | ${s} |`);
-md.push('\nUTMs: see rule 1. They are also kept in a first-party cookie on `.databox.com` for 90 days and passed to the booking in the URL, hidden fields and the Cal.com booking metadata.\n');
+md.push('\nUTMs: see rule 1. They are also passed to the booking in the URL, hidden fields and the Cal.com booking metadata.\n');
 md.push('## 5. Booking and email variables\n\nCarried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The emails (1 confirmation, 2 reminder 24 h, 3 reminder 1 h) read these as custom tokens.\n');
 md.push('| Property | Type | What it holds | Example | Where it comes from | Used in email |\n|---|---|---|---|---|---|');
 for (const [n, t, d, x, s] of BOOKING_VARS) md.push(`| \`${n}\` | ${t} | ${d} | \`${x === null ? 'null' : String(x).length > 60 ? String(x).slice(0, 57) + '...' : x}\` | ${s} | ${USED_IN[n] || ''} |`);

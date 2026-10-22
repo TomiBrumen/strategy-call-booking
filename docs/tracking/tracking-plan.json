@@ -6,7 +6,7 @@
     "utm": {
       "headline": "Every event includes all UTMs, as separate properties.",
       "body": "Especially for ads: this is how sources are tracked. UTMs are dynamic. Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.",
-      "firstTouch": "first_touch_* is the first marketing touch ever. Set once, kept in a cookie for 90 days.",
+      "firstTouch": "first_touch_* is the first marketing touch ever.",
       "lastTouch": "last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA: its UTMs, click id and referrer, with that page's path as last_touch_landing_page (same as source_page) and the click time as last_touch_at.",
       "firstLast": [
         "source",
@@ -143,7 +143,7 @@
     {
       "name": "first_touch_source",
       "type": "string or null",
-      "description": "utm_source of the first marketing touch, whatever value is on the URL. Set once, kept 90 days.",
+      "description": "utm_source of the first marketing touch, whatever value is on the URL.",
       "source": "Touch script, cookie on .databox.com"
     },
     {
