@@ -4,7 +4,7 @@ Draft 3, 22 Oct 2026. Built from the "Strategy Call Booking Flow spec (version 2
 
 ## Rules for every event
 
-1. **Every event includes all UTMs, as separate properties.** Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values. first_touch_* is the first marketing touch ever. last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA.
+1. **Every event includes all UTMs, as separate properties.** Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values. first_touch_* is the first marketing touch ever. last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA. If that page's URL has no UTMs, the UTM fields stay empty (null); there is no fallback to earlier UTMs.
 2. **Names** follow this rule: meeting_<thing>_<what happened>, snake_case, past tense. Page loads end in _page_viewed, clicks in _clicked. The meeting_ prefix makes every event of this flow filterable in one go. meeting_call_no_show keeps no_show, the term used across the spec, emails and Q5.
 3. **Call type:** The three page-view events are Segment page() calls (type page, category meeting, name = the event name). Send one page call per page load with that name, and do not also send a second generic page() on those pages. Everything else is a `track` call.
 4. Every event of this build goes to Segment, each fired from its own source: browser events through Analytics.js, server events (form, booking, reschedule, cancel, call) from our server or n8n into Segment, and email events from the email platform's Segment connection. Same workspace, same naming, one place to filter on meeting_.
@@ -808,7 +808,6 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 ## 7. Open points
 
 - Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.
-- last_touch is read from the page where the CTA was clicked. If that page's URL has no UTMs, should last_touch_* be empty, or fall back to the UTMs kept for the visit?
 - UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.
 - email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.
 - Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.

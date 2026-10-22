@@ -269,7 +269,6 @@ export const PATHS = [
 
 export const OPEN_POINTS = [
   'Mixpanel: do we want to add all contacts from this flow to Mixpanel? Today only contacts with Databox accounts are added.',
-  'last_touch is read from the page where the CTA was clicked. If that page\'s URL has no UTMs, should last_touch_* be empty, or fall back to the UTMs kept for the visit?',
   'UTMs are dynamic: capture every utm_* parameter on the URL. Cal.com metadata allows 50 keys; 29 are used today and each extra utm_* adds two.',
   'email is added to every event once known, which sends personal data to every Segment destination. The alternative is to rely on identify() and userId.',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach and which needs somewhere to be hosted.',
@@ -295,7 +294,7 @@ export const UTM_RULE = {
   headline: 'Every event includes all UTMs, as separate properties.',
   body: 'Read every utm_* parameter that is there, not a fixed list, and send each one as its own property. Never nest them, never hardcode values.',
   firstTouch: 'first_touch_* is the first marketing touch ever.',
-  lastTouch: 'last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA.',
+  lastTouch: 'last_touch_* is read from the page where the visitor started the flow, the page where they clicked the CTA. If that page\'s URL has no UTMs, the UTM fields stay empty (null); there is no fallback to earlier UTMs.',
   firstLast: ['source', 'medium', 'campaign', 'content', 'term', 'click_id', 'click_id_type', 'landing_page', 'referrer_domain', 'at'],
   more: 'Any other utm_* parameter is sent the same way (for example utm_id). Confirm the property naming for these with Engineering.',
   clickIds: ['gclid', 'gbraid', 'wbraid', 'li_fat_id', 'fbclid', 'msclkid'],
