@@ -39,6 +39,14 @@ not pass through our server.
 - **Rate limits:** Cal.com's docs list 120 requests per minute for unauthenticated requests and for API keys
   (can be raised on request).
 
+## One page, several calendars (`?link=`)
+
+The page reads `?link=<id>` from the URL and looks it up in `LINKS` in `src/cal.js`. Each entry names a Cal.com event type by `eventTypeId`, by `username` plus `eventTypeSlug`, or by `teamSlug` plus `eventTypeSlug`, and sets the title and length shown. The slots and booking calls use that entry, so each link shows its own availability. A missing or unknown `link` shows the `default` calendar. Only listed links work, so the page cannot be pointed at any Cal.com user.
+
+Example links: `/?link=ops-15` (15 minute event of `databox-operations`), `/?link=ops-30` (30 minute event), no parameter (team round-robin event).
+
+Checked against the live API without a key: `GET /v2/slots` accepts `username` plus `eventTypeSlug` and returns the same slots as `eventTypeId`. `POST /v2/bookings` accepts the same two fields at the top level of the body (probed with a past start time, so nothing was booked). An unknown slug or username returns 404.
+
 ## Open (public) vs authenticated endpoints
 Cal.com's docs say the Authorization header on create-booking is optional, and they give "creating a booking is
 public" as their example of a public endpoint. They do not publish a full list of public endpoints, so we tested

@@ -2,8 +2,23 @@
 // so there is no backend: Cal.com keeps the calendars, bookings and emails.
 const BASE = 'https://api.cal.com/v2';
 
-// Public identifiers of the event, not secrets. Team event: Databox > "Round robin test".
-export const EVENT = { eventTypeId: 7549757, title: 'Strategy call', length: 30 };
+// One page, several calendars. The page reads ?link=<id> from the URL and looks it up here.
+// Only links listed here are allowed, so the page cannot be pointed at any Cal.com user.
+// Each entry names a Cal.com event type in one of three ways: eventTypeId, username + eventTypeSlug,
+// or teamSlug + eventTypeSlug. All of these are public identifiers, not secrets.
+export const LINKS = {
+  default: { eventTypeId: 7549757, title: 'Strategy call', length: 30 }, // team event: Databox > "Round robin test"
+  'ops-30': { username: 'databox-operations', eventTypeSlug: '30min', title: 'Strategy call', length: 30 },
+  'ops-15': { username: 'databox-operations', eventTypeSlug: '15min', title: 'Quick call', length: 15 },
+};
+
+const linkId = () => { try { return new URLSearchParams(window.location.search).get('link'); } catch { return null; } };
+export const LINK_ID = LINKS[linkId()] ? linkId() : 'default'; // unknown or missing link: default calendar
+export const EVENT = LINKS[LINK_ID];
+
+// What identifies the event type in the slots and booking calls.
+const eventRef = ({ eventTypeId, username, teamSlug, eventTypeSlug }) =>
+  eventTypeId ? { eventTypeId } : { eventTypeSlug, ...(teamSlug ? { teamSlug } : { username }) };
 
 // Demo build (claude.ai artifact): published pages cannot call outside hosts, so Cal.com is simulated.
 export const DEMO = import.meta.env.VITE_DEMO === '1';
@@ -52,13 +67,13 @@ const demoBooking = ({ start }) => ({
 });
 
 export const getSlots = (start, end, timeZone) => DEMO ? Promise.resolve(demoSlots(start, end, timeZone)) :
-  call(`/slots?${new URLSearchParams({ eventTypeId: EVENT.eventTypeId, start, end, timeZone })}`, { version: '2024-09-04' });
+  call(`/slots?${new URLSearchParams({ ...eventRef(EVENT), start, end, timeZone })}`, { version: '2024-09-04' });
 
 export const createBooking = ({ start, name, email, phone, timeZone, metadata }) => DEMO ? new Promise((r) => setTimeout(() => r(demoBooking({ start })), 900)) :
   call('/bookings', {
     method: 'POST',
     body: {
-      start, eventTypeId: EVENT.eventTypeId,
+      start, ...eventRef(EVENT),
       attendee: { name, email, timeZone, language: 'en', ...(phone ? { phoneNumber: phone } : {}) },
       metadata,
     },
