@@ -19,13 +19,14 @@ const vals = { flow_entry: 'cta, ad, email, direct', flow_start: 'booking_page, 
 const typeOf = (t) => /number/.test(t) ? 'Number' : /datetime/.test(t) ? 'Date and time' : 'Single-line text';
 const short = { 'Single-line text': 'text', Number: 'number', 'Date and time': 'datetime', 'Dropdown select': 'dropdown' };
 
+export const HS_SKIP_NOTE = true;
 const keys = Object.keys(use).filter((k) => !SKIP.test(k));
-const names = EVENTS.map((e) => e.name);
-const rows = [['event_name', 'Dropdown select', names.map((n) => '`' + n + '`').join(', '), 'workflow', 'all']].concat(
+export const HS_EVENT_NAMES = EVENTS.map((e) => e.name);
+export const rows = [['event_name', 'Dropdown select', HS_EVENT_NAMES.map((n) => '`' + n + '`').join(', '), 'workflow', 'all']].concat(
   keys.map((k) => [k, typeOf(info[k].t), vals[k] || '', read[k] || '', [...new Set(use[k])].join(', ')]));
 
 const table = rows.map((r) => `| \`${r[0]}\` | ${r[1]} | ${r[2]} | ${r[3]} | ${r[4]} |`).join('\n');
-const plain = rows.map((r) => `${r[0]} - ${short[r[1]]}`).join('\n');
+export const plain = rows.map((r) => `${r[0]} - ${short[r[1]]}`).join('\n');
 
 const md = `# HubSpot custom event for the strategy call flow
 
@@ -60,6 +61,8 @@ ${table}
 - Date and time values go in as ISO 8601 or epoch milliseconds.
 - Check that HubSpot accepts a Number type for custom event properties in your portal. If not, use single-line text for \`duration_min\`, \`lead_time_h\`, \`host_id\`, \`pct_watched\` and \`days_ahead\`.
 `;
-fs.writeFileSync('../../HUBSPOT_EVENT.md', md);
-console.log(rows.length);
-console.log(plain);
+if (process.argv[1] && process.argv[1].endsWith('hubspot-event.mjs')) {
+  fs.writeFileSync('../../HUBSPOT_EVENT.md', md);
+  console.log(rows.length);
+  console.log(plain);
+}

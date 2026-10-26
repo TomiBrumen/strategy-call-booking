@@ -1091,7 +1091,69 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 | `last_name` | string or empty | Rest of name after the first space. Empty if only one word was typed. Added. | `Novak` | Derived from name | 1 |
 | `phone` | string or null | Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added. | `+38640123456` | Booking form |  |
 
-## 5. Entry paths
+## 5. HubSpot: the Meeting event
+
+One HubSpot custom event, `Meeting`, receives every `meeting_*` event from Segment. The property `event_name` says which one it is. The full list with details is in HUBSPOT_EVENT.md.
+
+- `event_name` is not sent by the app: map it in Segment from the event name.
+- `email` identifies the contact, and is also kept as a property. `hutk` is sent as the HubSpot user token, not as a property.
+- Not on the HubSpot event: the first and last touch UTMs (contact properties instead), `hashed_email`, `anonymous_id`, `email_domain` and `contact_id` (they stay in Segment). This keeps the event under HubSpot's limit of 50 properties (49 used).
+- Every property below has the same name in the Segment events above, so the mapping is one to one.
+
+```
+event_name - dropdown
+cta_id - text
+source_page - text
+cta_text - text
+booking_session_id - text
+flow_entry - text
+flow_start - text
+variant_booking - text
+variant_confirmation - text
+page - text
+pct_watched - number
+name - text
+first_name - text
+last_name - text
+phone - text
+rebook_url - text
+email - text
+days_ahead - number
+booking_id - text
+call_at - datetime
+call_end_at - datetime
+duration_min - number
+lead_time_h - number
+time_zone - text
+call_weekday - text
+call_date_text - text
+call_time_text - text
+join_url - text
+meeting_location - text
+host_id - number
+host_name - text
+host_first_name - text
+host_email - text
+host_username - text
+host_role - text
+host_photo_url - text
+calendar_google_url - text
+calendar_outlook_url - text
+calendar_ics_url - text
+reschedule_url - text
+cancel_url - text
+calendar - text
+email_id - text
+link_id - text
+previous_booking_id - text
+old_call_at - datetime
+new_call_at - datetime
+canceled_by - text
+reason - text
+```
+
+
+## 6. Entry paths
 
 | Path | Route | Resulting values |
 |---|---|---|
@@ -1103,7 +1165,7 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 | P6 | Marketing email, booking page (or straight to the calendar), thank you | flow_entry = email. No CTA click: last_touch = the email visit, with the email's UTMs |
 | P7 | Flow email (reschedule, rebook), calendar, thank you | No new touch. The booking keeps its original first_touch and last_touch |
 
-## 6. Open points
+## 7. Open points
 
 - Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.
 - Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.
