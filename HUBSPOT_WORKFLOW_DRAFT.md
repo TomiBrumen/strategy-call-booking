@@ -8,8 +8,8 @@ hand in HubSpot. Nothing here is published and nothing has been sent.
 | # | Email | Triggered by | When | Open in HubSpot |
 |---|---|---|---|---|
 | 1 | Confirmation (session pass) | `meeting_booking_confirmed` | right away | [edit](https://app.hubspot.com/email/518207/edit/225045939005) |
-| 2 | Reminder 24 h | `meeting_booking_confirmed` | call time minus 24 h. Skip if booked less than 24 h ahead | [edit](https://app.hubspot.com/email/518207/edit/225040932986) |
-| 3 | Reminder 1 h | `meeting_booking_confirmed` | call time minus 1 h | [edit](https://app.hubspot.com/email/518207/edit/225045090637) |
+| 2 | Reminder 24 h | `meeting_booking_confirmed` or `meeting_booking_rescheduled` | call time minus 24 h. Skip if booked less than 24 h ahead | [edit](https://app.hubspot.com/email/518207/edit/225040932986) |
+| 3 | Reminder 1 h | `meeting_booking_confirmed` or `meeting_booking_rescheduled` | call time minus 1 h | [edit](https://app.hubspot.com/email/518207/edit/225045090637) |
 | 4 | Recovery | `meeting_form_submitted` | 1 h later, only if no `meeting_booking_confirmed` with the same `booking_session_id` in that hour | [edit](https://app.hubspot.com/email/518207/edit/225153591692) |
 | 5 | Rescheduled | `meeting_booking_rescheduled` | right away | [edit](https://app.hubspot.com/email/518207/edit/225158059049) |
 | 6 | Cancelled | `meeting_booking_canceled` | right away | [edit](https://app.hubspot.com/email/518207/edit/225157344329) |
@@ -61,7 +61,7 @@ This is the pattern, with what is documented and what to test.
 5. **Timing.** Reminders: "Delay until a date" using `call_at` (UTC). It normally reads a date on the contact, so copy `call_at` to a
    contact date property first if it cannot read the event. Skip email 2 when `lead_time_h` is under 24. The recovery email: delay 1 h,
    then branch on whether a `meeting_booking_confirmed` event with the same `booking_session_id` happened.
-6. **Stop reminders.** Add `meeting_booking_canceled` as an exit condition, and rely on re-enrolment for a reschedule (a reschedule
+6. **Reschedule and cancel.** A reschedule fires `meeting_booking_rescheduled`, not `meeting_booking_confirmed`, so reminders 2 and 3 must also enrol on `meeting_booking_rescheduled`. It carries the same values with the new `call_at` and a new `booking_id`. Remove the contact from the old reminders when `meeting_booking_rescheduled` or `meeting_booking_canceled` happens, or the old time still gets a reminder.
    brings a new `booking_id`, which also changes the cancel and reschedule links).
 
 ## Cal.com and design notes
