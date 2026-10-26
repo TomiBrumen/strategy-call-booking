@@ -8,7 +8,7 @@ One custom event, `pe518207_meetings_cal_com`, receives every `meeting_*` event 
 
 ## Plain list (49 properties)
 ```
-event_name - dropdown
+event_name - text
 cta_id - text
 source_page - text
 cta_text - text
@@ -60,11 +60,11 @@ reason - text
 ```
 
 ## Details
-Recommended types are HubSpot field types. Closed lists are kept as single-line text on purpose: a value that is not on a dropdown list can be rejected, and then the event is lost.
+Recommended types are HubSpot field types. Every property is single-line text, number or date and time. There are no dropdowns, on purpose: a value that is not on a dropdown list can be rejected, and then the event is lost. The expected values below are for reference only.
 
 | Internal name | Field type | Expected values | Read by | Sent on events |
 |---|---|---|---|---|
-| `event_name` | Dropdown select | `meeting_cta_clicked`, `meeting_booking_page_viewed`, `meeting_video_played`, `meeting_form_started`, `meeting_form_submitted`, `meeting_calendar_page_viewed`, `meeting_slot_selected`, `meeting_booking_confirmed`, `meeting_confirmation_page_viewed`, `meeting_add_to_calendar_clicked`, `meeting_email_sent`, `meeting_email_clicked`, `meeting_booking_rescheduled`, `meeting_booking_canceled`, `meeting_call_held`, `meeting_call_no_show` | workflow | all |
+| `event_name` | Single-line text | `meeting_cta_clicked`, `meeting_booking_page_viewed`, `meeting_video_played`, `meeting_form_started`, `meeting_form_submitted`, `meeting_calendar_page_viewed`, `meeting_slot_selected`, `meeting_booking_confirmed`, `meeting_confirmation_page_viewed`, `meeting_add_to_calendar_clicked`, `meeting_email_sent`, `meeting_email_clicked`, `meeting_booking_rescheduled`, `meeting_booking_canceled`, `meeting_call_held`, `meeting_call_no_show` | workflow | all |
 | `cta_id` | Single-line text |  |  | cta_clicked, booking_page_viewed, video_played, form_started, form_submitted, calendar_page_viewed, slot_selected, booking_confirmed, confirmation_page_viewed, add_to_calendar_clicked, email_sent, email_clicked, booking_rescheduled, booking_canceled, call_held, call_no_show |
 | `source_page` | Single-line text |  |  | cta_clicked, booking_page_viewed, video_played, form_started, form_submitted, calendar_page_viewed, slot_selected, booking_confirmed, confirmation_page_viewed, add_to_calendar_clicked, email_sent, email_clicked, booking_rescheduled, booking_canceled, call_held, call_no_show |
 | `cta_text` | Single-line text |  |  | cta_clicked |

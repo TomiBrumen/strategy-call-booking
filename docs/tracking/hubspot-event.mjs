@@ -22,7 +22,7 @@ const short = { 'Single-line text': 'text', Number: 'number', 'Date and time': '
 export const HS_SKIP_NOTE = true;
 const keys = Object.keys(use).filter((k) => !SKIP.test(k));
 export const HS_EVENT_NAMES = EVENTS.map((e) => e.name);
-export const rows = [['event_name', 'Dropdown select', HS_EVENT_NAMES.map((n) => '`' + n + '`').join(', '), 'workflow', 'all']].concat(
+export const rows = [['event_name', 'Single-line text', HS_EVENT_NAMES.map((n) => '`' + n + '`').join(', '), 'workflow', 'all']].concat(
   keys.map((k) => [k, typeOf(info[k].t), vals[k] || '', read[k] || '', [...new Set(use[k])].join(', ')]));
 
 const table = rows.map((r) => `| \`${r[0]}\` | ${r[1]} | ${r[2]} | ${r[3]} | ${r[4]} |`).join('\n');
@@ -42,7 +42,7 @@ ${plain}
 \`\`\`
 
 ## Details
-Recommended types are HubSpot field types. Closed lists are kept as single-line text on purpose: a value that is not on a dropdown list can be rejected, and then the event is lost.
+Recommended types are HubSpot field types. Every property is single-line text, number or date and time. There are no dropdowns, on purpose: a value that is not on a dropdown list can be rejected, and then the event is lost. The expected values below are for reference only.
 
 | Internal name | Field type | Expected values | Read by | Sent on events |
 |---|---|---|---|---|

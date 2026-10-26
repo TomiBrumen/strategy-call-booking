@@ -1101,7 +1101,7 @@ One HubSpot custom event, `pe518207_meetings_cal_com` (the ID Segment needs), re
 - Every property below has the same name in the Segment events above, so the mapping is one to one.
 
 ```
-event_name - dropdown
+event_name - text
 cta_id - text
 source_page - text
 cta_text - text
