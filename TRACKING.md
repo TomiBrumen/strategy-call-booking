@@ -451,8 +451,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
   "properties": {
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
     "call_at": "2026-10-29T14:30:00Z",
-    "call_end_at": "2026-10-29T15:30:00Z",
-    "duration_min": 60,
+    "call_end_at": "2026-10-29T15:00:00Z",
+    "duration_min": 30,
     "lead_time_h": 173,
     "time_zone": "Europe/Ljubljana",
     "call_weekday": "Thursday",
@@ -785,8 +785,8 @@ _Plus all UTMs, each as a separate property (see the UTM rule)._
     "new_call_at": "2026-10-29T14:30:00Z",
     "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
     "call_at": "2026-10-29T14:30:00Z",
-    "call_end_at": "2026-10-29T15:30:00Z",
-    "duration_min": 60,
+    "call_end_at": "2026-10-29T15:00:00Z",
+    "duration_min": 30,
     "lead_time_h": 173,
     "time_zone": "Europe/Ljubljana",
     "call_weekday": "Thursday",
@@ -1064,8 +1064,8 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 |---|---|---|---|---|---|
 | `booking_id` | string | Cal.com booking id (uid). Builds the reschedule and cancel links. | `k9Zp3QmV7sLw2TnXb8Rc4D` | Cal.com webhook: payload.uid | 1, 2, 3, 5 (reschedule and cancel links) |
 | `call_at` | ISO datetime | Call start, UTC. Drives the 24 h and 1 h reminder timing. | `2026-10-29T14:30:00Z` | Cal.com webhook: payload.startTime | workflow timing |
-| `call_end_at` | ISO datetime | Call end, UTC. Added. | `2026-10-29T15:30:00Z` | Cal.com webhook: payload.endTime |  |
-| `duration_min` | number | Call length in minutes. The designs say 60. Added. | `60` | Cal.com webhook: end minus start | 1 |
+| `call_end_at` | ISO datetime | Call end, UTC. Added. | `2026-10-29T15:00:00Z` | Cal.com webhook: payload.endTime |  |
+| `duration_min` | number | Call length in minutes (30 for the strategy call). Added. | `30` | Cal.com webhook: end minus start | 1 |
 | `lead_time_h` | number | Hours between booking and call. Reminder 2 is skipped under 24. | `173` | Computed |  |
 | `time_zone` | string | Visitor's time zone (IANA). | `Europe/Ljubljana` | Cal.com webhook: attendees[0].timeZone |  |
 | `call_weekday` | string | Weekday of the call in the visitor's time zone. Email: "See you on ...". Added. | `Thursday` | Computed in the visitor's time zone | 1 |

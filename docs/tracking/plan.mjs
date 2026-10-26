@@ -74,8 +74,8 @@ export function context(level) {
 export const BOOKING_VARS = [
   ['booking_id', 'string', 'Cal.com booking id (uid). Builds the reschedule and cancel links.', S.bookingId, 'Cal.com webhook: payload.uid'],
   ['call_at', 'ISO datetime', 'Call start, UTC. Drives the 24 h and 1 h reminder timing.', S.callAt, 'Cal.com webhook: payload.startTime'],
-  ['call_end_at', 'ISO datetime', 'Call end, UTC. Added.', '2026-10-29T15:30:00Z', 'Cal.com webhook: payload.endTime'],
-  ['duration_min', 'number', 'Call length in minutes. The designs say 60. Added.', 60, 'Cal.com webhook: end minus start'],
+  ['call_end_at', 'ISO datetime', 'Call end, UTC. Added.', '2026-10-29T15:00:00Z', 'Cal.com webhook: payload.endTime'],
+  ['duration_min', 'number', 'Call length in minutes (30 for the strategy call). Added.', 30, 'Cal.com webhook: end minus start'],
   ['lead_time_h', 'number', 'Hours between booking and call. Reminder 2 is skipped under 24.', 173, 'Computed'],
   ['time_zone', 'string', 'Visitor\'s time zone (IANA).', 'Europe/Ljubljana', 'Cal.com webhook: attendees[0].timeZone'],
   ['call_weekday', 'string', 'Weekday of the call in the visitor\'s time zone. Email: "See you on ...". Added.', 'Thursday', 'Computed in the visitor\'s time zone'],
