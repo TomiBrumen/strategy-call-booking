@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  EVENTS, CONTEXT_PROPS, BOOKING_VARS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, LATER,
+  EVENTS, CONTEXT_PROPS, BOOKING_VARS, PATHS, OPEN_POINTS, HS_CONTACT, COVERAGE, NAMING, SEGMENT_NOTE, LATER,
   UTM_RULE, PAGE_NOTE, SEGMENT_SOURCE, RECEIVED_EXAMPLES, callOf, jsonFor,
 } from './plan.mjs';
 
@@ -82,9 +82,10 @@ md.push('## 4. Booking and email variables\n\nCarried by `meeting_booking_confir
 md.push('| Property | Type | What it holds | Example | Where it comes from | Used in email |\n|---|---|---|---|---|---|');
 for (const [n, t, d, x, s] of BOOKING_VARS) md.push(`| \`${n}\` | ${t} | ${d} | \`${x === null ? 'null' : String(x).length > 60 ? String(x).slice(0, 57) + '...' : x}\` | ${s} | ${USED_IN[n] || ''} |`);
 md.push('\n## 5. HubSpot: the meeting event\n\nOne HubSpot custom event, `pe518207_meetings_cal_com` (the ID Segment needs), receives every `meeting_*` event from Segment. The property `event_name` says which one it is. The full list with details is in HUBSPOT_EVENT.md.\n\n- `event_name` is not sent by the app: map it in Segment from the event name.\n- `email` identifies the contact, and is also kept as a property. `hutk` is sent as the HubSpot user token, not as a property.\n- Not on the HubSpot event: the first and last touch UTMs (contact properties instead), `hashed_email`, `anonymous_id`, `email_domain` and `contact_id` (they stay in Segment). This keeps the event under HubSpot\'s limit of 50 properties (' + HS_ROWS.length + ' used).\n- Every property below has the same name in the Segment events above, so the mapping is one to one.\n\n```\n' + HS_PLAIN + '\n```\n');
-md.push('\n## 6. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');
+md.push(`\n## 6. ${HS_CONTACT.title}\n\n${HS_CONTACT.intro}\n\n${HS_CONTACT.how.map((x) => `- ${x}`).join('\n')}\n\n| HubSpot contact property | From the event | Note |\n|---|---|---|\n${HS_CONTACT.fields.map((f) => `| \`${f[0]}\` | \`${f[1]}\` | ${f[2]} |`).join('\n')}\n`);
+md.push('\n## 7. Entry paths\n\n| Path | Route | Resulting values |\n|---|---|---|');
 for (const [id, r, v] of PATHS) md.push(`| ${id} | ${r} | ${v} |`);
-md.push('\n## 7. Open points\n\n' + OPEN_POINTS.map((o) => `- ${o}`).join('\n') + '\n');
+md.push('\n## 8. Open points\n\n' + OPEN_POINTS.map((o) => `- ${o}`).join('\n') + '\n');
 md.push('## Naming: spec name to plan name\n\n| Spec | Plan |\n|---|---|\n' + NAMING.renames.map(([a, b]) => `| \`${a}\` | \`${b}\` |`).join('\n') + '\n');
 md.push('## Check against the spec\n\n' + COVERAGE.spec + '.\n\n' + COVERAGE.checks.map(([a, b]) => `- **${a}:** ${b}`).join('\n') + '\n');
 fs.writeFileSync(path.join(dir, '..', '..', 'TRACKING.md'), md.join('\n'));
@@ -201,6 +202,13 @@ ul.op{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-
     <p class="lede">One HubSpot event, <code>pe518207_meetings_cal_com</code> (the ID Segment needs), takes every <code>meeting_*</code> event. <code>event_name</code> says which one. Properties keep the same names as in Segment.</p>
     <ul class="op"><li><code>event_name</code> is mapped in Segment from the event name.</li><li><code>email</code> finds the contact and is also kept as a property. <code>hutk</code> is the HubSpot user token.</li><li>Not on the HubSpot event: first and last touch UTMs (contact properties), <code>hashed_email</code>, <code>anonymous_id</code>, <code>email_domain</code>, <code>contact_id</code>. ${HS_ROWS.length} of 50 properties used.</li></ul>
     <div class="tw"><table><thead><tr><th>Property</th><th>HubSpot field type</th></tr></thead><tbody>${HS_ROWS.map((r) => `<tr><td><code>${r[0]}</code></td><td>${esc(r[1])}</td></tr>`).join('')}</tbody></table></div>
+  </section>
+
+  <section aria-labelledby="h-hc">
+    <h2 id="h-hc">${esc(HS_CONTACT.title)}</h2>
+    <p class="lede">${esc(HS_CONTACT.intro)}</p>
+    <ul class="op">${HS_CONTACT.how.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="tw"><table><thead><tr><th>HubSpot contact property</th><th>From the event</th><th>Note</th></tr></thead><tbody>${HS_CONTACT.fields.map((f) => `<tr><td><code>${esc(f[0])}</code></td><td><code>${esc(f[1])}</code></td><td>${esc(f[2])}</td></tr>`).join('')}</tbody></table></div>
   </section>
 
   <section aria-labelledby="h-later">

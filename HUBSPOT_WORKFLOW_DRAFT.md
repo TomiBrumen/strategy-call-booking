@@ -23,7 +23,7 @@ owner's email, falling back to `help@databox.com`. Email 4 sends from "Databox" 
 
 All `meeting_*` events arrive in HubSpot as one custom event, `pe518207_meetings_cal_com`. Its property `event_name` holds the Segment event name. A workflow trigger is therefore "When an event occurs: pe518207_meetings_cal_com" with the filter `event_name` is `meeting_booking_confirmed` (or the event named in the table above). The property list is in [HUBSPOT_EVENT.md](HUBSPOT_EVENT.md).
 
-**Creating the contact:** HubSpot has no setting for it. An event sent with an email creates a contact when none exists, but with the email only. The name, phone and UTMs come from a Segment mapping that upserts the contact from `meeting_form_submitted` (and from `meeting_booking_confirmed`, when no form ran).
+**Creating the contact:** do not rely on the event to create it. The contact is created or updated first (our server through the HubSpot API, or a Segment upsert-contact mapping), with name, phone, owner and attribution, and the event is sent after it. See the section "HubSpot: creating the contact" in TRACKING.md.
 
 ## Which event values each email reads
 

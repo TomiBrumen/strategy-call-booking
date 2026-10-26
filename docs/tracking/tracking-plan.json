@@ -1936,7 +1936,8 @@
     }
   ],
   "openPoints": [
-    "Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.",
+    "Decide how the contact is created: our server upserts it with the HubSpot API before sending the event (recommended), or a Segment upsert-contact mapping. Engineering to confirm which, and that the HubSpot destination can pass hutk.",
+    "Marketing and Sales to decide the lifecycle stage, lead status and whether a HubSpot Lead is also created for each booking. A Lead object exists in the portal.",
     "Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback."
   ],
   "coverage": {

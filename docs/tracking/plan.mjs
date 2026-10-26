@@ -256,7 +256,8 @@ export const PATHS = [
 ];
 
 export const OPEN_POINTS = [
-  'Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.',
+  'Decide how the contact is created: our server upserts it with the HubSpot API before sending the event (recommended), or a Segment upsert-contact mapping. Engineering to confirm which, and that the HubSpot destination can pass hutk.',
+  'Marketing and Sales to decide the lifecycle stage, lead status and whether a HubSpot Lead is also created for each booking. A Lead object exists in the portal.',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.',
 ];
 // ---------- examples received from the website (test bookings), personal details replaced ----------
@@ -315,6 +316,29 @@ export const RECEIVED_EXAMPLES = {
       hashed_email: S.hashedEmail,
     },
   },
+};
+
+
+// ---------- creating the contact in HubSpot ----------
+export const HS_CONTACT = {
+  title: 'HubSpot: creating the contact',
+  intro: 'Do not rely on the event to create the contact. HubSpot may not create one from an event, and an event that arrives before its contact can be lost. The contact is created or updated first, with everything we know, and the event is sent after it.',
+  how: [
+    'Recommended: our server (the one that fires meeting_form_submitted and meeting_booking_confirmed) upserts the contact with the HubSpot API, matched on email, and only then sends the Segment event. This keeps the order and lets us set the owner. It needs a HubSpot private app token on the server, with contact write access (and lead write access, if a Lead is created).',
+    'Alternative: the Segment HubSpot destination has an upsert-contact action, mapped from meeting_form_submitted and meeting_booking_confirmed. No server code, but Segment does not guarantee that the contact exists before the event reaches HubSpot, and it cannot set the owner.',
+    'When no form ran (targeted ad straight to the calendar), the contact is created from meeting_booking_confirmed instead.',
+    'In the browser, call _hsq.push([\'identify\', { email }]) once the email is known, so HubSpot links its tracking cookie (hutk), and with it the ad click, to the contact.',
+  ],
+  fields: [
+    ['email', 'email', 'Matches an existing contact, or creates one.'],
+    ['firstname', 'first_name', ''],
+    ['lastname', 'last_name', 'Empty if only one word was typed.'],
+    ['phone', 'phone', 'Skip when empty. Never overwrite an existing phone with a blank.'],
+    ['hubspot_owner_id', 'host_email', 'Look up the owner by email. Email 1 sends from the contact owner, so this must be set before it goes out.'],
+    ['first_touch_* (10 properties)', 'first_touch_*', 'New contact properties. Write only when the contact has no first touch yet.'],
+    ['last_touch_* (10 properties)', 'last_touch_*', 'New contact properties. Overwrite on each new tracked visit.'],
+    ['lifecyclestage, lifecycle_stage_dbx, hs_lead_status', '(to decide)', 'Values to be agreed with Marketing and Sales. See open points.'],
+  ],
 };
 
 // ---------- JSON builder ----------
