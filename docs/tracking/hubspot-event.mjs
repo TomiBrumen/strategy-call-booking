@@ -1,4 +1,4 @@
-// Generates HUBSPOT_EVENT.md from plan.mjs: the property list for the one HubSpot custom event "Meeting".
+// Generates HUBSPOT_EVENT.md from plan.mjs: the property list for the one HubSpot custom event pe518207_meetings_cal_com.
 import { EVENTS, CONTEXT_PROPS, BOOKING_VARS, jsonFor } from './plan.mjs';
 import fs from 'fs';
 
@@ -30,10 +30,10 @@ export const plain = rows.map((r) => `${r[0]} - ${short[r[1]]}`).join('\n');
 
 const md = `# HubSpot custom event for the strategy call flow
 
-One custom event, \`Meeting\`, receives every \`meeting_*\` event from Segment. Which one it is lives in the property \`event_name\`.
+One custom event, \`pe518207_meetings_cal_com\`, receives every \`meeting_*\` event from Segment. Which one it is lives in the property \`event_name\`.
 
 ## Event
-- Label: Meeting. Internal name: \`meeting\` (HubSpot adds its own prefix). Associated object: contact.
+- Event ID for Segment: \`pe518207_meetings_cal_com\`. Associated object: contact.
 - The contact is matched on **email**, sent as the event identifier and also kept as the property \`email\`. \`hutk\` goes in the HubSpot user token field and is not a property.
 
 ## Plain list (${rows.length} properties)

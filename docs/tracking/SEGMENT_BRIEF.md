@@ -12,6 +12,7 @@ We track the strategy call booking flow in Segment and send it to HubSpot. Compa
 
 ## Facts from the plan
 - Segment workspace: `databox`. Source: `leads` (only contacts without a Databox account). The production source `2.0` is not used for this flow.
+- HubSpot custom event for all of them: `pe518207_meetings_cal_com`. The property `event_name` holds the Segment event name.
 - No identify() calls. Contacts are created in HubSpot from track events, matched on email. `hutk` (the HubSpot cookie) travels on every event.
 - Every name starts with `meeting_`. Three events are page() calls, the rest are track().
 

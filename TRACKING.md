@@ -1091,9 +1091,9 @@ Carried by `meeting_booking_confirmed` (and `meeting_booking_rescheduled`). The 
 | `last_name` | string or empty | Rest of name after the first space. Empty if only one word was typed. Added. | `Novak` | Derived from name | 1 |
 | `phone` | string or null | Visitor phone. Optional (Q4 decided). The phone field is hidden on the test event in Cal.com, so check it on the real one. Added. | `+38640123456` | Booking form |  |
 
-## 5. HubSpot: the Meeting event
+## 5. HubSpot: the meeting event
 
-One HubSpot custom event, `Meeting`, receives every `meeting_*` event from Segment. The property `event_name` says which one it is. The full list with details is in HUBSPOT_EVENT.md.
+One HubSpot custom event, `pe518207_meetings_cal_com` (the ID Segment needs), receives every `meeting_*` event from Segment. The property `event_name` says which one it is. The full list with details is in HUBSPOT_EVENT.md.
 
 - `event_name` is not sent by the app: map it in Segment from the event name.
 - `email` identifies the contact, and is also kept as a property. `hutk` is sent as the HubSpot user token, not as a property.

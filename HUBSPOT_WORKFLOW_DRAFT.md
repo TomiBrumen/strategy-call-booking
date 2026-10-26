@@ -21,7 +21,7 @@ owner's email, falling back to `help@databox.com`. Email 4 sends from "Databox" 
 
 ## One HubSpot event, filtered by `event_name`
 
-All `meeting_*` events arrive in HubSpot as one custom event, `Meeting`. Its property `event_name` holds the Segment event name. A workflow trigger is therefore "When an event occurs: Meeting" with the filter `event_name` is `meeting_booking_confirmed` (or the event named in the table above). The property list is in [HUBSPOT_EVENT.md](HUBSPOT_EVENT.md).
+All `meeting_*` events arrive in HubSpot as one custom event, `pe518207_meetings_cal_com`. Its property `event_name` holds the Segment event name. A workflow trigger is therefore "When an event occurs: pe518207_meetings_cal_com" with the filter `event_name` is `meeting_booking_confirmed` (or the event named in the table above). The property list is in [HUBSPOT_EVENT.md](HUBSPOT_EVENT.md).
 
 **Creating the contact:** HubSpot has no setting for it. An event sent with an email creates a contact when none exists, but with the email only. The name, phone and UTMs come from a Segment mapping that upserts the contact from `meeting_form_submitted` (and from `meeting_booking_confirmed`, when no form ran).
 
@@ -53,7 +53,7 @@ This is the pattern, with what is documented and what to test.
 
 1. **Event into HubSpot.** The events arrive through Segment's HubSpot connection as custom behavioural events on the contact
    (matched by `email`). Each event property you want to use must exist on the event's definition in HubSpot.
-2. **Enrol on the event.** New workflow, trigger "When an event occurs", choose the custom event `Meeting` and filter on `event_name` (for example
+2. **Enrol on the event.** New workflow, trigger "When an event occurs", choose the custom event `pe518207_meetings_cal_com` and filter on `event_name` (for example
    `meeting_booking_confirmed`). Turn on re-enrolment, so a reschedule or a second booking starts again. HubSpot notes that
    custom events created in the newer events tool appear under this trigger and not under the older "Behavioral events" filter.
 3. **Send email, with custom tokens.** Add a "Send email" action, pick the email, and in "Add custom tokens to email" add one token per
