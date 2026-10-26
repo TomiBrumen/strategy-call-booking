@@ -1179,6 +1179,67 @@
           "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
         }
       },
+      "receivedExample": {
+        "context": {
+          "ip": "203.0.113.24",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:158.0) Gecko/20100101 Firefox/158.0",
+          "page": {
+            "url": "https://www.databox.com/strategy-call/calendar",
+            "path": "/strategy-call/calendar",
+            "search": "",
+            "referrer": "https://www.databox.com/strategy-call",
+            "title": "Pick a time | Databox"
+          },
+          "library": {
+            "name": "databox-website",
+            "version": "unknown"
+          }
+        },
+        "receivedAt": "2026-10-26T07:06:46.248Z",
+        "timestamp": "2026-10-26T07:06:45.000Z",
+        "originalTimestamp": "2026-10-26T07:06:45Z",
+        "integrations": {},
+        "anonymousId": "bs_7f3a91c2",
+        "event": "meeting_booking_confirmed",
+        "type": "track",
+        "messageId": "3c9a1f52-6d0e-4b87-9a15-2f4e8d7b6c10",
+        "properties": {
+          "booking_id": "k9Zp3QmV7sLw2TnXb8Rc4D",
+          "call_at": "2026-10-26T11:00:00Z",
+          "call_end_at": "2026-10-26T12:00:00Z",
+          "duration_min": 60,
+          "lead_time_h": 4,
+          "time_zone": "Europe/Ljubljana",
+          "call_weekday": "Monday",
+          "call_date_text": "Monday, 26 October",
+          "call_time_text": "12:00 (CET)",
+          "join_url": "https://app.cal.com/video/k9Zp3QmV7sLw2TnXb8Rc4D",
+          "meeting_location": "Video call",
+          "host_id": 1001,
+          "host_name": "Alex Rivera",
+          "host_first_name": "Alex",
+          "host_email": "alex.rivera@databox.com",
+          "host_username": "alex-rivera",
+          "host_photo_url": "https://cdn.example.com/hosts/alex-rivera-288.jpg",
+          "calendar_google_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy%20Call&dates=20261026T110000Z%2F20261026T120000Z&details=https%3A%2F%2Fapp.cal.com%2Fvideo%2Fk9Zp3QmV7sLw2TnXb8Rc4D&location=https%3A%2F%2Fapp.cal.com%2Fvideo%2Fk9Zp3QmV7sLw2TnXb8Rc4D",
+          "calendar_outlook_url": "https://outlook.office.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy%20Call&startdt=2026-10-26T11%3A00%3A00.000Z&enddt=2026-10-26T12%3A00%3A00.000Z&body=https%3A%2F%2Fapp.cal.com%2Fvideo%2Fk9Zp3QmV7sLw2TnXb8Rc4D&location=https%3A%2F%2Fapp.cal.com%2Fvideo%2Fk9Zp3QmV7sLw2TnXb8Rc4D",
+          "calendar_ics_url": "https://www.databox.com/wp-json/booking/v1/ics?booking=k9Zp3QmV7sLw2TnXb8Rc4D",
+          "rebook_url": "https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2",
+          "reschedule_url": "https://app.cal.com/reschedule/k9Zp3QmV7sLw2TnXb8Rc4D",
+          "cancel_url": "https://app.cal.com/booking/k9Zp3QmV7sLw2TnXb8Rc4D?cancel=true",
+          "name": "Ana Novak",
+          "first_name": "Ana",
+          "last_name": "Novak",
+          "phone": "+38640123456",
+          "booking_session_id": "bs_7f3a91c2",
+          "flow_entry": "direct",
+          "flow_start": "booking_page",
+          "variant_booking": "B",
+          "variant_confirmation": "B",
+          "email": "ana.novak@acme.com",
+          "hashed_email": "ba522d25bce4709b0c0d79cfcaade393e50c9548acc2eb52d6a71a7523e9ee84"
+        }
+      },
       "plusUtms": "All UTMs are also sent on this event, as separate properties."
     },
     {

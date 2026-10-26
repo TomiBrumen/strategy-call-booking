@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   EVENTS, CONTEXT_PROPS, BOOKING_VARS, PATHS, OPEN_POINTS, COVERAGE, NAMING, SEGMENT_NOTE, LATER,
-  UTM_RULE, PAGE_NOTE, SEGMENT_SOURCE, callOf, jsonFor,
+  UTM_RULE, PAGE_NOTE, SEGMENT_SOURCE, RECEIVED_EXAMPLES, callOf, jsonFor,
 } from './plan.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
@@ -38,7 +38,7 @@ const plan = {
     inThisBuild: !e.later, name: e.name, segmentCall: e.call, step: e.step, firedBy: (e.byLabel || BY[e.by]), role: e.role,
     when: e.when, paths: e.paths, notes: e.notes,
     specificProperties: e.props.map(([n, t, d, x]) => ({ name: n, type: t, description: d, example: x })),
-    example: e.json, plusUtms: 'All UTMs are also sent on this event, as separate properties.',
+    example: e.json, receivedExample: RECEIVED_EXAMPLES[e.name] || undefined, plusUtms: 'All UTMs are also sent on this event, as separate properties.',
   })),
   implementedSeparately: LATER, entryPaths: PATHS.map(([id, route, values]) => ({ id, route, values })), openPoints: OPEN_POINTS, coverage: COVERAGE,
 };
@@ -66,6 +66,7 @@ const eventMd = (e) => {
   if (e.booking) md.push('- **Properties:** all booking and email variables, see section 5.');
   for (const n of e.notes) md.push(`- ${n}`);
   md.push('\n```json\n' + J(e.json) + '\n```\n_' + UTM_LINE + '_\n');
+  if (RECEIVED_EXAMPLES[e.name]) md.push('**Example received from the website** (a test booking, personal details replaced):\n\n```json\n' + J(RECEIVED_EXAMPLES[e.name]) + '\n```\n');
 };
 for (const e of inBuild) eventMd(e);
 md.push(`## 2. ${LATER.title}\n\n${LATER.intro}\n\n${LATER.effects.map((x) => `- ${x}`).join('\n')}\n`);
@@ -103,6 +104,7 @@ const card = (e) => {
     <div class="jh"><span class="lbl">Example call</span><button class="copy" type="button" data-copy>Copy JSON</button></div>
     <pre class="json"><code>${esc(J(e.json))}</code></pre>
     <p class="mut utmline">${UTM_LINE}</p>
+    ${RECEIVED_EXAMPLES[e.name] ? `<div class="jh"><span class="lbl">Received from the website (test booking, personal details replaced)</span><button class="copy" type="button" data-copy>Copy JSON</button></div><pre class="json"><code>${esc(J(RECEIVED_EXAMPLES[e.name]))}</code></pre>` : ''}
   </div>
 </details>`;
 };

@@ -258,7 +258,66 @@ export const PATHS = [
 export const OPEN_POINTS = [
   'Confirm with Engineering that the Segment HubSpot destination can create the contact from a track event (mapping its contact action to meeting_form_submitted) and pass hutk with the event.',
   'Add to Apple Calendar needs a link to an .ics file, which HubSpot emails cannot attach. Idea: host the files on S3 and delete them after 30 days. A step must create one file per booking. Gregor to give feedback.',
-];// ---------- JSON builder ----------
+];
+// ---------- examples received from the website (test bookings), personal details replaced ----------
+const RX_UID = 'k9Zp3QmV7sLw2TnXb8Rc4D';
+const RX_JOIN = `https://app.cal.com/video/${RX_UID}`;
+export const RECEIVED_EXAMPLES = {
+  meeting_booking_confirmed: {
+    context: {
+      ip: '203.0.113.24',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:158.0) Gecko/20100101 Firefox/158.0',
+      page: { url: 'https://www.databox.com/strategy-call/calendar', path: '/strategy-call/calendar', search: '', referrer: 'https://www.databox.com/strategy-call', title: 'Pick a time | Databox' },
+      library: { name: 'databox-website', version: 'unknown' },
+    },
+    receivedAt: '2026-10-26T07:06:46.248Z',
+    timestamp: '2026-10-26T07:06:45.000Z',
+    originalTimestamp: '2026-10-26T07:06:45Z',
+    integrations: {},
+    anonymousId: 'bs_7f3a91c2',
+    event: 'meeting_booking_confirmed',
+    type: 'track',
+    messageId: '3c9a1f52-6d0e-4b87-9a15-2f4e8d7b6c10',
+    properties: {
+      booking_id: RX_UID,
+      call_at: '2026-10-26T11:00:00Z',
+      call_end_at: '2026-10-26T12:00:00Z',
+      duration_min: 60,
+      lead_time_h: 4,
+      time_zone: 'Europe/Ljubljana',
+      call_weekday: 'Monday',
+      call_date_text: 'Monday, 26 October',
+      call_time_text: '12:00 (CET)',
+      join_url: RX_JOIN,
+      meeting_location: 'Video call',
+      host_id: 1001,
+      host_name: 'Alex Rivera',
+      host_first_name: 'Alex',
+      host_email: 'alex.rivera@databox.com',
+      host_username: 'alex-rivera',
+      host_photo_url: 'https://cdn.example.com/hosts/alex-rivera-288.jpg',
+      calendar_google_url: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Strategy%20Call&dates=20261026T110000Z%2F20261026T120000Z&details=${encodeURIComponent(RX_JOIN)}&location=${encodeURIComponent(RX_JOIN)}`,
+      calendar_outlook_url: `https://outlook.office.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=Strategy%20Call&startdt=2026-10-26T11%3A00%3A00.000Z&enddt=2026-10-26T12%3A00%3A00.000Z&body=${encodeURIComponent(RX_JOIN)}&location=${encodeURIComponent(RX_JOIN)}`,
+      calendar_ics_url: `https://www.databox.com/wp-json/booking/v1/ics?booking=${RX_UID}`,
+      rebook_url: 'https://www.databox.com/strategy-call/calendar?bsid=bs_7f3a91c2',
+      reschedule_url: `https://app.cal.com/reschedule/${RX_UID}`,
+      cancel_url: `https://app.cal.com/booking/${RX_UID}?cancel=true`,
+      name: 'Ana Novak',
+      first_name: 'Ana',
+      last_name: 'Novak',
+      phone: '+38640123456',
+      booking_session_id: 'bs_7f3a91c2',
+      flow_entry: 'direct',
+      flow_start: 'booking_page',
+      variant_booking: 'B',
+      variant_confirmation: 'B',
+      email: 'ana.novak@acme.com',
+      hashed_email: S.hashedEmail,
+    },
+  },
+};
+
+// ---------- JSON builder ----------
 export const callOf = (e) => e.call || 'track';
 export function jsonFor(e) {
   const ctx = context(e.level === 'any' ? 'anon' : e.level);
