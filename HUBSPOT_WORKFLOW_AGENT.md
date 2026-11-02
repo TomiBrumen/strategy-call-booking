@@ -70,18 +70,23 @@ The emails also use the standard contact first name (`contact.firstname`, defaul
 ## Phase 1: build now (events that exist)
 
 ### Workflow 1: `Strategy call: confirmation and reminders`
-- **Trigger:** event `pe518207_meetings_cal_com` where `event_name` = `meeting_booking_confirmed`. Allow re-enrolment.
+- **Trigger:** event `pe518207_meetings_cal_com` where `event_name` = `meeting_booking_confirmed` and `meeting_flow` = `assessment`. Allow re-enrolment. (The demo flow sends the same events with `meeting_flow` = `demo`; do not send these emails for it.)
 - **Step 1:** wait 3 minutes. The contact is created and filled in by a separate mapping, and the owner may not be set yet.
 - **Step 2:** send email 1 (598651809065) with its tokens.
 - **Step 3:** if `lead_time_h` is 24 or more, delay until `call_at` minus 24 hours, then send email 2 (598663931676). If it is below 24, skip email 2.
 - **Step 4:** delay until `call_at` minus 1 hour, then send email 3 (598654734132). If the call is already less than 1 hour away, skip it.
 
 ### Workflow 2: `Strategy call: recovery`
-- **Trigger:** event `pe518207_meetings_cal_com` where `event_name` = `meeting_form_submitted`. Allow re-enrolment.
-- **Goal:** the contact completes the event with `event_name` = `meeting_booking_confirmed`. When the goal is met, the contact leaves the workflow.
+Rule from the user: someone who started to book but did not finish gets the recovery email.
+- **Trigger:** event `pe518207_meetings_cal_com` where `event_name` is any of `meeting_form_submitted`, `meeting_calendar_page_viewed` or `meeting_slot_selected`, and `meeting_flow` is `assessment`, and an email is present on the contact. The first of these events starts the one-hour clock. A contact already in the workflow is not enrolled again by the next event.
+- **Re-enrolment:** allow it, but not again within 7 days of a recovery email, so one person never gets the email twice in a week.
+- **Goal / exit:** the contact completes an event with `event_name` = `meeting_booking_confirmed`. Also exit if the contact has a HubSpot meeting created after enrolment (see the test below).
 - **Step 1:** wait 1 hour.
-- **Step 2:** if the goal was not met, send email 4 (598969267723) with token `rebook_url`.
-- Note: the check is by time, not by `booking_session_id`. HubSpot probably cannot compare a property of two events. Say so in your report.
+- **Step 2:** if neither exit condition is met, send email 4 (598969267723) with token `rebook_url`.
+- **Optional refinement:** after the wait, if any of the three trigger events happened in the last 30 minutes, wait another 30 minutes first, so someone still choosing a time does not get the email.
+- **Test to run:** can the workflow check for a meeting in HubSpot? The Cal.com integration creates a meeting activity titled "Strategy Call between <host> and <attendee>", with source CRM_UI, and sets its outcome to CANCELED when cancelled. The contact property `engagements_last_meeting_booked` is for HubSpot's own meetings tool and probably is not updated by it. Find out which condition, if any, sees that meeting, and report it. If none does, rely on the booking-confirmed event alone and say so.
+- Calendar and slot events carry the email only when the visitor filled in the form first. A visitor who goes straight to the calendar and leaves has no email, so there is no one to send to. That is expected.
+- The check is by time, not by `booking_session_id`. HubSpot probably cannot compare a property of two events. Say so in your report.
 
 ## Phase 2: when the other events exist (do not build now, document the plan)
 
