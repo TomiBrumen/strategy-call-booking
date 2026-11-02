@@ -25,6 +25,7 @@ export const HS_EVENT_NAMES = EVENTS.map((e) => e.name);
 export const rows = [['event_name', 'Single-line text', HS_EVENT_NAMES.map((n) => '`' + n + '`').join(', '), 'workflow', 'all']].concat(
   keys.map((k) => [k, typeOf(info[k].t), vals[k] || '', read[k] || '', [...new Set(use[k])].join(', ')]));
 
+rows.splice(1, 0, ['meeting_flow', 'Single-line text', 'assessment, assessment_sl, demo, meeting', 'workflow', 'all']);
 const table = rows.map((r) => `| \`${r[0]}\` | ${r[1]} | ${r[2]} | ${r[3]} | ${r[4]} |`).join('\n');
 export const plain = rows.map((r) => `${r[0]} - ${short[r[1]]}`).join('\n');
 
@@ -36,10 +37,10 @@ One custom event, \`pe518207_meetings_cal_com\`, receives every \`meeting_*\` ev
 - Event ID for Segment: \`pe518207_meetings_cal_com\`. Associated object: contact.
 - The contact is matched on **email**, sent as the event identifier and also kept as the property \`email\`. \`hutk\` goes in the HubSpot user token field and is not a property.
 
-## Review of the live event (read from HubSpot)
-The event \`pe518207_meetings_cal_com\` ("Meetings (cal.com)", contact) has exactly the 49 properties below, with matching types. Against the new tracking spec (booking-tracking-events.md):
-- **Missing, must be added:** \`meeting_flow\` (assessment, assessment_sl, demo or meeting) and \`scheduling_type\` (roundRobin or personal). Without \`meeting_flow\` a workflow trigger that filters on it can never match, and HubSpot may drop the value Segment sends. The API accepted a filter on it in the draft workflows, so that is not proof it exists.
-- **Limit:** 49 plus 2 is 51, over the 50-property limit. Remove properties of events that are not sent: \`pct_watched\`, \`page\` (video), \`email_id\`, \`link_id\` (email events).
+## Review of the live event (read from HubSpot, 2 Nov)
+The event \`pe518207_meetings_cal_com\` ("Meetings (cal.com)", contact) had the 49 properties of the first list. Against the new tracking spec (booking-tracking-events.md):
+- **\`meeting_flow\` added on 2 Nov** (single-line text: assessment, assessment_sl, demo or meeting). The event now has 50 properties, the limit. The Segment mappings must pass it, and workflows can filter on it.
+- **\`scheduling_type\` (roundRobin or personal) is still missing.** To add it, remove properties of events that are not sent first: \`pct_watched\` and \`page\` (video), \`email_id\` and \`link_id\` (email events).
 - **Not on the event, as planned:** the signup attribution (\`referer*\`, \`first_page_url\`, \`signup_url\`, \`prom_*\`, \`experiments\`, the website segments), the \`ad_provider_*\` touches, \`hutk\`, \`anonymous_id\`, \`hashed_email\`.
 - \`calendar_id\` is mentioned in the spec ("with a link calendar, \`calendar_id\` follows \`cta_id\`") but is not in its examples. Decide whether to add it when the personal links are live.
 

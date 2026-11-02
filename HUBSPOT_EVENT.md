@@ -6,16 +6,17 @@ One custom event, `pe518207_meetings_cal_com`, receives every `meeting_*` event 
 - Event ID for Segment: `pe518207_meetings_cal_com`. Associated object: contact.
 - The contact is matched on **email**, sent as the event identifier and also kept as the property `email`. `hutk` goes in the HubSpot user token field and is not a property.
 
-## Review of the live event (read from HubSpot)
-The event `pe518207_meetings_cal_com` ("Meetings (cal.com)", contact) has exactly the 49 properties below, with matching types. Against the new tracking spec (booking-tracking-events.md):
-- **Missing, must be added:** `meeting_flow` (assessment, assessment_sl, demo or meeting) and `scheduling_type` (roundRobin or personal). Without `meeting_flow` a workflow trigger that filters on it can never match, and HubSpot may drop the value Segment sends. The API accepted a filter on it in the draft workflows, so that is not proof it exists.
-- **Limit:** 49 plus 2 is 51, over the 50-property limit. Remove properties of events that are not sent: `pct_watched`, `page` (video), `email_id`, `link_id` (email events).
+## Review of the live event (read from HubSpot, 2 Nov)
+The event `pe518207_meetings_cal_com` ("Meetings (cal.com)", contact) had the 49 properties of the first list. Against the new tracking spec (booking-tracking-events.md):
+- **`meeting_flow` added on 2 Nov** (single-line text: assessment, assessment_sl, demo or meeting). The event now has 50 properties, the limit. The Segment mappings must pass it, and workflows can filter on it.
+- **`scheduling_type` (roundRobin or personal) is still missing.** To add it, remove properties of events that are not sent first: `pct_watched` and `page` (video), `email_id` and `link_id` (email events).
 - **Not on the event, as planned:** the signup attribution (`referer*`, `first_page_url`, `signup_url`, `prom_*`, `experiments`, the website segments), the `ad_provider_*` touches, `hutk`, `anonymous_id`, `hashed_email`.
 - `calendar_id` is mentioned in the spec ("with a link calendar, `calendar_id` follows `cta_id`") but is not in its examples. Decide whether to add it when the personal links are live.
 
-## Plain list (49 properties)
+## Plain list (50 properties)
 ```
 event_name - text
+meeting_flow - text
 cta_id - text
 source_page - text
 cta_text - text
@@ -72,6 +73,7 @@ Recommended types are HubSpot field types. Every property is single-line text, n
 | Internal name | Field type | Expected values | Read by | Sent on events |
 |---|---|---|---|---|
 | `event_name` | Single-line text | `meeting_cta_clicked`, `meeting_booking_page_viewed`, `meeting_video_played`, `meeting_form_started`, `meeting_form_submitted`, `meeting_calendar_page_viewed`, `meeting_slot_selected`, `meeting_booking_confirmed`, `meeting_confirmation_page_viewed`, `meeting_add_to_calendar_clicked`, `meeting_email_sent`, `meeting_email_clicked`, `meeting_booking_rescheduled`, `meeting_booking_canceled`, `meeting_call_held`, `meeting_call_no_show` | workflow | all |
+| `meeting_flow` | Single-line text | assessment, assessment_sl, demo, meeting | workflow | all |
 | `cta_id` | Single-line text |  |  | cta_clicked, booking_page_viewed, video_played, form_started, form_submitted, calendar_page_viewed, slot_selected, booking_confirmed, confirmation_page_viewed, add_to_calendar_clicked, email_sent, email_clicked, booking_rescheduled, booking_canceled, call_held, call_no_show |
 | `source_page` | Single-line text |  |  | cta_clicked, booking_page_viewed, video_played, form_started, form_submitted, calendar_page_viewed, slot_selected, booking_confirmed, confirmation_page_viewed, add_to_calendar_clicked, email_sent, email_clicked, booking_rescheduled, booking_canceled, call_held, call_no_show |
 | `cta_text` | Single-line text |  |  | cta_clicked |
@@ -129,7 +131,7 @@ Recommended types are HubSpot field types. Every property is single-line text, n
 - **Dropped to stay under the limit:** `email_domain` (derivable from `email`) and `contact_id` (HubSpot already attaches the event to the contact).
 
 ## Limits to know
-- 50 properties per event occurrence (this list has 49); names up to 50 characters, lowercase letters, numbers and underscores, starting with a letter.
+- 50 properties per event occurrence (this list has 50); names up to 50 characters, lowercase letters, numbers and underscores, starting with a letter.
 - Values up to 256 characters. Keep `calendar_google_url` and `calendar_outlook_url` under 256 characters, or they may be cut.
 - Date and time values go in as ISO 8601 or epoch milliseconds.
 - Check that HubSpot accepts a Number type for custom event properties in your portal. If not, use single-line text for `duration_min`, `lead_time_h`, `host_id`, `pct_watched` and `days_ahead`.
