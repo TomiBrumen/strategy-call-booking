@@ -49,7 +49,7 @@ The emails read values as `{{custom.<name>}}`. Every token must be mapped in the
 | 1 | `call_date_text`, `call_time_text`, `call_weekday`, `host_name`, `host_role`, `host_photo_url`, `calendar_google_url`, `calendar_outlook_url`, `calendar_ics_url`, `booking_id` |
 | 2 | `call_date_text`, `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `join_url`, `booking_id` |
 | 3 | `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `join_url`, `booking_id` |
-| 4 | `rebook_url` |
+| 4 | none. The button links to https://databox.com/assessment |
 | 5 | `call_date_text`, `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `calendar_google_url`, `booking_id` |
 | 6 | `call_date_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `rebook_url` |
 | 7 | `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `rebook_url` |
@@ -82,7 +82,7 @@ Rule from the user: someone who started to book but did not finish gets the reco
 - **Re-enrolment:** allow it, but not again within 7 days of a recovery email, so one person never gets the email twice in a week.
 - **Goal / exit:** the contact completes an event with `event_name` = `meeting_booking_confirmed`. Also exit if the contact has a HubSpot meeting created after enrolment (see the test below).
 - **Step 1:** wait 1 hour.
-- **Step 2:** if neither exit condition is met, send email 4 (598969267723) with token `rebook_url`.
+- **Step 2:** if neither exit condition is met, send email 4 (598969267723). It has no custom token: its button is the fixed link https://databox.com/assessment.
 - **Optional refinement:** after the wait, if any of the three trigger events happened in the last 30 minutes, wait another 30 minutes first, so someone still choosing a time does not get the email.
 - **Test to run:** can the workflow check for a meeting in HubSpot? The Cal.com integration creates a meeting activity titled "Strategy Call between <host> and <attendee>", with source CRM_UI, and sets its outcome to CANCELED when cancelled. The contact property `engagements_last_meeting_booked` is for HubSpot's own meetings tool and probably is not updated by it. Find out which condition, if any, sees that meeting, and report it. If none does, rely on the booking-confirmed event alone and say so.
 - Calendar and slot events carry the email only when the visitor filled in the form first. A visitor who goes straight to the calendar and leaves has no email, so there is no one to send to. That is expected.

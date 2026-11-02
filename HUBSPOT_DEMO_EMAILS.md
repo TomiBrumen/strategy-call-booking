@@ -24,7 +24,7 @@ Map each as a custom token on the Send email step. The value is the property of 
 | 1 | `call_date_text`, `call_time_text`, `host_name`, `host_role`, `host_photo_url`, `calendar_google_url`, `calendar_outlook_url`, `calendar_ics_url`, `booking_id` |
 | 2 | `call_date_text`, `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `join_url`, `booking_id` |
 | 3 | `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `join_url`, `booking_id` |
-| 4 | `rebook_url` |
+| 4 | none. The button links to https://databox.com/demo |
 | 5 | `call_date_text`, `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `calendar_google_url`, `booking_id` |
 | 6 | `call_date_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `rebook_url` |
 | 7 | `call_time_text`, `host_name`, `host_role`, `host_first_name`, `host_photo_url`, `rebook_url` |
@@ -32,6 +32,6 @@ Map each as a custom token on the Send email step. The value is the property of 
 ## Differences from the strategy call emails
 - Copy is about a Databox demo with a product expert. Confirmation lists what the demo covers, and has "Best regards" instead of "See you on <weekday>".
 - Reminders and the add-to-calendar mail use a "Join the Demo" and an "Add to Calendar" button.
-- Recovery has its own text ("Still comparing analytics or reporting tools?") and no host signature.
+- Recovery has no custom token: the button is the fixed link https://databox.com/demo. It has its own text ("Still comparing analytics or reporting tools?") and no host signature.
 - Email 1 says "Your join link is in this email", but, as in the design, it has no join button.
 - Logos load from this repo's public files (docs/email-assets/). Move them to HubSpot's file manager before sending.
